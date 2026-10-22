@@ -45,7 +45,9 @@ const DEFAULT_USERS = [
   { id: 'USR-002', name: 'Vireak Vong', email: 'vireak.vong@company.com', department: 'Procurement', role: 'management', status: 'active' },
   { id: 'USR-003', name: 'Rithy Seng', email: 'rithy.seng@company.com', department: 'IT', role: 'requester', status: 'active' },
   { id: 'USR-004', name: 'Bopha Keo', email: 'bopha.keo@company.com', department: 'HR', role: 'requester', status: 'active' },
-  { id: 'USR-005', name: 'Dara Pich', email: 'dara.pich@company.com', department: 'Marketing', role: 'requester', status: 'active' }
+  { id: 'USR-005', name: 'Dara Pich', email: 'dara.pich@company.com', department: 'Marketing', role: 'requester', status: 'active' },
+  { id: 'USR-006', name: 'Chenda Mom', email: 'chenda.mom@company.com', department: 'Finance', role: 'requester', status: 'active' },
+  { id: 'USR-007', name: 'Channary Lim', email: 'channary.lim@company.com', department: 'Operations', role: 'requester', status: 'active' }
 ];
 
 const DEFAULT_REQUISITIONS = [

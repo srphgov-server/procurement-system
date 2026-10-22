@@ -9,6 +9,10 @@ const AppState = {
     status: 'all',
     priority: 'all'
   },
+  requesterPersona: localStorage.getItem('procureflow_req_persona') || 'all',
+  requesterSituation: 'all',
+  requesterSearch: '',
+  requesterPriority: 'all',
   activeModal: null,
   viewingReqId: null,
   editingCategoryId: null,
@@ -55,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initNavigation();
   initKPIListeners();
   initFilterListeners();
+  initRequesterDashboardListeners();
   initRequestForm();
   renderAll();
 });
@@ -111,7 +116,11 @@ function initRoleSwitcher() {
       AppState.role = e.target.value;
       localStorage.setItem('procureflow_role', AppState.role);
       updateLanguageUI();
-      renderAll();
+      if (AppState.role === 'requester' && (AppState.currentTab === 'dashboard' || ['categories', 'items', 'users'].includes(AppState.currentTab))) {
+        switchTab('requester-dashboard');
+      } else {
+        renderAll();
+      }
       showToast(`${t('currentRole')}: ${getRoleName(AppState.role)}`, 'info');
     });
   }
@@ -196,9 +205,9 @@ function updateRoleVisibility() {
     }
   });
 
-  // If requester is somehow in admin tab, fallback to dashboard
+  // If requester is somehow in admin tab, fallback to requester-dashboard
   if (AppState.role !== 'admin' && ['categories', 'items', 'users'].includes(AppState.currentTab)) {
-    switchTab('dashboard');
+    switchTab(AppState.role === 'requester' ? 'requester-dashboard' : 'dashboard');
   }
 }
 
@@ -206,6 +215,9 @@ function renderCurrentTabView() {
   switch (AppState.currentTab) {
     case 'dashboard':
       renderRequisitionsTable();
+      break;
+    case 'requester-dashboard':
+      renderRequesterDashboard();
       break;
     case 'categories':
       renderCategoriesTable();
@@ -639,6 +651,30 @@ function addLineItemRow(data = null) {
       <button type="button" class="btn btn-sm btn-text" onclick="removeLineItemRow('${rowId}')" title="${t('actionDelete')}">🗑️</button>
     </td>
   `;
+
+  if (data) {
+    const isCustom = data.itemId && String(data.itemId).startsWith('custom-');
+    const catalogSelect = tr.querySelector('.item-catalog-select');
+    const customInput = tr.querySelector('.item-custom-name');
+    const catSelect = tr.querySelector('.item-category-select');
+    const specInput = tr.querySelector('.item-spec');
+    const qtyInput = tr.querySelector('.item-qty');
+    const unitInput = tr.querySelector('.item-unit');
+    const priceInput = tr.querySelector('.item-price');
+
+    if (isCustom) {
+      catalogSelect.value = 'custom';
+      customInput.style.display = 'block';
+      customInput.value = data.itemName || '';
+    } else if (data.itemId) {
+      catalogSelect.value = data.itemId;
+    }
+    if (data.categoryId) catSelect.value = data.categoryId;
+    if (data.spec) specInput.value = data.spec;
+    if (data.qty !== undefined) qtyInput.value = data.qty;
+    if (data.unit) unitInput.value = data.unit;
+    if (data.unitPrice !== undefined) priceInput.value = Number(data.unitPrice).toFixed(2);
+  }
 
   tbody.appendChild(tr);
   calculateRowSubtotal(rowId);
@@ -1373,3 +1409,527 @@ function exportRequisitionsToCSV() {
   document.body.removeChild(link);
   showToast('Requisitions exported to CSV successfully!', 'success');
 }
+
+// =========================================================================
+// Separated Requester Dashboard & Management Situation Controller
+// =========================================================================
+
+function initRequesterDashboardListeners() {
+  const personaSelect = document.getElementById('requesterPersonaSelect');
+  const searchInput = document.getElementById('requesterSearchInput');
+  const priorityFilter = document.getElementById('requesterPriorityFilter');
+
+  if (personaSelect) {
+    personaSelect.addEventListener('change', (e) => {
+      AppState.requesterPersona = e.target.value;
+      localStorage.setItem('procureflow_req_persona', AppState.requesterPersona);
+      renderRequesterDashboard();
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      AppState.requesterSearch = e.target.value.toLowerCase().trim();
+      renderRequesterDashboard();
+    });
+  }
+
+  if (priorityFilter) {
+    priorityFilter.addEventListener('change', (e) => {
+      AppState.requesterPriority = e.target.value;
+      renderRequesterDashboard();
+    });
+  }
+}
+
+function populateRequesterPersonas() {
+  const select = document.getElementById('requesterPersonaSelect');
+  if (!select) return;
+
+  const currentVal = AppState.requesterPersona || 'all';
+  const requisitions = AppData.getRequisitions();
+  const users = AppData.getUsers().filter(u => u.status === 'active');
+  const distinctRequesters = [];
+  const seen = new Set();
+
+  users.forEach(u => {
+    if (!seen.has(u.name)) {
+      seen.add(u.name);
+      distinctRequesters.push({ name: u.name, dept: u.department, email: u.email });
+    }
+  });
+
+  requisitions.forEach(r => {
+    if (r.requesterName && !seen.has(r.requesterName)) {
+      seen.add(r.requesterName);
+      distinctRequesters.push({ name: r.requesterName, dept: r.department, email: r.requesterEmail });
+    }
+  });
+
+  let optionsHtml = `<option value="all">🌟 ${t('requesterAllProfiles')}</option>`;
+  distinctRequesters.forEach(reqUser => {
+    const isSelected = currentVal === reqUser.name ? 'selected' : '';
+    optionsHtml += `<option value="${reqUser.name}" ${isSelected}>👤 ${reqUser.name} (${reqUser.dept})</option>`;
+  });
+
+  select.innerHTML = optionsHtml;
+  select.value = currentVal;
+}
+
+window.setRequesterSituationFilter = function(situation) {
+  AppState.requesterSituation = situation;
+  renderRequesterDashboard();
+};
+
+function renderRequesterDashboard() {
+  const container = document.getElementById('requesterListContainer');
+  if (!container) return;
+
+  populateRequesterPersonas();
+
+  const allReqs = AppData.getRequisitions();
+
+  // Filter by selected persona if not 'all'
+  let personaReqs = allReqs;
+  if (AppState.requesterPersona && AppState.requesterPersona !== 'all') {
+    personaReqs = allReqs.filter(r => r.requesterName === AppState.requesterPersona);
+  }
+
+  // Calculate Situation Metrics for this requester/department
+  const totalCount = personaReqs.length;
+  const totalAmt = personaReqs.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
+  const reviewCount = personaReqs.filter(r => r.status === 'under_review' || r.status === 'new').length;
+  const approvedCount = personaReqs.filter(r => r.status === 'approved').length;
+  const declinedCount = personaReqs.filter(r => r.status === 'rejected').length;
+  const completedCount = personaReqs.filter(r => r.status === 'completed').length;
+
+  // Update KPI Card Numbers
+  const kpiTotalVal = document.getElementById('reqKpiTotalVal');
+  const kpiTotalAmt = document.getElementById('reqKpiTotalAmt');
+  const kpiReviewVal = document.getElementById('reqKpiReviewVal');
+  const kpiApprovedVal = document.getElementById('reqKpiApprovedVal');
+  const kpiDeclinedVal = document.getElementById('reqKpiDeclinedVal');
+  const kpiCompletedVal = document.getElementById('reqKpiCompletedVal');
+
+  if (kpiTotalVal) kpiTotalVal.textContent = totalCount;
+  if (kpiTotalAmt) kpiTotalAmt.textContent = formatCurrency(totalAmt);
+  if (kpiReviewVal) kpiReviewVal.textContent = reviewCount;
+  if (kpiApprovedVal) kpiApprovedVal.textContent = approvedCount;
+  if (kpiDeclinedVal) kpiDeclinedVal.textContent = declinedCount;
+  if (kpiCompletedVal) kpiCompletedVal.textContent = completedCount;
+
+  // Update situation pill counters
+  const sitCountAll = document.getElementById('sitCountAll');
+  const sitCountReview = document.getElementById('sitCountReview');
+  const sitCountApproved = document.getElementById('sitCountApproved');
+  const sitCountDeclined = document.getElementById('sitCountDeclined');
+  const sitCountCompleted = document.getElementById('sitCountCompleted');
+
+  if (sitCountAll) sitCountAll.textContent = totalCount;
+  if (sitCountReview) sitCountReview.textContent = reviewCount;
+  if (sitCountApproved) sitCountApproved.textContent = approvedCount;
+  if (sitCountDeclined) sitCountDeclined.textContent = declinedCount;
+  if (sitCountCompleted) sitCountCompleted.textContent = completedCount;
+
+  // Update situation pill active states
+  document.querySelectorAll('.situation-pill').forEach(btn => {
+    if (btn.getAttribute('data-sit') === AppState.requesterSituation) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // Situation Alert Banners
+  const declinedAlert = document.getElementById('requesterDeclinedAlert');
+  const approvedAlert = document.getElementById('requesterApprovedAlert');
+  const declinedAlertText = document.getElementById('requesterDeclinedAlertText');
+  const approvedAlertText = document.getElementById('requesterApprovedAlertText');
+
+  if (declinedAlert) {
+    if (declinedCount > 0) {
+      declinedAlert.style.display = 'flex';
+      const declinedItems = personaReqs.filter(r => r.status === 'rejected');
+      const latestDeclined = declinedItems[0];
+      const reasonSnippet = latestDeclined.remarks ? `"${latestDeclined.remarks}"` : '';
+      if (declinedAlertText) {
+        declinedAlertText.innerHTML = AppState.lang === 'kh'
+          ? `ថ្នាក់ដឹកនាំបានបដិសេធសំណើចំនួន <strong>${declinedCount}</strong> (ឧ. <strong>${latestDeclined.id}</strong>៖ <em>${reasonSnippet}</em>)។ សូមពិនិត្យមើលមូលហេតុ និងចុច <strong>កែសម្រួល & ដាក់ស្នើឡើងវិញ</strong> ដើម្បីកែប្រែ។`
+          : `Management has declined <strong>${declinedCount}</strong> requisition(s) (e.g. <strong>${latestDeclined.id}</strong>: <em>${reasonSnippet}</em>). Review the feedback reasons below and click <strong>Modify & Re-submit</strong> to revise.`;
+      }
+    } else {
+      declinedAlert.style.display = 'none';
+    }
+  }
+
+  if (approvedAlert) {
+    if (approvedCount > 0 && declinedCount === 0) {
+      approvedAlert.style.display = 'flex';
+      const approvedItems = personaReqs.filter(r => r.status === 'approved');
+      const latestApproved = approvedItems[0];
+      if (approvedAlertText) {
+        approvedAlertText.innerHTML = AppState.lang === 'kh'
+          ? `សំណើចំនួន <strong>${approvedCount}</strong> (ឧ. <strong>${latestApproved.id}</strong>) ត្រូវបានថ្នាក់ដឹកនាំអនុម័តរួចរាល់ និងបានបញ្ជូនទៅផ្នែកលទ្ធកម្មដើម្បីបញ្ជាទិញ។`
+          : `<strong>${approvedCount}</strong> requisition(s) (e.g. <strong>${latestApproved.id}</strong>) have been approved by Management and forwarded to Procurement for purchasing.`;
+      }
+    } else {
+      approvedAlert.style.display = 'none';
+    }
+  }
+
+  // Filter list by situation filter
+  let displayList = personaReqs;
+  if (AppState.requesterSituation === 'under_review') {
+    displayList = displayList.filter(r => r.status === 'under_review' || r.status === 'new');
+  } else if (AppState.requesterSituation === 'approved') {
+    displayList = displayList.filter(r => r.status === 'approved');
+  } else if (AppState.requesterSituation === 'rejected') {
+    displayList = displayList.filter(r => r.status === 'rejected');
+  } else if (AppState.requesterSituation === 'completed') {
+    displayList = displayList.filter(r => r.status === 'completed');
+  }
+
+  // Filter list by search query
+  if (AppState.requesterSearch) {
+    const term = AppState.requesterSearch;
+    displayList = displayList.filter(r => 
+      r.id.toLowerCase().includes(term) ||
+      (r.purpose && r.purpose.toLowerCase().includes(term)) ||
+      (r.remarks && r.remarks.toLowerCase().includes(term)) ||
+      (r.items && r.items.some(i => i.itemName.toLowerCase().includes(term)))
+    );
+  }
+
+  // Filter list by priority
+  if (AppState.requesterPriority && AppState.requesterPriority !== 'all') {
+    displayList = displayList.filter(r => r.priority === AppState.requesterPriority);
+  }
+
+  if (displayList.length === 0) {
+    container.innerHTML = `
+      <div class="data-card" style="text-align:center; padding: 60px 20px; color: var(--text-muted);">
+        <div style="font-size: 40px; margin-bottom: 12px;">📂</div>
+        <h4 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">${t('noRequesterRequests')}</h4>
+        <p style="font-size: 13px; max-width: 450px; margin: 0 auto 16px;">
+          ${AppState.lang === 'kh' ? 'អ្នកអាចបង្កើតសំណើសុំទិញសម្ភារៈថ្មីដោយចុចប៊ូតុងខាងក្រោម' : 'You can submit a new purchase requisition anytime by clicking the button below.'}
+        </p>
+        <button class="btn btn-primary" onclick="switchTab('new-request')">${t('navNewRequest')}</button>
+      </div>
+    `;
+    return;
+  }
+
+  // Render cards feed
+  container.innerHTML = displayList.map(req => {
+    return buildRequesterCardHtml(req);
+  }).join('');
+}
+
+function buildRequesterCardHtml(req) {
+  const deptObj = AppData.getDepartments().find(d => d.id === req.department);
+  const deptName = deptObj ? (AppState.lang === 'kh' ? deptObj.nameKh : deptObj.nameEn) : req.department;
+  const priorityBadge = getPriorityBadge(req.priority);
+  const statusBadge = getStatusBadge(req.status);
+
+  // Stepper Stage Calculation
+  // Stage 1: Submitted (always done)
+  const step1Class = 'completed';
+  const step1Icon = '✓';
+  const step1Detail = req.requestDate;
+
+  // Stage 2: Management Review
+  let step2Class = 'pending';
+  let step2Icon = '2';
+  let step2Detail = t('stageStatusWait');
+  if (req.status === 'new') {
+    step2Class = 'active';
+    step2Icon = '⏳';
+    step2Detail = t('stageStatusWait');
+  } else if (req.status === 'under_review') {
+    step2Class = 'active';
+    step2Icon = '⏳';
+    step2Detail = t('stageStatusActiveReview');
+  } else {
+    step2Class = 'completed';
+    step2Icon = '✓';
+    step2Detail = AppState.lang === 'kh' ? 'បានពិនិត្យរួចរាល់' : 'Reviewed';
+  }
+
+  // Stage 3: Management Decision (Approve / Decline)
+  let step3Class = 'pending';
+  let step3Icon = '3';
+  let step3Detail = AppState.lang === 'kh' ? 'រង់ចាំការសម្រេច' : 'Pending Decision';
+  if (req.status === 'approved' || req.status === 'completed') {
+    step3Class = 'completed';
+    step3Icon = '✓';
+    step3Detail = t('statusApproved');
+  } else if (req.status === 'rejected') {
+    step3Class = 'declined';
+    step3Icon = '✕';
+    step3Detail = t('statusRejected');
+  }
+
+  // Stage 4: Fulfillment / Delivery
+  let step4Class = 'pending';
+  let step4Icon = '4';
+  let step4Detail = AppState.lang === 'kh' ? 'រង់ចាំការអនុម័ត' : 'Awaiting Approval';
+  if (req.status === 'completed') {
+    step4Class = 'completed';
+    step4Icon = '★';
+    step4Detail = t('statusCompleted');
+  } else if (req.status === 'approved') {
+    step4Class = 'active';
+    step4Icon = '📦';
+    step4Detail = AppState.lang === 'kh' ? 'កំពុងរៀបចំបញ្ជាទិញ' : 'PO in progress';
+  } else if (req.status === 'rejected') {
+    step4Class = 'pending';
+    step4Icon = '✕';
+    step4Detail = AppState.lang === 'kh' ? 'បានផ្អាកការបញ្ជាទិញ' : 'Order stopped';
+  }
+
+  // Stepper progress line width and color
+  let progressWidth = '25%';
+  let progressColor = 'var(--success)';
+  if (req.status === 'new') {
+    progressWidth = '25%';
+    progressColor = '#f59e0b';
+  } else if (req.status === 'under_review') {
+    progressWidth = '45%';
+    progressColor = '#f59e0b';
+  } else if (req.status === 'rejected') {
+    progressWidth = '75%';
+    progressColor = 'var(--danger)';
+  } else if (req.status === 'approved') {
+    progressWidth = '75%';
+    progressColor = 'var(--success)';
+  } else if (req.status === 'completed') {
+    progressWidth = '100%';
+    progressColor = '#8b5cf6';
+  }
+
+  // Management Feedback / Remarks Callout Box
+  let feedbackBoxHtml = '';
+  if (req.status === 'rejected') {
+    feedbackBoxHtml = `
+      <div class="mgmt-feedback-box declined">
+        <div>
+          <div class="mgmt-feedback-title">
+            <span>❌</span>
+            <span>${t('mgmtRemarksTitle')}: ${t('statusRejected')}</span>
+          </div>
+          <div class="mgmt-feedback-text">
+            "${req.remarks || 'No detailed reason provided.'}"
+          </div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; white-space:nowrap;">
+          🔄 ${t('btnResubmitModify')}
+        </button>
+      </div>
+    `;
+  } else if (req.status === 'approved') {
+    feedbackBoxHtml = `
+      <div class="mgmt-feedback-box approved">
+        <div>
+          <div class="mgmt-feedback-title">
+            <span>✅</span>
+            <span>${t('mgmtRemarksTitle')}: ${t('statusApproved')}</span>
+          </div>
+          <div class="mgmt-feedback-text">
+            "${req.remarks || 'Approved by Management & Admin.'}"
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" style="white-space:nowrap;">
+          🖨️ ${t('actionPrint')}
+        </button>
+      </div>
+    `;
+  } else if (req.status === 'under_review') {
+    feedbackBoxHtml = `
+      <div class="mgmt-feedback-box under_review">
+        <div>
+          <div class="mgmt-feedback-title">
+            <span>⏳</span>
+            <span>${t('mgmtRemarksTitle')}: ${t('statusUnderReview')}</span>
+          </div>
+          <div class="mgmt-feedback-text">
+            "${req.remarks || 'Under management review and budget verification.'}"
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Items table preview (up to 4 items)
+  const itemsRows = (req.items || []).map((itm, idx) => {
+    return `
+      <tr>
+        <td style="font-weight:600; width:35px;">#${idx + 1}</td>
+        <td>
+          <div style="font-weight:700;">${itm.itemName}</div>
+          <div style="font-size:11.5px; color:var(--text-light);">${itm.spec || '-'}</div>
+        </td>
+        <td><strong>${itm.qty}</strong> ${itm.unit}</td>
+        <td>${formatCurrency(itm.unitPrice)}</td>
+        <td style="text-align:right; font-weight:700; color:var(--text-main);">${formatCurrency(itm.subtotal)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="req-card status-${req.status}">
+      <!-- Header -->
+      <div class="req-card-header">
+        <div class="req-card-id-block">
+          <span class="req-card-id">${req.id}</span>
+          ${statusBadge}
+          ${priorityBadge}
+        </div>
+        <div class="req-card-meta">
+          <span class="req-card-meta-item">
+            📅 ${req.requestDate}
+          </span>
+          <span class="req-card-meta-item">
+            ⏰ ${AppState.lang === 'kh' ? 'ត្រូវការត្រឹម៖ ' : 'Need by: '}<strong style="color:var(--text-main);">${req.neededDate || '-'}</strong>
+          </span>
+          <span class="badge" style="background:#e2e8f0; color:#334155; font-weight:600;">
+            ${deptName}
+          </span>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="req-card-body">
+        <!-- 4-Stage Progress Stepper -->
+        <div class="workflow-stepper-box">
+          <div class="stepper-header-title">
+            <span>⚡</span>
+            <span>${t('approvalStage')} (Management Situation Tracker)</span>
+          </div>
+          <div class="stepper">
+            <div class="stepper-line">
+              <div class="stepper-line-progress" style="width: ${progressWidth}; background: ${progressColor};"></div>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="stepper-step ${step1Class}">
+              <div class="step-circle">${step1Icon}</div>
+              <div class="step-name">${t('stageSubmitted')}</div>
+              <div class="step-detail">${step1Detail}</div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="stepper-step ${step2Class}">
+              <div class="step-circle">${step2Icon}</div>
+              <div class="step-name">${t('stageReview')}</div>
+              <div class="step-detail">${step2Detail}</div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="stepper-step ${step3Class}">
+              <div class="step-circle">${step3Icon}</div>
+              <div class="step-name">${t('stageDecision')}</div>
+              <div class="step-detail">${step3Detail}</div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="stepper-step ${step4Class}">
+              <div class="step-circle">${step4Icon}</div>
+              <div class="step-name">${t('stageDelivery')}</div>
+              <div class="step-detail">${step4Detail}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Management Feedback Callout -->
+        ${feedbackBoxHtml}
+
+        <!-- Business Purpose -->
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:4px;">
+          ${t('purposeLabel')}:
+        </div>
+        <div class="req-purpose-quote">
+          ${req.purpose || 'No purpose description provided.'}
+        </div>
+
+        <!-- Items Breakdown -->
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:6px;">
+          ${t('itemsSectionTitle')} (${(req.items || []).length}):
+        </div>
+        <table class="card-items-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>${t('colItemSelect')}</th>
+              <th>${t('colQty')} & ${t('colUnit')}</th>
+              <th>${t('colUnitPrice')}</th>
+              <th style="text-align:right;">${t('colLineTotal')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRows}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="req-card-footer">
+        <div style="font-size:12.5px; color:var(--text-muted);">
+          👤 <strong>${req.requesterName}</strong> (${req.requesterEmail || ''})
+        </div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="req-total-badge">
+            <span style="font-size:12.5px; font-weight:600; color:var(--text-muted); margin-right:4px;">${t('grandTotal')}</span>
+            <span>${formatCurrency(req.totalAmount)}</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-outline" onclick="openRequisitionDetail('${req.id}')">${t('actionView')}</button>
+            <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}">🖨️</button>
+            ${req.status === 'rejected' ? `<button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239;">🔄 ${t('btnResubmitModify')}</button>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.cloneRequisitionToNew = function(reqId) {
+  const req = AppData.getRequisitions().find(r => r.id === reqId);
+  if (!req) return;
+
+  switchTab('new-request');
+
+  const deptSelect = document.getElementById('formDepartmentSelect');
+  const prioritySelect = document.getElementById('formPrioritySelect');
+  const requesterNameInput = document.getElementById('formRequesterName');
+  const requesterEmailInput = document.getElementById('formRequesterEmail');
+  const neededDateInput = document.getElementById('formNeededDate');
+  const purposeInput = document.getElementById('formPurposeText');
+
+  if (deptSelect) deptSelect.value = req.department;
+  if (prioritySelect) prioritySelect.value = req.priority;
+  if (requesterNameInput) requesterNameInput.value = req.requesterName;
+  if (requesterEmailInput) requesterEmailInput.value = req.requesterEmail;
+  if (neededDateInput) neededDateInput.value = req.neededDate || '';
+  if (purposeInput) {
+    purposeInput.value = `[Re-submission of ${req.id}] ${req.purpose || ''}`;
+  }
+
+  // Populate line items
+  const tbody = document.getElementById('lineItemsTbody');
+  if (tbody) {
+    tbody.innerHTML = '';
+    lineItemCounter = 0;
+    if (req.items && req.items.length > 0) {
+      req.items.forEach(item => {
+        addLineItemRow(item);
+      });
+    } else {
+      addLineItemRow();
+    }
+    updateGrandTotal();
+  }
+
+  showToast(t('cloneToastSuccess'), 'success');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+

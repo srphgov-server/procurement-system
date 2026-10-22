@@ -15,7 +15,23 @@ A full-featured, bilingual (**English** & **Khmer / ភាសាខ្មែរ*
   - Real-time subtotal and grand total calculation.
   - Auto-generated sequential Requisition ID (`REQ-2026-001`, `REQ-2026-002`, etc.).
 
-### 2. Requisition Board & Priority KPI Tracker (ផ្ទាំងគ្រប់គ្រង & KPI តាមដានអាទិភាព)
+### 2. Separated Requester Dashboard & Management Situation Tracker (ផ្ទាំងតាមដានរបស់អ្នកស្នើសុំ & ស្ថានភាពពីថ្នាក់ដឹកនាំ)
+- **Dedicated Requester Portal**: Tailored view for department staff to follow their requisition status and decisions from Management.
+- **Requester Persona / Account Switcher**: Switch between specific requester profiles (IT, HR, Marketing, Finance, Operations) or view all requisitions.
+- **Management Situation KPI Metric Cards**:
+  - **Total My Requests** (សំណើសរុប)
+  - **In Review by Management** (កំពុងស្ថិតក្នុងការពិនិត្យ) with live status pulse
+  - **Approved by Management** (បានអនុម័តដោយថ្នាក់ដឹកនាំ)
+  - **Declined by Management** (បានបដិសេធដោយថ្នាក់ដឹកនាំ) with attention alert
+  - **Completed & Delivered** (បានទទួលទំនិញរួចរាល់)
+- **4-Stage Visual Progress Stepper**: Real-time progress bar on every request:
+  1. 📝 `Submitted` ➔ 2. 👔 `Management Review` ➔ 3. ⚖️ `Management Decision (Approved / Declined)` ➔ 4. 📦 `Fulfillment / Delivered`.
+- **Management Feedback & Declining Reason Callout**:
+  - Clear highlight box showing reviewer comments, approval notes, or reasons for decline.
+  - **1-Click Re-submit / Modify (`🔄 Modify & Re-submit`)**: Instantly reloads the declined requisition's line items and specs into the form for easy adjustment and resubmission.
+- **Action Alerts Banner**: Instant notice when requests are approved or require revision due to decline.
+
+### 3. Requisition Board & Priority KPI Tracker (ផ្ទាំងគ្រប់គ្រង & KPI តាមដានអាទិភាព)
 - **Interactive KPI Metric Boxes**:
   - **Total Requisitions** (ចំនួនសំណើសរុប)
   - **New / Pending Review** (សំណើថ្មី / កំពុងរង់ចាំការពិនិត្យ)
@@ -26,7 +42,7 @@ A full-featured, bilingual (**English** & **Khmer / ភាសាខ្មែរ*
 - **Priority Breakdown Bar**: Visual counters for `Urgent`, `High`, `Medium`, and `Low` priorities.
 - **Comprehensive Filtering**: Search by ID, Requester, Department, Purpose, or filter by Status and Priority.
 
-### 3. Role-Based Workflow & Approvals (តួនាទី & ដំណាក់កាលការងារ)
+### 4. Role-Based Workflow & Approvals (តួនាទី & ដំណាក់កាលការងារ)
 Switch between roles instantly from the top bar:
 - 👨‍💼 **Requester (Dept Staff)**: Submits new purchase requests and tracks department requests.
 - 👔 **Management (Reviewer)**: 

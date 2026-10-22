@@ -27,6 +27,13 @@
         <span data-i18n="navDashboard">Requisition Board & KPI</span>
       </a>
 
+      <a href="#" class="nav-item" data-nav-target="requester-dashboard" id="navRequesterDashboardItem">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span data-i18n="navRequesterDashboard">Requester Dashboard</span>
+      </a>
+
       <a href="#" class="nav-item" data-nav-target="new-request">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -253,6 +260,140 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- View: Separated Requester Dashboard (Situation Tracker) -->
+      <section id="view-requester-dashboard" class="tab-view" style="display:none;">
+        <div class="page-header">
+          <div class="page-title">
+            <h2 data-i18n="requesterDashboardTitle">Requester Portal & Status Tracker</h2>
+            <p data-i18n="requesterDashboardSubtitle">Monitor the real-time review, approval, and declining situation from Management for your requisitions</p>
+          </div>
+          <div class="header-actions" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div class="requester-profile-pill">
+              <span class="profile-label" data-i18n="requesterSelectPersona">Viewing as Requester:</span>
+              <select id="requesterPersonaSelect" class="form-select profile-select">
+                <!-- Populated dynamically by js/app.js -->
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="switchTab('new-request')">
+              <span data-i18n="navNewRequest">+ New Requisition</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Management Situation Alerts -->
+        <div id="requesterDeclinedAlert" class="situation-alert alert-declined" style="display:none;">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-body">
+            <h4 data-i18n="declinedAlertTitle">Action Needed: Declined Request(s)</h4>
+            <p id="requesterDeclinedAlertText" data-i18n="declinedAlertMsg">Management has declined one or more of your requests. Please review the feedback reasons below and re-submit with revised specifications.</p>
+          </div>
+        </div>
+
+        <div id="requesterApprovedAlert" class="situation-alert alert-approved" style="display:none;">
+          <div class="alert-icon">🎉</div>
+          <div class="alert-body">
+            <h4 data-i18n="approvedAlertTitle">Great News: Request(s) Approved</h4>
+            <p id="requesterApprovedAlertText" data-i18n="approvedAlertMsg">Management has approved your request! Procurement will initiate purchasing.</p>
+          </div>
+        </div>
+
+        <!-- Management Situation KPI Metric Cards Grid -->
+        <div class="kpi-grid">
+          <!-- Total My Requests -->
+          <div class="kpi-card total" id="reqKpiTotalCard" onclick="setRequesterSituationFilter('all')">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="requesterKpiTotalTitle">My Total Requests</span>
+              <div class="kpi-icon-wrap">📋</div>
+            </div>
+            <div class="kpi-value" id="reqKpiTotalVal">0</div>
+            <div class="kpi-subtext" id="reqKpiTotalAmt">$0.00</div>
+          </div>
+
+          <!-- Under Review by Management -->
+          <div class="kpi-card new" id="reqKpiReviewCard" onclick="setRequesterSituationFilter('under_review')">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="requesterKpiReviewTitle">In Review by Management</span>
+              <div class="kpi-icon-wrap">
+                <span class="pulse-dot" style="background:#f59e0b;"></span>
+              </div>
+            </div>
+            <div class="kpi-value" id="reqKpiReviewVal" style="color:#d97706;">0</div>
+            <div class="kpi-subtext" data-i18n="requesterKpiReviewDesc">In queue or being evaluated</div>
+          </div>
+
+          <!-- Approved by Management -->
+          <div class="kpi-card approved" id="reqKpiApprovedCard" onclick="setRequesterSituationFilter('approved')">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="requesterKpiApprovedTitle">Approved by Management</span>
+              <div class="kpi-icon-wrap">✓</div>
+            </div>
+            <div class="kpi-value" id="reqKpiApprovedVal" style="color:var(--success);">0</div>
+            <div class="kpi-subtext" data-i18n="requesterKpiApprovedDesc">Approved for procurement</div>
+          </div>
+
+          <!-- Declined by Management -->
+          <div class="kpi-card urgent" id="reqKpiDeclinedCard" onclick="setRequesterSituationFilter('rejected')">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="requesterKpiDeclinedTitle">Declined by Management</span>
+              <div class="kpi-icon-wrap" style="color:var(--danger); font-weight:800;">✕</div>
+            </div>
+            <div class="kpi-value" id="reqKpiDeclinedVal" style="color:var(--danger);">0</div>
+            <div class="kpi-subtext" data-i18n="requesterKpiDeclinedDesc">Requires specification revision</div>
+          </div>
+
+          <!-- Completed / Delivered -->
+          <div class="kpi-card budget" id="reqKpiCompletedCard" onclick="setRequesterSituationFilter('completed')">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="requesterKpiCompletedTitle">Completed & Delivered</span>
+              <div class="kpi-icon-wrap">📦</div>
+            </div>
+            <div class="kpi-value" id="reqKpiCompletedVal" style="color:#6366f1;">0</div>
+            <div class="kpi-subtext" data-i18n="requesterKpiCompletedDesc">Delivered to department</div>
+          </div>
+        </div>
+
+        <!-- Situation Quick Filter Pills & Toolbar -->
+        <div class="filter-card requester-toolbar" style="margin-bottom: 22px;">
+          <!-- Situation Filter Pills -->
+          <div class="situation-pills" id="situationTabsContainer">
+            <button type="button" class="situation-pill active" data-sit="all" onclick="setRequesterSituationFilter('all')">
+              <span data-i18n="situationTabAll">All My Requests</span> <span class="badge badge-pill-count" id="sitCountAll">0</span>
+            </button>
+            <button type="button" class="situation-pill" data-sit="under_review" onclick="setRequesterSituationFilter('under_review')">
+              <span data-i18n="situationTabReview">⏳ In Review</span> <span class="badge badge-pill-count" id="sitCountReview">0</span>
+            </button>
+            <button type="button" class="situation-pill" data-sit="approved" onclick="setRequesterSituationFilter('approved')">
+              <span data-i18n="situationTabApproved">✅ Approved</span> <span class="badge badge-pill-count" id="sitCountApproved">0</span>
+            </button>
+            <button type="button" class="situation-pill" data-sit="rejected" onclick="setRequesterSituationFilter('rejected')">
+              <span data-i18n="situationTabDeclined">❌ Declined</span> <span class="badge badge-pill-count" id="sitCountDeclined">0</span>
+            </button>
+            <button type="button" class="situation-pill" data-sit="completed" onclick="setRequesterSituationFilter('completed')">
+              <span data-i18n="situationTabCompleted">📦 Completed</span> <span class="badge badge-pill-count" id="sitCountCompleted">0</span>
+            </button>
+          </div>
+
+          <div class="requester-search-group">
+            <div class="search-input-wrap" style="width:240px;">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="requesterSearchInput" placeholder="Search my requests..." data-i18n-ph="searchPlaceholder">
+            </div>
+            <select id="requesterPriorityFilter" class="select-filter" style="width:130px;">
+              <option value="all" data-i18n="priorityAll">All Priorities</option>
+              <option value="urgent" data-i18n="priorityUrgent">Urgent</option>
+              <option value="high" data-i18n="priorityHigh">High</option>
+              <option value="medium" data-i18n="priorityMedium">Medium</option>
+              <option value="low" data-i18n="priorityLow">Low</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Requester Cards & Situations Feed -->
+        <div id="requesterListContainer" class="requester-cards-feed">
+          <!-- Rendered dynamically by js/app.js -->
         </div>
       </section>
 
