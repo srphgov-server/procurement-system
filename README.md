@@ -1,6 +1,6 @@
-# Dynamics 365 | ProcureFlow - Sourcing & Procurement (ប្រព័ន្ធគ្រប់គ្រងលទ្ធកម្ម)
+# Siem Reap Referral Hospital | ProcureFlow - Sourcing & Procurement (ប្រព័ន្ធគ្រប់គ្រងលទ្ធកម្ម)
 
-A full-featured, enterprise-grade Procurement Management System modeled after **Microsoft Dynamics 365 (Supply Chain Management & Procurement)**, built with the **Bootstrap library** and **Fluent 2 design system**. Features full bilingual support (**English** & **Khmer / ភាសាខ្មែរ**), departmental purchase requisitions, priority tracking with real-time KPI metrics, role-based workflows for Management and Administrators, and master list management.
+A full-featured, enterprise-grade Procurement Management System for **Siem Reap Referral Hospital (មន្ទីរពេទ្យបង្អែកខេត្តសៀមរាប)** modeled after **Microsoft Dynamics 365 (Supply Chain Management & Procurement)**, built with the **Bootstrap library** and **Fluent 2 design system**. Features full bilingual support (**English** & **Khmer / ភាសាខ្មែរ**), departmental purchase requisitions, priority tracking with real-time KPI metrics, role-based workflows for Management and Administrators, and master list management.
 
 ---
 
@@ -8,12 +8,12 @@ A full-featured, enterprise-grade Procurement Management System modeled after **
 
 - **Microsoft 365 Top Suite Bar (`#002050` Deep Navy)**:
   - 9-dot Waffle App Launcher button with sidebar toggle.
-  - Global Dynamics 365 App Branding with `USMF Production` environment status tag.
+  - Global Siem Reap Referral Hospital Branding with `USMF Production` environment status tag.
   - Global Suite Search with `Alt+Q` keyboard shortcut hint.
   - Role/Persona security switcher, bilingual toggle (`EN` / `ខ្មែរ`), quick notifications, and user avatar.
 - **Dynamics 365 Command Bar (Horizontal Action Ribbon)**:
   - High-efficiency enterprise toolbar: `+ New Requisition`, `Refresh`, `Export to Excel`, `Print Voucher`, `Requester Portal`, and `Reset Data`.
-  - Dynamic breadcrumb navigation trail (`Dynamics 365 › Procurement & Sourcing › Requisitions`).
+  - Dynamic breadcrumb navigation trail (`Siem Reap Referral Hospital › Procurement & Sourcing › Requisitions`).
 - **Collapsible Left Sitemap Rail (Navigation Bar)**:
   - Enterprise sitemap grouped into: `MY WORK` (Board & Requester Portal), `PROCUREMENT` (New Requisition), and `MASTER LISTS` (Departments, Urgency/Priorities, Categories, Catalog, Users).
   - Hamburger expand/collapse toggle with smooth width animation.

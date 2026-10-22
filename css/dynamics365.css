@@ -446,8 +446,8 @@ a:hover {
 /* Left Sitemap Navigation Rail */
 .d365-sitemap {
   width: var(--d365-sitemap-width);
-  background-color: #ffffff;
-  border-right: 1px solid var(--d365-border);
+  background-color: var(--d365-suitebar-bg);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -461,27 +461,28 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--d365-border-subtle);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .d365-sitemap-title {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--d365-text-secondary);
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.65);
 }
 .d365-sitemap-collapse-btn {
   background: transparent;
   border: none;
-  color: var(--d365-text-secondary);
+  color: rgba(255, 255, 255, 0.75);
   font-size: 14px;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 .d365-sitemap-collapse-btn:hover {
-  background-color: var(--d365-border-subtle);
-  color: var(--d365-text-primary);
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .d365-sitemap-nav {
@@ -489,23 +490,33 @@ a:hover {
   flex: 1;
   overflow-y: auto;
 }
+.d365-sitemap-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.d365-sitemap-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+.d365-sitemap-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
 
 .d365-nav-group-header {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
-  color: #8a8886;
+  color: rgba(255, 255, 255, 0.45);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  padding: 12px 10px 4px 10px;
+  letter-spacing: 0.8px;
+  padding: 14px 10px 4px 10px;
 }
 
 .d365-nav-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border-radius: 4px;
-  color: var(--d365-text-primary);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
@@ -514,13 +525,13 @@ a:hover {
   margin-bottom: 2px;
 }
 .d365-nav-link:hover {
-  background-color: var(--d365-commandbar-hover);
-  color: var(--d365-text-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
   text-decoration: none;
 }
 .d365-nav-link.active {
-  background-color: var(--d365-primary-subtle);
-  color: var(--d365-primary);
+  background-color: rgba(0, 120, 212, 0.35);
+  color: #ffffff;
   font-weight: 600;
 }
 .d365-nav-link.active::before {
@@ -530,7 +541,7 @@ a:hover {
   top: 4px;
   bottom: 4px;
   width: 3px;
-  background-color: var(--d365-primary);
+  background-color: #38bdf8;
   border-radius: 0 2px 2px 0;
 }
 
@@ -541,11 +552,11 @@ a:hover {
   align-items: center;
   justify-content: center;
   font-size: 15px;
-  color: var(--d365-text-secondary);
+  color: rgba(255, 255, 255, 0.75);
   flex-shrink: 0;
 }
 .d365-nav-link.active .d365-nav-icon {
-  color: var(--d365-primary);
+  color: #38bdf8;
 }
 
 /* Sitemap Collapsed Mode */
@@ -567,20 +578,20 @@ a:hover {
 /* Sitemap Footer / Area Switcher */
 .d365-sitemap-footer {
   padding: 10px 12px;
-  border-top: 1px solid var(--d365-border);
-  background-color: #faf9f8;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 11.5px;
-  color: var(--d365-text-secondary);
+  color: rgba(255, 255, 255, 0.65);
 }
 .d365-area-badge {
   display: flex;
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: var(--d365-primary);
+  color: #38bdf8;
 }
 
 /* ==========================================================================

@@ -2,8 +2,10 @@
 const i18n = {
   en: {
     // App header & brand
+    hospitalName: "Siem Reap Referral Hospital",
     appTitle: "ProcureFlow",
     appSubtitle: "Procurement Management System",
+    navProcurementSourcing: "Procurement & Sourcing",
     currentRole: "Current Role",
     roleRequester: "Requester (Dept Staff)",
     roleManagement: "Management (Reviewer)",
@@ -271,8 +273,10 @@ const i18n = {
 
   kh: {
     // App header & brand
+    hospitalName: "មន្ទីរពេទ្យបង្អែកខេត្តសៀមរាប",
     appTitle: "ProcureFlow",
     appSubtitle: "ប្រព័ន្ធគ្រប់គ្រងលទ្ធកម្ម និងការបញ្ជាទិញ",
+    navProcurementSourcing: "លទ្ធកម្ម និងការផ្គត់ផ្គង់",
     currentRole: "តួនាទីបច្ចុប្បន្ន",
     roleRequester: "អ្នកស្នើសុំ (បុគ្គលិកដេប៉ាតឺម៉ង់)",
     roleManagement: "ថ្នាក់ដឹកនាំ (អ្នកត្រួតពិនិត្យ)",
