@@ -43,6 +43,20 @@
 
       <div class="nav-heading admin-only-nav" data-i18n="navMasterData">List Management</div>
       
+      <a href="#" class="nav-item admin-only-nav" data-nav-target="departments">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        <span data-i18n="navDepartments">Requesting Departments</span>
+      </a>
+
+      <a href="#" class="nav-item admin-only-nav" data-nav-target="priorities">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <span data-i18n="navPriorities">Urgency / Priority Levels</span>
+      </a>
+
       <a href="#" class="nav-item admin-only-nav" data-nav-target="categories">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -480,8 +494,8 @@
                 <table class="items-entry-table">
                   <thead>
                     <tr>
-                      <th style="min-width: 260px;" data-i18n="colItemSelect">Item Name / Catalog</th>
-                      <th style="min-width: 170px;" data-i18n="colCategory">Category</th>
+                      <th style="min-width: 190px;" data-i18n="colCategory">Category</th>
+                      <th style="min-width: 280px;" data-i18n="colCatalogItem">Select Catalog Item or Custom Name</th>
                       <th style="min-width: 180px;" data-i18n="colSpec">Specs / Description</th>
                       <th style="width: 90px;" data-i18n="colQty">Qty</th>
                       <th style="width: 100px;" data-i18n="colUnit">Unit</th>
@@ -509,6 +523,82 @@
               <button type="submit" class="btn btn-primary" data-i18n="btnSubmitRequest">Submit Procurement Request</button>
             </div>
           </form>
+        </div>
+      </section>
+
+      <!-- View: Master Data - Requesting Departments -->
+      <section id="view-departments" class="tab-view" style="display:none;">
+        <div class="page-header">
+          <div class="page-title">
+            <h2 data-i18n="deptManagementTitle">Requesting Department Management</h2>
+            <p data-i18n="deptManagementSubtitle">Manage company departments, procurement codes, bilingual titles, and active statuses</p>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="openAddDepartmentModal()">
+              <span data-i18n="btnNewDepartment">+ Add New Department</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thDeptCode">Dept Code</th>
+                  <th data-i18n="thDeptId">Dept Key / ID</th>
+                  <th data-i18n="thDeptNameEn">Department Name (EN)</th>
+                  <th data-i18n="thDeptNameKh">Department Name (KH)</th>
+                  <th data-i18n="thDeptDesc">Description</th>
+                  <th data-i18n="thDeptReqCount">Requisitions</th>
+                  <th data-i18n="thDeptStatus">Status</th>
+                  <th data-i18n="thActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="departmentsTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Master Data - Urgency & Priority Levels -->
+      <section id="view-priorities" class="tab-view" style="display:none;">
+        <div class="page-header">
+          <div class="page-title">
+            <h2 data-i18n="prioManagementTitle">Urgency / Priority Level Management</h2>
+            <p data-i18n="prioManagementSubtitle">Configure requisition urgency tiers, turnaround SLAs, bilingual labels, and visual badges</p>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="openAddPriorityModal()">
+              <span data-i18n="btnNewPriority">+ Add New Priority Level</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thPrioCode">Priority Code</th>
+                  <th data-i18n="thPrioKey">Priority Key / ID</th>
+                  <th data-i18n="thPrioNameEn">Priority Name (EN)</th>
+                  <th data-i18n="thPrioNameKh">Priority Name (KH)</th>
+                  <th data-i18n="thPrioSla">Target SLA (Hours)</th>
+                  <th data-i18n="thPrioBadge">Badge Preview</th>
+                  <th data-i18n="thPrioDesc">Description</th>
+                  <th data-i18n="thDeptReqCount">Requisitions</th>
+                  <th data-i18n="thDeptStatus">Status</th>
+                  <th data-i18n="thActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="prioritiesTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -637,6 +727,114 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ <span data-i18n="actionPrint">Print / PDF</span></button>
         <button type="button" class="btn btn-primary" onclick="closeModal('requisitionDetailModal')" data-i18n="actionClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department Modal -->
+  <div class="modal-backdrop" id="departmentModal">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 id="deptModalTitle" data-i18n="modalAddDeptTitle">Add Requesting Department</h3>
+        <button type="button" class="btn btn-text" onclick="closeModal('departmentModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+          <div class="form-group">
+            <label data-i18n="thDeptCode">Dept Code *</label>
+            <input type="text" id="deptFormCode" class="form-input" placeholder="e.g. DEPT-SEC" required>
+          </div>
+          <div class="form-group">
+            <label data-i18n="thDeptId">Dept Key / ID *</label>
+            <input type="text" id="deptFormId" class="form-input" placeholder="e.g. Security" required>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thDeptNameEn">Department Name (English) *</label>
+          <input type="text" id="deptFormNameEn" class="form-input" placeholder="e.g. Security & Safety Dept" required>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thDeptNameKh">Department Name (Khmer)</label>
+          <input type="text" id="deptFormNameKh" class="form-input" placeholder="e.g. ផ្នែកសន្តិសុខ និងសុវត្ថិភាព">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thDeptDesc">Description</label>
+          <input type="text" id="deptFormDesc" class="form-input" placeholder="Department mandate or procurement scope...">
+        </div>
+        <div class="form-group">
+          <label data-i18n="thDeptStatus">Status</label>
+          <select id="deptFormStatus" class="form-select">
+            <option value="active" data-i18n="active">Active</option>
+            <option value="inactive" data-i18n="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('departmentModal')" data-i18n="actionCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveDepartment()" data-i18n="actionSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Priority Modal -->
+  <div class="modal-backdrop" id="priorityModal">
+    <div class="modal-container" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 id="prioModalTitle" data-i18n="modalAddPrioTitle">Add Priority Level</h3>
+        <button type="button" class="btn btn-text" onclick="closeModal('priorityModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+          <div class="form-group">
+            <label data-i18n="thPrioCode">Priority Code *</label>
+            <input type="text" id="prioFormCode" class="form-input" placeholder="e.g. PRI-CRIT" required>
+          </div>
+          <div class="form-group">
+            <label data-i18n="thPrioKey">Priority Key / ID *</label>
+            <input type="text" id="prioFormId" class="form-input" placeholder="e.g. critical" required>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thPrioNameEn">Priority Name (English) *</label>
+          <input type="text" id="prioFormNameEn" class="form-input" placeholder="e.g. Critical (24/7)" required>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thPrioNameKh">Priority Name (Khmer)</label>
+          <input type="text" id="prioFormNameKh" class="form-input" placeholder="e.g. សំខាន់បំផុត">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+          <div class="form-group">
+            <label data-i18n="thPrioSla">Target SLA (Hours) *</label>
+            <input type="number" min="1" id="prioFormSla" class="form-input" value="24" placeholder="24">
+          </div>
+          <div class="form-group">
+            <label data-i18n="thPrioColor">Color / Theme *</label>
+            <select id="prioFormColor" class="form-select">
+              <option value="#ef4444" style="color:#ef4444; font-weight:700;">🔴 Red (Critical/Urgent)</option>
+              <option value="#f97316" style="color:#f97316; font-weight:700;">🟠 Orange (High)</option>
+              <option value="#f59e0b" style="color:#f59e0b; font-weight:700;">🟡 Amber (Medium-High)</option>
+              <option value="#3b82f6" style="color:#3b82f6; font-weight:700;">🔵 Blue (Medium)</option>
+              <option value="#10b981" style="color:#10b981; font-weight:700;">🟢 Green (Routine/Planned)</option>
+              <option value="#8b5cf6" style="color:#8b5cf6; font-weight:700;">🟣 Purple (Special Project)</option>
+              <option value="#64748b" style="color:#64748b; font-weight:700;">⚪ Slate / Gray (Low)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thPrioDesc">Description</label>
+          <input type="text" id="prioFormDesc" class="form-input" placeholder="Guidelines on when to select this urgency tier...">
+        </div>
+        <div class="form-group">
+          <label data-i18n="thDeptStatus">Status</label>
+          <select id="prioFormStatus" class="form-select">
+            <option value="active" data-i18n="active">Active</option>
+            <option value="inactive" data-i18n="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('priorityModal')" data-i18n="actionCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="savePriority()" data-i18n="actionSave">Save</button>
       </div>
     </div>
   </div>

@@ -7,13 +7,15 @@ A full-featured, bilingual (**English** & **Khmer / ភាសាខ្មែរ*
 ## 🌟 Key Features
 
 ### 1. Department Requisition Form (ទម្រង់ស្នើសុំលទ្ធកម្ម)
-- **Department Selection**: Pre-configured for IT, HR, Finance, Operations, Logistics, Marketing, Administration, and Procurement.
+- **Department & Priority Selection**: Dynamically loaded from Master List Management with real-time SLA hours tracking.
 - **Requester Information**: Name, Email, Request Date, Required-by Date, and Business Justification.
-- **Dynamic Line Items**:
-  - Auto-complete selection from the Item Catalog (auto-populating Category, Unit, and Estimated Unit Price).
-  - Ability to add Custom non-catalog items with specifications.
-  - Real-time subtotal and grand total calculation.
-  - Auto-generated sequential Requisition ID (`REQ-2026-001`, `REQ-2026-002`, etc.).
+- **Category-First Requested Line Items (ជ្រើសរើសប្រភេទមុខទំនិញជាមុន)**:
+  - **Category-First Workflow**: Select the procurement **Category** first (`IT & Electronics`, `Office Supplies`, `Office Furniture`, etc.).
+  - **Filtered Catalog Items**: The item dropdown dynamically filters to only show catalog items belonging to that chosen category.
+  - **Auto-Fill Unit & Unit Price**: Selecting a catalog item automatically populates its standardized unit and estimated price.
+  - **Custom Item Name Option**: Users can select `+ Custom Item Name...` under any category to freely enter a custom non-catalog item name, custom specs, and pricing.
+  - **Real-time Subtotal & Grand Total**: Immediate calculation of line subtotals and grand total as quantities or prices change.
+  - **Auto-generated Sequential Requisition ID**: E.g., `REQ-2026-001`, `REQ-2026-002`.
 
 ### 2. Separated Requester Dashboard & Management Situation Tracker (ផ្ទាំងតាមដានរបស់អ្នកស្នើសុំ & ស្ថានភាពពីថ្នាក់ដឹកនាំ)
 - **Dedicated Requester Portal**: Tailored view for department staff to follow their requisition status and decisions from Management.
@@ -53,10 +55,20 @@ Switch between roles instantly from the top bar:
   - Exclusive access to List Management (Categories, Items, Users).
 - **Audit History Timeline**: Complete trace of every action, who performed it, their role, timestamp, and comments.
 
-### 4. Master List Management (ការគ្រប់គ្រងបញ្ជីទិន្នន័យមេ)
-- **Category List**: Manage procurement categories with codes, bilingual names, descriptions, item counts, and status (Active/Inactive).
-- **Item Catalog**: Standardized item database with item codes, names, units (Unit, Box, Pcs, Set, Pack), estimated unit pricing, and category linkage.
-- **User Management**: Manage department accounts, emails, and assigned roles.
+### 5. Master List Management (ការគ្រប់គ្រងបញ្ជីទិន្នន័យមេ)
+- **Requesting Department Management (ការគ្រប់គ្រងផ្នែកស្នើសុំ)**:
+  - Add, edit, or deactivate company departments with custom Department Codes (e.g., `DEPT-SEC`, `DEPT-IT`), Key IDs, bilingual names (English & Khmer), and descriptions.
+  - Live requisition counters tracking how many requisitions each department has filed.
+  - Safe deletion protection preventing removal of departments linked to existing purchase records.
+  - Dynamic integration updating requisition forms, filter dropdowns, and user creation selects automatically.
+- **Urgency / Priority Level Management (ការគ្រប់គ្រងកម្រិតអាទិភាព & ភាពបន្ទាន់)**:
+  - Configure urgency tiers with unique codes (e.g., `PRI-URG`, `PRI-HIGH`), key identifiers, bilingual titles, and target turnaround SLA in hours (e.g., 24h, 48h, 72h).
+  - Customizable color themes (Red, Orange, Amber, Blue, Green, Purple, Slate) with dynamic badge rendering and pulse dot indicators for fast-track SLAs.
+  - Safe deletion safeguards preventing removal of priority tiers assigned to active requisitions.
+  - Seamless synchronization across Requisition Boards, Priority Breakdown Pills, and Requester Dashboards.
+- **Category List (បញ្ជីប្រភេទទំនិញ)**: Manage procurement categories with codes, bilingual names, descriptions, item counts, and status (Active/Inactive).
+- **Item Catalog (កាតាឡុកទំនិញ)**: Standardized item database with item codes, names, units (Unit, Box, Pcs, Set, Pack), estimated unit pricing, and category linkage.
+- **User Management (ការគ្រប់គ្រងអ្នកប្រើប្រាស់)**: Manage department accounts, emails, and assigned roles.
 
 ### 5. Seamless Bilingual Switching (ភាសាខ្មែរ & English)
 - One-click toggle in the header between 🇰🇭 **ភាសាខ្មែរ** and 🇬🇧 **English**.

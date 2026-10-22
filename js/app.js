@@ -15,6 +15,8 @@ const AppState = {
   requesterPriority: 'all',
   activeModal: null,
   viewingReqId: null,
+  editingDepartmentId: null,
+  editingPriorityId: null,
   editingCategoryId: null,
   editingItemId: null,
   editingUserId: null
@@ -105,6 +107,9 @@ function updateLanguageUI() {
     else if (AppState.role === 'management') roleDescEl.textContent = t('roleNoteManagement');
     else roleDescEl.textContent = t('roleNoteRequester');
   }
+
+  // Refresh dynamic line items in form if any
+  refreshLineItemsLanguage();
 }
 
 // Setup Role Switcher
@@ -116,7 +121,7 @@ function initRoleSwitcher() {
       AppState.role = e.target.value;
       localStorage.setItem('procureflow_role', AppState.role);
       updateLanguageUI();
-      if (AppState.role === 'requester' && (AppState.currentTab === 'dashboard' || ['categories', 'items', 'users'].includes(AppState.currentTab))) {
+      if (AppState.role === 'requester' && (AppState.currentTab === 'dashboard' || ['categories', 'items', 'users', 'departments', 'priorities'].includes(AppState.currentTab))) {
         switchTab('requester-dashboard');
       } else {
         renderAll();
@@ -179,6 +184,7 @@ function switchTab(tab) {
   // If opening request form, refresh catalog options and reset line items
   if (tab === 'new-request') {
     populateDepartmentSelect();
+    populateFilterDropdowns();
     resetLineItemsTable();
   }
 
@@ -189,6 +195,7 @@ function renderAll() {
   updateLanguageUI();
   updateRoleVisibility();
   populateFilterDropdowns();
+  populateDepartmentSelect();
   renderKPIs();
   renderPriorityPills();
   renderCurrentTabView();
@@ -206,7 +213,7 @@ function updateRoleVisibility() {
   });
 
   // If requester is somehow in admin tab, fallback to requester-dashboard
-  if (AppState.role !== 'admin' && ['categories', 'items', 'users'].includes(AppState.currentTab)) {
+  if (AppState.role !== 'admin' && ['categories', 'items', 'users', 'departments', 'priorities'].includes(AppState.currentTab)) {
     switchTab(AppState.role === 'requester' ? 'requester-dashboard' : 'dashboard');
   }
 }
@@ -218,6 +225,12 @@ function renderCurrentTabView() {
       break;
     case 'requester-dashboard':
       renderRequesterDashboard();
+      break;
+    case 'departments':
+      renderDepartmentsTable();
+      break;
+    case 'priorities':
+      renderPrioritiesTable();
       break;
     case 'categories':
       renderCategoriesTable();
@@ -291,34 +304,31 @@ function initKPIListeners() {
 // Priority Breakdown Bar
 function renderPriorityPills() {
   const requisitions = AppData.getRequisitions();
-  const counts = {
-    urgent: requisitions.filter(r => r.priority === 'urgent').length,
-    high: requisitions.filter(r => r.priority === 'high').length,
-    medium: requisitions.filter(r => r.priority === 'medium').length,
-    low: requisitions.filter(r => r.priority === 'low').length
-  };
+  const priorities = AppData.getPriorities ? AppData.getPriorities() : [];
 
   const container = document.getElementById('priorityPillsContainer');
   if (!container) return;
 
-  container.innerHTML = `
+  let pillsHtml = `
     <div class="priority-pill ${AppState.filters.priority === 'all' ? 'active' : ''}" onclick="setPriorityFilter('all')">
       <span>${t('priorityAll')} (${requisitions.length})</span>
     </div>
-    <div class="priority-pill urgent ${AppState.filters.priority === 'urgent' ? 'active' : ''}" onclick="setPriorityFilter('urgent')">
-      <span class="pulse-dot"></span>
-      <span>${t('priorityUrgent')}: ${counts.urgent}</span>
-    </div>
-    <div class="priority-pill high ${AppState.filters.priority === 'high' ? 'active' : ''}" onclick="setPriorityFilter('high')">
-      <span>${t('priorityHigh')}: ${counts.high}</span>
-    </div>
-    <div class="priority-pill medium ${AppState.filters.priority === 'medium' ? 'active' : ''}" onclick="setPriorityFilter('medium')">
-      <span>${t('priorityMedium')}: ${counts.medium}</span>
-    </div>
-    <div class="priority-pill low ${AppState.filters.priority === 'low' ? 'active' : ''}" onclick="setPriorityFilter('low')">
-      <span>${t('priorityLow')}: ${counts.low}</span>
-    </div>
   `;
+
+  priorities.forEach(p => {
+    const count = requisitions.filter(r => r.priority === p.id).length;
+    if (p.status !== 'active' && count === 0) return;
+    const name = AppState.lang === 'kh' ? p.nameKh : p.nameEn;
+    const pulse = p.id === 'urgent' || p.color === '#ef4444' || (p.slaHours && p.slaHours <= 24) ? '<span class="pulse-dot"></span>' : '';
+    pillsHtml += `
+      <div class="priority-pill ${p.id} ${AppState.filters.priority === p.id ? 'active' : ''}" onclick="setPriorityFilter('${p.id}')">
+        ${pulse}
+        <span>${name}: ${count}</span>
+      </div>
+    `;
+  });
+
+  container.innerHTML = pillsHtml;
 }
 
 window.setPriorityFilter = function(priority) {
@@ -380,18 +390,66 @@ function initFilterListeners() {
 }
 
 function populateFilterDropdowns() {
-  const deptSelect = document.getElementById('filterDepartmentSelect');
-  if (!deptSelect) return;
-  const currentVal = deptSelect.value || 'all';
   const depts = AppData.getDepartments();
+  const priorities = AppData.getPriorities ? AppData.getPriorities() : [];
 
-  let html = `<option value="all">${t('allDepartments')}</option>`;
-  depts.forEach(d => {
-    const name = AppState.lang === 'kh' ? d.nameKh : d.nameEn;
-    html += `<option value="${d.id}">${name}</option>`;
-  });
-  deptSelect.innerHTML = html;
-  deptSelect.value = currentVal;
+  // Filter department select on Requisition Board
+  const deptSelect = document.getElementById('filterDepartmentSelect');
+  if (deptSelect) {
+    const currentVal = deptSelect.value || 'all';
+    let html = `<option value="all">${t('allDepartments')}</option>`;
+    depts.forEach(d => {
+      const name = AppState.lang === 'kh' ? d.nameKh : d.nameEn;
+      html += `<option value="${d.id}">${name}</option>`;
+    });
+    deptSelect.innerHTML = html;
+    deptSelect.value = currentVal;
+  }
+
+  // Filter priority select on Requisition Board
+  const prioSelect = document.getElementById('filterPrioritySelect');
+  if (prioSelect) {
+    const currentVal = prioSelect.value || 'all';
+    let html = `<option value="all">${t('priorityAll')}</option>`;
+    priorities.forEach(p => {
+      const name = AppState.lang === 'kh' ? p.nameKh : p.nameEn;
+      html += `<option value="${p.id}">${name}</option>`;
+    });
+    prioSelect.innerHTML = html;
+    prioSelect.value = currentVal;
+  }
+
+  // Requester dashboard priority filter
+  const reqPrioFilter = document.getElementById('requesterPriorityFilter');
+  if (reqPrioFilter) {
+    const currentVal = reqPrioFilter.value || 'all';
+    let html = `<option value="all">${t('priorityAll')}</option>`;
+    priorities.forEach(p => {
+      const name = AppState.lang === 'kh' ? p.nameKh : p.nameEn;
+      html += `<option value="${p.id}">${name}</option>`;
+    });
+    reqPrioFilter.innerHTML = html;
+    reqPrioFilter.value = currentVal;
+  }
+
+  // Form priority select in New Requisition Form
+  const formPrioSelect = document.getElementById('formPrioritySelect');
+  if (formPrioSelect) {
+    const currentVal = formPrioSelect.value || 'medium';
+    const activePriorities = priorities.filter(p => p.status === 'active');
+    let html = '';
+    activePriorities.forEach(p => {
+      const name = AppState.lang === 'kh' ? p.nameKh : p.nameEn;
+      const hoursText = p.slaHours ? ` (${p.slaHours}h SLA)` : '';
+      html += `<option value="${p.id}">${name}${hoursText}</option>`;
+    });
+    formPrioSelect.innerHTML = html;
+    if (currentVal && activePriorities.some(p => p.id === currentVal)) {
+      formPrioSelect.value = currentVal;
+    } else if (activePriorities.length > 0) {
+      formPrioSelect.value = activePriorities[0].id;
+    }
+  }
 }
 
 // Render Requisitions Table
@@ -460,8 +518,8 @@ function renderRequisitionsTable() {
   tbody.innerHTML = list.map(req => {
     const priorityBadge = getPriorityBadge(req.priority);
     const statusBadge = getStatusBadge(req.status);
-    const deptObj = AppData.getDepartments().find(d => d.id === req.department);
-    const deptName = deptObj ? (AppState.lang === 'kh' ? deptObj.nameKh : deptObj.nameEn) : req.department;
+    const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
+    const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
     const itemsCount = req.items ? req.items.length : 0;
     const firstItem = req.items && req.items[0] ? req.items[0].itemName : '-';
     const itemsPreview = itemsCount > 1 ? `${firstItem} (+${itemsCount - 1} more)` : firstItem;
@@ -519,6 +577,20 @@ window.filterOnlyNew = function() {
 };
 
 function getPriorityBadge(priority) {
+  const prios = (typeof AppData !== 'undefined' && AppData.getPriorities) ? AppData.getPriorities() : [];
+  const found = prios.find(p => p.id === priority || p.code === priority);
+
+  if (found) {
+    const isKhmer = AppState && AppState.lang === 'kh';
+    const label = isKhmer ? (found.nameKh || found.nameEn) : (found.nameEn || found.nameKh);
+    const pulseDot = (found.slaHours <= 24 || found.color === '#ef4444' || found.id === 'urgent') ? '<span class="pulse-dot"></span>' : '';
+
+    if (found.badgeClass) {
+      return `<span class="badge ${found.badgeClass}">${pulseDot}${label}</span>`;
+    }
+    return `<span class="badge" style="background: ${found.color}15; color: ${found.color}; border: 1px solid ${found.color}40; font-weight:600;">${pulseDot}${label}</span>`;
+  }
+
   switch (priority) {
     case 'urgent':
       return `<span class="badge badge-priority-urgent"><span class="pulse-dot"></span>${t('priorityUrgent')}</span>`;
@@ -529,7 +601,7 @@ function getPriorityBadge(priority) {
     case 'low':
       return `<span class="badge badge-priority-low">${t('priorityLow')}</span>`;
     default:
-      return `<span class="badge">${priority}</span>`;
+      return `<span class="badge">${priority || '-'}</span>`;
   }
 }
 
@@ -581,9 +653,17 @@ function initRequestForm() {
 function populateDepartmentSelect() {
   const deptSelect = document.getElementById('formDepartmentSelect');
   if (!deptSelect) return;
-  const depts = AppData.getDepartments();
-  deptSelect.innerHTML = `<option value="">-- ${t('deptSelectPlaceholder')} --</option>` +
-    depts.map(d => `<option value="${d.id}">${AppState.lang === 'kh' ? d.nameKh : d.nameEn}</option>`).join('');
+  const currentVal = deptSelect.value;
+  const depts = AppData.getDepartments().filter(d => d.status === 'active');
+  let html = `<option value="">-- ${t('deptSelectPlaceholder')} --</option>`;
+  depts.forEach(d => {
+    const name = AppState.lang === 'kh' ? (d.nameKh || d.nameEn) : (d.nameEn || d.nameKh);
+    html += `<option value="${d.id}">${name}</option>`;
+  });
+  deptSelect.innerHTML = html;
+  if (currentVal && depts.some(d => d.id === currentVal)) {
+    deptSelect.value = currentVal;
+  }
 }
 
 let lineItemCounter = 0;
@@ -597,40 +677,102 @@ function resetLineItemsTable() {
   updateGrandTotal();
 }
 
+function populateRowItemsDropdown(rowId, categoryId, selectedItemId = '', customName = '') {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+
+  const catalogSelect = row.querySelector('.item-catalog-select');
+  const customWrap = row.querySelector('.custom-item-name-wrap');
+  const customInput = row.querySelector('.item-custom-name');
+  if (!catalogSelect) return;
+
+  const allItems = AppData.getItems().filter(i => i.status === 'active');
+  const catItems = categoryId ? allItems.filter(i => i.categoryId === categoryId) : [];
+
+  let optionsHtml = '';
+  if (!categoryId) {
+    optionsHtml = `<option value="">-- ${t('selectCategoryFirst')} --</option>`;
+  } else {
+    const countText = catItems.length > 0 ? `(${catItems.length})` : `(${t('noCatalogItems')})`;
+    optionsHtml = `<option value="">-- ${t('colItemSelect')} ${countText} --</option>`;
+  }
+
+  catItems.forEach(item => {
+    const itemName = AppState.lang === 'kh' ? (item.nameKh || item.nameEn) : (item.nameEn || item.nameKh);
+    const isSelected = selectedItemId && selectedItemId === item.id;
+    optionsHtml += `<option value="${item.id}" data-cat="${item.categoryId}" data-unit="${item.unit || 'Unit'}" data-price="${item.estimatedPrice || 0}" ${isSelected ? 'selected' : ''}>${item.code} - ${itemName} ($${Number(item.estimatedPrice || 0).toFixed(2)})</option>`;
+  });
+
+  // Custom Item option is always available under the category
+  const isCustom = selectedItemId === 'custom' || (!selectedItemId && Boolean(customName)) || (selectedItemId && String(selectedItemId).startsWith('custom-'));
+  optionsHtml += `<option value="custom" ${isCustom ? 'selected' : ''}>✏️ ${t('customItemOption')}</option>`;
+
+  catalogSelect.innerHTML = optionsHtml;
+
+  if (isCustom) {
+    catalogSelect.value = 'custom';
+    if (customWrap) customWrap.style.display = 'block';
+    if (customInput) {
+      customInput.required = true;
+      if (customName) customInput.value = customName;
+    }
+  } else if (selectedItemId && catItems.some(i => i.id === selectedItemId)) {
+    catalogSelect.value = selectedItemId;
+    if (customWrap) customWrap.style.display = 'none';
+    if (customInput) {
+      customInput.required = false;
+      customInput.value = '';
+    }
+  } else {
+    catalogSelect.value = '';
+    if (customWrap) customWrap.style.display = 'none';
+    if (customInput) {
+      customInput.required = false;
+      customInput.value = '';
+    }
+  }
+}
+
 function addLineItemRow(data = null) {
   const tbody = document.getElementById('lineItemsTbody');
   if (!tbody) return;
   lineItemCounter++;
   const rowId = `row-${lineItemCounter}`;
-  const catalogItems = AppData.getItems().filter(i => i.status === 'active');
-  const categories = AppData.getCategories();
+  const categories = AppData.getCategories().filter(c => c.status === 'active');
 
-  let itemOptionsHtml = `<option value="">-- ${t('colItemSelect')} --</option>`;
-  catalogItems.forEach(item => {
-    const itemName = AppState.lang === 'kh' ? item.nameKh : item.nameEn;
-    itemOptionsHtml += `<option value="${item.id}" data-cat="${item.categoryId}" data-unit="${item.unit}" data-price="${item.estimatedPrice}">${item.code} - ${itemName} ($${item.estimatedPrice})</option>`;
-  });
-  itemOptionsHtml += `<option value="custom">${t('customItemOption')}</option>`;
+  // Determine initial category
+  let initialCatId = '';
+  if (data && data.categoryId) {
+    initialCatId = data.categoryId;
+  } else if (data && data.itemId && !String(data.itemId).startsWith('custom-')) {
+    const matchedItem = AppData.getItems().find(i => i.id === data.itemId);
+    if (matchedItem) initialCatId = matchedItem.categoryId;
+  } else if (categories.length > 0) {
+    initialCatId = categories[0].id;
+  }
 
-  let catOptionsHtml = '';
+  let catOptionsHtml = `<option value="">-- ${t('selectCategoryPrompt')} --</option>`;
   categories.forEach(cat => {
-    const catName = AppState.lang === 'kh' ? cat.nameKh : cat.nameEn;
-    catOptionsHtml += `<option value="${cat.id}">${catName}</option>`;
+    const catName = AppState.lang === 'kh' ? (cat.nameKh || cat.nameEn) : (cat.nameEn || cat.nameKh);
+    const isSelected = cat.id === initialCatId;
+    catOptionsHtml += `<option value="${cat.id}" ${isSelected ? 'selected' : ''}>${catName}</option>`;
   });
 
   const tr = document.createElement('tr');
   tr.id = rowId;
   tr.innerHTML = `
     <td>
-      <select class="form-select item-catalog-select" onchange="onCatalogItemSelected('${rowId}', this.value)">
-        ${itemOptionsHtml}
-      </select>
-      <input type="text" class="form-input item-custom-name" placeholder="Custom item name..." style="display:none; margin-top:4px;" />
-    </td>
-    <td>
-      <select class="form-select item-category-select">
+      <select class="form-select item-category-select" onchange="onCategoryChanged('${rowId}', this.value)" required>
         ${catOptionsHtml}
       </select>
+    </td>
+    <td>
+      <select class="form-select item-catalog-select" onchange="onCatalogItemSelected('${rowId}', this.value)" required>
+        <!-- Populated dynamically based on selected Category -->
+      </select>
+      <div class="custom-item-name-wrap" style="display:none; margin-top:6px;">
+        <input type="text" class="form-input item-custom-name" placeholder="${t('customItemPlaceholder') || 'Enter custom item name...'}" />
+      </div>
     </td>
     <td>
       <input type="text" class="form-input item-spec" placeholder="Specs, brand, model..." />
@@ -639,7 +781,7 @@ function addLineItemRow(data = null) {
       <input type="number" min="1" value="1" class="form-input item-qty" oninput="calculateRowSubtotal('${rowId}')" />
     </td>
     <td style="width: 100px;">
-      <input type="text" value="Pcs" class="form-input item-unit" />
+      <input type="text" value="Unit" class="form-input item-unit" placeholder="Unit" />
     </td>
     <td style="width: 120px;">
       <input type="number" step="0.01" min="0" value="0.00" class="form-input item-price" oninput="calculateRowSubtotal('${rowId}')" />
@@ -652,60 +794,120 @@ function addLineItemRow(data = null) {
     </td>
   `;
 
+  tbody.appendChild(tr);
+
   if (data) {
-    const isCustom = data.itemId && String(data.itemId).startsWith('custom-');
-    const catalogSelect = tr.querySelector('.item-catalog-select');
-    const customInput = tr.querySelector('.item-custom-name');
-    const catSelect = tr.querySelector('.item-category-select');
+    const isCustom = (data.itemId && String(data.itemId).startsWith('custom-')) || (!data.itemId && data.itemName);
+    const selectedItemId = isCustom ? 'custom' : (data.itemId || '');
+    const customName = isCustom ? (data.itemName || '') : '';
+
+    populateRowItemsDropdown(rowId, initialCatId, selectedItemId, customName);
+
     const specInput = tr.querySelector('.item-spec');
     const qtyInput = tr.querySelector('.item-qty');
     const unitInput = tr.querySelector('.item-unit');
     const priceInput = tr.querySelector('.item-price');
 
-    if (isCustom) {
-      catalogSelect.value = 'custom';
-      customInput.style.display = 'block';
-      customInput.value = data.itemName || '';
-    } else if (data.itemId) {
-      catalogSelect.value = data.itemId;
-    }
-    if (data.categoryId) catSelect.value = data.categoryId;
     if (data.spec) specInput.value = data.spec;
     if (data.qty !== undefined) qtyInput.value = data.qty;
     if (data.unit) unitInput.value = data.unit;
     if (data.unitPrice !== undefined) priceInput.value = Number(data.unitPrice).toFixed(2);
+  } else {
+    populateRowItemsDropdown(rowId, initialCatId, '', '');
   }
 
-  tbody.appendChild(tr);
   calculateRowSubtotal(rowId);
 }
+
+window.onCategoryChanged = function(rowId, categoryId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+
+  const catalogSelect = row.querySelector('.item-catalog-select');
+  const customInput = row.querySelector('.item-custom-name');
+  const unitInput = row.querySelector('.item-unit');
+  const priceInput = row.querySelector('.item-price');
+
+  const currentVal = catalogSelect ? catalogSelect.value : '';
+  const currentCustom = customInput ? customInput.value.trim() : '';
+  const wasCustom = currentVal === 'custom' || currentVal.startsWith('custom-') || Boolean(currentCustom);
+
+  populateRowItemsDropdown(rowId, categoryId, wasCustom ? 'custom' : '', wasCustom ? currentCustom : '');
+
+  if (!wasCustom) {
+    if (unitInput) unitInput.value = 'Unit';
+    if (priceInput) priceInput.value = '0.00';
+    calculateRowSubtotal(rowId);
+  }
+};
 
 window.onCatalogItemSelected = function(rowId, itemId) {
   const row = document.getElementById(rowId);
   if (!row) return;
+
+  const customWrap = row.querySelector('.custom-item-name-wrap');
   const customInput = row.querySelector('.item-custom-name');
   const catSelect = row.querySelector('.item-category-select');
   const unitInput = row.querySelector('.item-unit');
   const priceInput = row.querySelector('.item-price');
 
   if (itemId === 'custom') {
-    customInput.style.display = 'block';
-    customInput.required = true;
-    priceInput.value = '0.00';
+    if (customWrap) customWrap.style.display = 'block';
+    if (customInput) {
+      customInput.required = true;
+      customInput.focus();
+    }
+    if (unitInput && !unitInput.value) unitInput.value = 'Unit';
   } else if (itemId) {
-    customInput.style.display = 'none';
-    customInput.required = false;
+    if (customWrap) customWrap.style.display = 'none';
+    if (customInput) {
+      customInput.required = false;
+      customInput.value = '';
+    }
     const item = AppData.getItems().find(i => i.id === itemId);
     if (item) {
-      catSelect.value = item.categoryId;
-      unitInput.value = item.unit;
-      priceInput.value = item.estimatedPrice.toFixed(2);
+      if (catSelect && (!catSelect.value || catSelect.value !== item.categoryId)) {
+        catSelect.value = item.categoryId;
+      }
+      if (unitInput) unitInput.value = item.unit || 'Unit';
+      if (priceInput) priceInput.value = Number(item.estimatedPrice || 0).toFixed(2);
     }
   } else {
-    customInput.style.display = 'none';
+    if (customWrap) customWrap.style.display = 'none';
+    if (customInput) {
+      customInput.required = false;
+      customInput.value = '';
+    }
   }
+
   calculateRowSubtotal(rowId);
 };
+
+function refreshLineItemsLanguage() {
+  const rows = document.querySelectorAll('#lineItemsTbody tr');
+  if (!rows || rows.length === 0) return;
+  rows.forEach(row => {
+    const catSelect = row.querySelector('.item-category-select');
+    const catalogSelect = row.querySelector('.item-catalog-select');
+    const customInput = row.querySelector('.item-custom-name');
+    if (!catSelect || !catalogSelect) return;
+
+    const currentCat = catSelect.value;
+    const currentItem = catalogSelect.value;
+    const currentCustom = customInput ? customInput.value : '';
+
+    const categories = AppData.getCategories().filter(c => c.status === 'active');
+    let catOptionsHtml = `<option value="">-- ${t('selectCategoryPrompt')} --</option>`;
+    categories.forEach(cat => {
+      const catName = AppState.lang === 'kh' ? (cat.nameKh || cat.nameEn) : (cat.nameEn || cat.nameKh);
+      const isSelected = cat.id === currentCat;
+      catOptionsHtml += `<option value="${cat.id}" ${isSelected ? 'selected' : ''}>${catName}</option>`;
+    });
+    catSelect.innerHTML = catOptionsHtml;
+
+    populateRowItemsDropdown(row.id, currentCat, currentItem, currentCustom);
+  });
+}
 
 window.calculateRowSubtotal = function(rowId) {
   const row = document.getElementById(rowId);
@@ -753,40 +955,61 @@ function handleFormSubmit(e) {
   // Validate items
   const rows = document.querySelectorAll('#lineItemsTbody tr');
   const items = [];
+  let validationError = '';
+
   rows.forEach(row => {
+    if (validationError) return;
+    const catSelect = row.querySelector('.item-category-select');
     const catalogSelect = row.querySelector('.item-catalog-select');
     const customInput = row.querySelector('.item-custom-name');
-    const catSelect = row.querySelector('.item-category-select');
     const spec = row.querySelector('.item-spec').value.trim();
     const qty = parseFloat(row.querySelector('.item-qty').value) || 1;
-    const unit = row.querySelector('.item-unit').value.trim();
+    const unit = row.querySelector('.item-unit').value.trim() || 'Unit';
     const unitPrice = parseFloat(row.querySelector('.item-price').value) || 0;
     const subtotal = qty * unitPrice;
+
+    if (!catSelect || !catSelect.value) {
+      validationError = 'Please select a Category for all line items.';
+      return;
+    }
 
     let itemName = '';
     let itemId = '';
     if (catalogSelect.value === 'custom') {
-      itemName = customInput.value.trim() || 'Custom Item';
-      itemId = 'custom-' + Date.now();
+      itemName = customInput.value.trim();
+      if (!itemName) {
+        validationError = 'Please enter a custom item name for custom line items.';
+        return;
+      }
+      itemId = 'custom-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     } else if (catalogSelect.value) {
       const itm = AppData.getItems().find(i => i.id === catalogSelect.value);
-      itemName = itm ? (AppState.lang === 'kh' ? itm.nameKh : itm.nameEn) : 'Item';
+      itemName = itm ? (AppState.lang === 'kh' ? (itm.nameKh || itm.nameEn) : (itm.nameEn || itm.nameKh)) : 'Item';
       itemId = catalogSelect.value;
+    } else if (customInput && customInput.value.trim()) {
+      itemName = customInput.value.trim();
+      itemId = 'custom-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    } else {
+      validationError = 'Please select a catalog item or choose Custom Item Name.';
+      return;
     }
 
-    if (itemName) {
-      items.push({
-        itemId,
-        itemName,
-        categoryId: catSelect.value,
-        spec,
-        qty,
-        unit,
-        unitPrice,
-        subtotal
-      });
-    }
+    items.push({
+      itemId,
+      itemName,
+      categoryId: catSelect.value,
+      spec,
+      qty,
+      unit,
+      unitPrice,
+      subtotal
+    });
   });
+
+  if (validationError) {
+    showToast(validationError, 'danger');
+    return;
+  }
 
   if (items.length === 0) {
     showToast(t('emptyItemsError'), 'danger');
@@ -840,8 +1063,8 @@ window.openRequisitionDetail = function(reqId) {
   const container = document.getElementById('requisitionDetailContent');
   if (!modal || !container) return;
 
-  const deptObj = AppData.getDepartments().find(d => d.id === req.department);
-  const deptName = deptObj ? (AppState.lang === 'kh' ? deptObj.nameKh : deptObj.nameEn) : req.department;
+  const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
+  const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
 
   // Build items table
   const itemsHtml = req.items.map((item, idx) => {
@@ -1032,6 +1255,297 @@ window.printRequisition = function(reqId) {
   setTimeout(() => {
     window.print();
   }, 300);
+};
+
+// Master Data: Requesting Departments
+function renderDepartmentsTable() {
+  const tbody = document.getElementById('departmentsTableBody');
+  if (!tbody) return;
+  const departments = AppData.getDepartments();
+  const requisitions = AppData.getRequisitions();
+
+  tbody.innerHTML = departments.map(dept => {
+    const reqCount = requisitions.filter(r => r.department === dept.id || r.department === dept.code).length;
+    const statusPill = dept.status === 'active'
+      ? `<span class="badge" style="background:#ecfdf5; color:#047857;">${t('active')}</span>`
+      : `<span class="badge" style="background:#fef2f2; color:#b91c1c;">${t('inactive')}</span>`;
+
+    return `
+      <tr>
+        <td><strong>${dept.code || dept.id}</strong></td>
+        <td><code>${dept.id}</code></td>
+        <td>${dept.nameEn}</td>
+        <td>${dept.nameKh || '-'}</td>
+        <td style="color:#64748b; font-size:13px;">${dept.desc || '-'}</td>
+        <td><span class="badge" style="background:#f1f5f9;">${reqCount} ${t('navRequisitions').toLowerCase()}</span></td>
+        <td>${statusPill}</td>
+        <td>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm btn-outline" onclick="openEditDepartmentModal('${dept.id}')">${t('actionEdit')}</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteDepartment('${dept.id}')">${t('actionDelete')}</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.openAddDepartmentModal = function() {
+  AppState.editingDepartmentId = null;
+  document.getElementById('deptModalTitle').textContent = t('modalAddDeptTitle');
+  document.getElementById('deptFormCode').value = '';
+  document.getElementById('deptFormId').value = '';
+  document.getElementById('deptFormId').disabled = false;
+  document.getElementById('deptFormNameEn').value = '';
+  document.getElementById('deptFormNameKh').value = '';
+  document.getElementById('deptFormDesc').value = '';
+  document.getElementById('deptFormStatus').value = 'active';
+  document.getElementById('departmentModal').classList.add('open');
+};
+
+window.openEditDepartmentModal = function(deptId) {
+  AppState.editingDepartmentId = deptId;
+  const dept = AppData.getDepartments().find(d => d.id === deptId);
+  if (!dept) return;
+
+  document.getElementById('deptModalTitle').textContent = t('modalEditDeptTitle');
+  document.getElementById('deptFormCode').value = dept.code || dept.id;
+  document.getElementById('deptFormId').value = dept.id;
+  document.getElementById('deptFormId').disabled = true;
+  document.getElementById('deptFormNameEn').value = dept.nameEn;
+  document.getElementById('deptFormNameKh').value = dept.nameKh || '';
+  document.getElementById('deptFormDesc').value = dept.desc || '';
+  document.getElementById('deptFormStatus').value = dept.status || 'active';
+  document.getElementById('departmentModal').classList.add('open');
+};
+
+window.saveDepartment = function() {
+  const code = document.getElementById('deptFormCode').value.trim();
+  const id = document.getElementById('deptFormId').value.trim();
+  const nameEn = document.getElementById('deptFormNameEn').value.trim();
+  const nameKh = document.getElementById('deptFormNameKh').value.trim();
+  const desc = document.getElementById('deptFormDesc').value.trim();
+  const status = document.getElementById('deptFormStatus').value;
+
+  if (!code || !nameEn) {
+    showToast('Department Code and English Name are required', 'danger');
+    return;
+  }
+
+  const departments = AppData.getDepartments();
+
+  if (AppState.editingDepartmentId) {
+    const target = departments.find(d => d.id === AppState.editingDepartmentId);
+    if (target) {
+      target.code = code;
+      target.nameEn = nameEn;
+      target.nameKh = nameKh || nameEn;
+      target.desc = desc;
+      target.status = status;
+    }
+  } else {
+    const cleanId = (id || code).replace(/[^a-zA-Z0-9_-]/g, '');
+    if (!cleanId) {
+      showToast('A valid Dept Key / ID is required', 'danger');
+      return;
+    }
+    if (departments.some(d => d.id.toLowerCase() === cleanId.toLowerCase())) {
+      showToast('A department with this Key / ID already exists', 'danger');
+      return;
+    }
+    departments.push({
+      id: cleanId,
+      code,
+      nameEn,
+      nameKh: nameKh || nameEn,
+      desc,
+      status
+    });
+  }
+
+  AppData.saveDepartments(departments);
+  showToast(t('itemSavedSuccess'), 'success');
+  closeModal('departmentModal');
+  renderDepartmentsTable();
+  populateFilterDropdowns();
+  populateDepartmentSelect();
+};
+
+window.deleteDepartment = function(deptId) {
+  const requisitions = AppData.getRequisitions();
+  const inUse = requisitions.some(r => r.department === deptId);
+  if (inUse) {
+    showToast(`Cannot delete: Department is used in existing requisitions. Set status to Inactive instead.`, 'danger');
+    return;
+  }
+  if (!confirm(t('confirmDelete'))) return;
+  let departments = AppData.getDepartments();
+  departments = departments.filter(d => d.id !== deptId);
+  AppData.saveDepartments(departments);
+  showToast(t('statusUpdatedSuccess'), 'success');
+  renderDepartmentsTable();
+  populateFilterDropdowns();
+  populateDepartmentSelect();
+};
+
+// Master Data: Urgency / Priority Levels
+function renderPrioritiesTable() {
+  const tbody = document.getElementById('prioritiesTableBody');
+  if (!tbody) return;
+  const priorities = AppData.getPriorities ? AppData.getPriorities() : [];
+  const requisitions = AppData.getRequisitions();
+
+  tbody.innerHTML = priorities.map(prio => {
+    const reqCount = requisitions.filter(r => r.priority === prio.id).length;
+    const statusPill = prio.status === 'active'
+      ? `<span class="badge" style="background:#ecfdf5; color:#047857;">${t('active')}</span>`
+      : `<span class="badge" style="background:#fef2f2; color:#b91c1c;">${t('inactive')}</span>`;
+
+    const previewBadge = getPriorityBadge(prio.id);
+
+    return `
+      <tr>
+        <td><strong>${prio.code || prio.id.toUpperCase()}</strong></td>
+        <td><code>${prio.id}</code></td>
+        <td>${prio.nameEn}</td>
+        <td>${prio.nameKh || '-'}</td>
+        <td><strong>${prio.slaHours ? prio.slaHours + ' hrs' : '-'}</strong></td>
+        <td>${previewBadge}</td>
+        <td style="color:#64748b; font-size:13px;">${prio.desc || '-'}</td>
+        <td><span class="badge" style="background:#f1f5f9;">${reqCount} ${t('navRequisitions').toLowerCase()}</span></td>
+        <td>${statusPill}</td>
+        <td>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm btn-outline" onclick="openEditPriorityModal('${prio.id}')">${t('actionEdit')}</button>
+            <button class="btn btn-sm btn-danger" onclick="deletePriority('${prio.id}')">${t('actionDelete')}</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.openAddPriorityModal = function() {
+  AppState.editingPriorityId = null;
+  document.getElementById('prioModalTitle').textContent = t('modalAddPrioTitle');
+  document.getElementById('prioFormCode').value = '';
+  document.getElementById('prioFormId').value = '';
+  document.getElementById('prioFormId').disabled = false;
+  document.getElementById('prioFormNameEn').value = '';
+  document.getElementById('prioFormNameKh').value = '';
+  document.getElementById('prioFormSla').value = '24';
+  document.getElementById('prioFormColor').value = '#ef4444';
+  document.getElementById('prioFormDesc').value = '';
+  document.getElementById('prioFormStatus').value = 'active';
+  document.getElementById('priorityModal').classList.add('open');
+};
+
+window.openEditPriorityModal = function(prioId) {
+  AppState.editingPriorityId = prioId;
+  const prio = (AppData.getPriorities ? AppData.getPriorities() : []).find(p => p.id === prioId);
+  if (!prio) return;
+
+  document.getElementById('prioModalTitle').textContent = t('modalEditPrioTitle');
+  document.getElementById('prioFormCode').value = prio.code || prio.id.toUpperCase();
+  document.getElementById('prioFormId').value = prio.id;
+  document.getElementById('prioFormId').disabled = true;
+  document.getElementById('prioFormNameEn').value = prio.nameEn;
+  document.getElementById('prioFormNameKh').value = prio.nameKh || '';
+  document.getElementById('prioFormSla').value = prio.slaHours || 24;
+  document.getElementById('prioFormColor').value = prio.color || '#3b82f6';
+  document.getElementById('prioFormDesc').value = prio.desc || '';
+  document.getElementById('prioFormStatus').value = prio.status || 'active';
+  document.getElementById('priorityModal').classList.add('open');
+};
+
+window.savePriority = function() {
+  const code = document.getElementById('prioFormCode').value.trim();
+  const id = document.getElementById('prioFormId').value.trim();
+  const nameEn = document.getElementById('prioFormNameEn').value.trim();
+  const nameKh = document.getElementById('prioFormNameKh').value.trim();
+  const slaHours = parseInt(document.getElementById('prioFormSla').value) || 24;
+  const color = document.getElementById('prioFormColor').value;
+  const desc = document.getElementById('prioFormDesc').value.trim();
+  const status = document.getElementById('prioFormStatus').value;
+
+  if (!code || !nameEn) {
+    showToast('Priority Code and English Name are required', 'danger');
+    return;
+  }
+
+  const priorities = AppData.getPriorities ? AppData.getPriorities() : [];
+
+  const badgeClassMap = {
+    'urgent': 'badge-priority-urgent',
+    'high': 'badge-priority-high',
+    'medium': 'badge-priority-medium',
+    'low': 'badge-priority-low'
+  };
+
+  if (AppState.editingPriorityId) {
+    const target = priorities.find(p => p.id === AppState.editingPriorityId);
+    if (target) {
+      target.code = code;
+      target.nameEn = nameEn;
+      target.nameKh = nameKh || nameEn;
+      target.slaHours = slaHours;
+      target.color = color;
+      target.desc = desc;
+      target.status = status;
+      if (badgeClassMap[target.id]) {
+        target.badgeClass = badgeClassMap[target.id];
+      }
+    }
+  } else {
+    const cleanId = (id || code).toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (!cleanId) {
+      showToast('A valid Priority Key / ID is required', 'danger');
+      return;
+    }
+    if (priorities.some(p => p.id.toLowerCase() === cleanId.toLowerCase())) {
+      showToast('A priority with this Key / ID already exists', 'danger');
+      return;
+    }
+    priorities.push({
+      id: cleanId,
+      code,
+      nameEn,
+      nameKh: nameKh || nameEn,
+      slaHours,
+      color,
+      badgeClass: badgeClassMap[cleanId] || '',
+      desc,
+      status
+    });
+  }
+
+  AppData.savePriorities(priorities);
+  showToast(t('itemSavedSuccess'), 'success');
+  closeModal('priorityModal');
+  renderPrioritiesTable();
+  renderPriorityPills();
+  populateFilterDropdowns();
+  if (AppState.currentTab === 'board' || AppState.currentTab === 'dashboard') renderRequisitionsTable();
+  if (AppState.currentTab === 'requester-dashboard') renderRequesterDashboard();
+};
+
+window.deletePriority = function(prioId) {
+  const requisitions = AppData.getRequisitions();
+  const inUse = requisitions.some(r => r.priority === prioId);
+  if (inUse) {
+    showToast(`Cannot delete: Priority is used in existing requisitions. Set status to Inactive instead.`, 'danger');
+    return;
+  }
+  if (!confirm(t('confirmDelete'))) return;
+  let priorities = AppData.getPriorities ? AppData.getPriorities() : [];
+  priorities = priorities.filter(p => p.id !== prioId);
+  AppData.savePriorities(priorities);
+  showToast(t('statusUpdatedSuccess'), 'success');
+  renderPrioritiesTable();
+  renderPriorityPills();
+  populateFilterDropdowns();
+  if (AppState.currentTab === 'board' || AppState.currentTab === 'dashboard') renderRequisitionsTable();
+  if (AppState.currentTab === 'requester-dashboard') renderRequesterDashboard();
 };
 
 // Master Data: Categories
@@ -1626,8 +2140,8 @@ function renderRequesterDashboard() {
 }
 
 function buildRequesterCardHtml(req) {
-  const deptObj = AppData.getDepartments().find(d => d.id === req.department);
-  const deptName = deptObj ? (AppState.lang === 'kh' ? deptObj.nameKh : deptObj.nameEn) : req.department;
+  const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
+  const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
   const priorityBadge = getPriorityBadge(req.priority);
   const statusBadge = getStatusBadge(req.status);
 

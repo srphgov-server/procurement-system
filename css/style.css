@@ -799,7 +799,7 @@ table.data-table tbody tr:hover {
 .items-entry-table td {
   padding: 8px 10px;
   border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .items-entry-table input, .items-entry-table select {

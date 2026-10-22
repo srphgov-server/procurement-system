@@ -4,18 +4,67 @@ const STORAGE_KEYS = {
   CATEGORIES: 'procureflow_categories_v1',
   ITEMS: 'procureflow_items_v1',
   USERS: 'procureflow_users_v1',
+  DEPARTMENTS: 'procureflow_departments_v1',
+  PRIORITIES: 'procureflow_priorities_v1',
   SETTINGS: 'procureflow_settings_v1'
 };
 
 const DEFAULT_DEPARTMENTS = [
-  { id: 'IT', nameEn: 'Information Technology (IT)', nameKh: 'ព័ត៌មានវិទ្យា (IT)' },
-  { id: 'HR', nameEn: 'Human Resources (HR)', nameKh: 'ធនធានមនុស្ស (HR)' },
-  { id: 'Finance', nameEn: 'Finance & Accounting', nameKh: 'ហិរញ្ញវត្ថុ & គណនេយ្យ' },
-  { id: 'Operations', nameEn: 'Operations', nameKh: 'ប្រតិបត្តិការទូទៅ' },
-  { id: 'Logistics', nameEn: 'Logistics & Warehouse', nameKh: 'ភស្តុភារ & ឃ្លាំងស្តុក' },
-  { id: 'Marketing', nameEn: 'Marketing & Sales', nameKh: 'ទីផ្សារ & ការលក់' },
-  { id: 'Admin', nameEn: 'Administration', nameKh: 'រដ្ឋបាលទូទៅ' },
-  { id: 'Procurement', nameEn: 'Procurement Dept', nameKh: 'ផ្នែកលទ្ធកម្ម' }
+  { id: 'IT', code: 'DEPT-IT', nameEn: 'Information Technology (IT)', nameKh: 'ព័ត៌មានវិទ្យា (IT)', desc: 'Enterprise IT, cloud systems, and network infrastructure', status: 'active' },
+  { id: 'HR', code: 'DEPT-HR', nameEn: 'Human Resources (HR)', nameKh: 'ធនធានមនុស្ស (HR)', desc: 'Talent management, payroll, and training academy', status: 'active' },
+  { id: 'Finance', code: 'DEPT-FIN', nameEn: 'Finance & Accounting', nameKh: 'ហិរញ្ញវត្ថុ & គណនេយ្យ', desc: 'Accounting, auditing, financial planning, and budgets', status: 'active' },
+  { id: 'Operations', code: 'DEPT-OPS', nameEn: 'Operations', nameKh: 'ប្រតិបត្តិការទូទៅ', desc: 'Company operations and facility management', status: 'active' },
+  { id: 'Logistics', code: 'DEPT-LOG', nameEn: 'Logistics & Warehouse', nameKh: 'ភស្តុភារ & ឃ្លាំងស្តុក', desc: 'Supply chain, freight, inventory distribution', status: 'active' },
+  { id: 'Marketing', code: 'DEPT-MKT', nameEn: 'Marketing & Sales', nameKh: 'ទីផ្សារ & ការលក់', desc: 'Advertising, exhibitions, branding, customer acquisition', status: 'active' },
+  { id: 'Admin', code: 'DEPT-ADM', nameEn: 'Administration', nameKh: 'រដ្ឋបាលទូទៅ', desc: 'General corporate affairs and legal documentation', status: 'active' },
+  { id: 'Procurement', code: 'DEPT-PRO', nameEn: 'Procurement Dept', nameKh: 'ផ្នែកលទ្ធកម្ម', desc: 'Strategic sourcing, purchasing, supplier contracting', status: 'active' }
+];
+
+const DEFAULT_PRIORITIES = [
+  {
+    id: 'urgent',
+    code: 'PRI-URG',
+    nameEn: 'Urgent',
+    nameKh: 'បន្ទាន់បំផុត',
+    slaHours: 24,
+    color: '#ef4444',
+    badgeClass: 'badge-priority-urgent',
+    desc: 'Immediate emergency or critical business disruption needs',
+    status: 'active'
+  },
+  {
+    id: 'high',
+    code: 'PRI-HIGH',
+    nameEn: 'High',
+    nameKh: 'ខ្ពស់',
+    slaHours: 48,
+    color: '#f97316',
+    badgeClass: 'badge-priority-high',
+    desc: 'Time-sensitive project milestones or departmental deliverables',
+    status: 'active'
+  },
+  {
+    id: 'medium',
+    code: 'PRI-MED',
+    nameEn: 'Medium',
+    nameKh: 'មធ្យម',
+    slaHours: 72,
+    color: '#3b82f6',
+    badgeClass: 'badge-priority-medium',
+    desc: 'Standard scheduled departmental purchases and equipment',
+    status: 'active'
+  },
+  {
+    id: 'low',
+    code: 'PRI-LOW',
+    nameEn: 'Low',
+    nameKh: 'ទាប',
+    slaHours: 120,
+    color: '#64748b',
+    badgeClass: 'badge-priority-low',
+    desc: 'Routine replenishment, buffer stock, or non-urgent supplies',
+    status: 'active'
+  }
 ];
 
 const DEFAULT_CATEGORIES = [
@@ -228,14 +277,46 @@ const AppData = {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(data));
   },
 
+  getDepartments() {
+    const raw = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
+    if (!raw) {
+      this.saveDepartments(DEFAULT_DEPARTMENTS);
+      return JSON.parse(JSON.stringify(DEFAULT_DEPARTMENTS));
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return JSON.parse(JSON.stringify(DEFAULT_DEPARTMENTS));
+    }
+  },
+
+  saveDepartments(data) {
+    localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(data));
+  },
+
+  getPriorities() {
+    const raw = localStorage.getItem(STORAGE_KEYS.PRIORITIES);
+    if (!raw) {
+      this.savePriorities(DEFAULT_PRIORITIES);
+      return JSON.parse(JSON.stringify(DEFAULT_PRIORITIES));
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return JSON.parse(JSON.stringify(DEFAULT_PRIORITIES));
+    }
+  },
+
+  savePriorities(data) {
+    localStorage.setItem(STORAGE_KEYS.PRIORITIES, JSON.stringify(data));
+  },
+
   resetAllToDefault() {
     localStorage.setItem(STORAGE_KEYS.REQUISITIONS, JSON.stringify(DEFAULT_REQUISITIONS));
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
     localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(DEFAULT_ITEMS));
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(DEFAULT_USERS));
-  },
-
-  getDepartments() {
-    return DEFAULT_DEPARTMENTS;
+    localStorage.setItem(STORAGE_KEYS.DEPARTMENTS, JSON.stringify(DEFAULT_DEPARTMENTS));
+    localStorage.setItem(STORAGE_KEYS.PRIORITIES, JSON.stringify(DEFAULT_PRIORITIES));
   }
 };
