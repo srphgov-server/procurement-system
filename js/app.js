@@ -533,7 +533,7 @@ function renderRequisitionsTable() {
     tbody.innerHTML = `
       <tr>
         <td colspan="9" style="text-align:center; padding: 40px; color: var(--text-muted);">
-          <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
+          <div style="margin-bottom: 8px;"><span class="material-symbols-outlined" style="font-size:36px; color:#94a3b8;">assignment</span></div>
           <div>${t('noRecordsFound')}</div>
         </td>
       </tr>
@@ -588,7 +588,7 @@ function renderRequisitionsTable() {
         <td>
           <div style="display:flex; gap:6px;">
             ${actionBtnHtml}
-            <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}">🖨️</button>
+            <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}"><span class="material-symbols-outlined" style="font-size:15px;">print</span></button>
           </div>
         </td>
       </tr>
@@ -635,15 +635,15 @@ function getPriorityBadge(priority) {
 function getStatusBadge(status) {
   switch (status) {
     case 'new':
-      return `<span class="badge badge-status-new">● ${t('statusNew')}</span>`;
+      return `<span class="badge badge-status-new"><span class="material-symbols-outlined" style="font-size:12px; margin-right:3px; vertical-align:middle;">fiber_manual_record</span>${t('statusNew')}</span>`;
     case 'under_review':
-      return `<span class="badge badge-status-under_review">⏳ ${t('statusUnderReview')}</span>`;
+      return `<span class="badge badge-status-under_review"><span class="material-symbols-outlined" style="font-size:13px; margin-right:3px; vertical-align:middle;">schedule</span>${t('statusUnderReview')}</span>`;
     case 'approved':
-      return `<span class="badge badge-status-approved">✓ ${t('statusApproved')}</span>`;
+      return `<span class="badge badge-status-approved"><span class="material-symbols-outlined" style="font-size:13px; margin-right:3px; vertical-align:middle;">check</span>${t('statusApproved')}</span>`;
     case 'rejected':
-      return `<span class="badge badge-status-rejected">✕ ${t('statusRejected')}</span>`;
+      return `<span class="badge badge-status-rejected"><span class="material-symbols-outlined" style="font-size:13px; margin-right:3px; vertical-align:middle;">close</span>${t('statusRejected')}</span>`;
     case 'completed':
-      return `<span class="badge badge-status-completed">★ ${t('statusCompleted')}</span>`;
+      return `<span class="badge badge-status-completed"><span class="material-symbols-outlined" style="font-size:13px; margin-right:3px; vertical-align:middle;">done_all</span>${t('statusCompleted')}</span>`;
     default:
       return `<span class="badge">${status}</span>`;
   }
@@ -817,7 +817,7 @@ function addLineItemRow(data = null) {
       <span class="item-subtotal">$0.00</span>
     </td>
     <td style="width: 50px; text-align:center;">
-      <button type="button" class="btn btn-sm btn-text" onclick="removeLineItemRow('${rowId}')" title="${t('actionDelete')}">🗑️</button>
+      <button type="button" class="btn btn-sm btn-text" onclick="removeLineItemRow('${rowId}')" title="${t('actionDelete')}"><span class="material-symbols-outlined" style="font-size:16px; color:#ef4444;">delete</span></button>
     </td>
   `;
 
@@ -1146,7 +1146,7 @@ window.openRequisitionDetail = function(reqId) {
 
     actionPanelHtml = `
       <div class="action-panel-box">
-        <h4>⚡ ${t('sectionManagementActions')} (${getRoleName(AppState.role)})</h4>
+        <h4><span class="material-symbols-outlined" style="font-size:20px; vertical-align:middle; margin-right:4px; color:#2563eb;">bolt</span>${t('sectionManagementActions')} (${getRoleName(AppState.role)})</h4>
         <div class="form-group" style="margin-bottom:12px;">
           <label>${t('reviewCommentsLabel')}</label>
           <input type="text" id="actionRemarkInput" class="form-input" placeholder="${t('reviewCommentsPlaceholder')}" value="${req.remarks || ''}" />
@@ -1197,19 +1197,19 @@ window.openRequisitionDetail = function(reqId) {
     <div class="d365-bpf-container mb-3">
       <div class="d365-bpf-bar">
         <div class="d365-bpf-stage ${bpfStage1}">
-          <span class="d365-bpf-stage-title"><span>📝</span> 1. Draft & Submitted</span>
+          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">edit_document</span> 1. Draft & Submitted</span>
           <span class="d365-bpf-stage-status">${req.requestDate}</span>
         </div>
         <div class="d365-bpf-stage ${bpfStage2}">
-          <span class="d365-bpf-stage-title"><span>👔</span> 2. Management Review</span>
+          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">rate_review</span> 2. Management Review</span>
           <span class="d365-bpf-stage-status">${bpfStage2Status}</span>
         </div>
         <div class="d365-bpf-stage ${bpfStage3}">
-          <span class="d365-bpf-stage-title"><span>⚖️</span> 3. Approval Decision</span>
+          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">gavel</span> 3. Approval Decision</span>
           <span class="d365-bpf-stage-status">${bpfStage3Status}</span>
         </div>
         <div class="d365-bpf-stage ${bpfStage4}">
-          <span class="d365-bpf-stage-title"><span>📦</span> 4. Fulfillment & PO</span>
+          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">local_shipping</span> 4. Fulfillment & PO</span>
           <span class="d365-bpf-stage-status">${bpfStage4Status}</span>
         </div>
       </div>
@@ -2236,7 +2236,7 @@ function buildRequesterCardHtml(req) {
   // Stepper Stage Calculation
   // Stage 1: Submitted (always done)
   const step1Class = 'completed';
-  const step1Icon = '✓';
+  const step1Icon = '<span class="material-symbols-outlined" style="font-size:14px;">check</span>';
   const step1Detail = req.requestDate;
 
   // Stage 2: Management Review
@@ -2245,15 +2245,15 @@ function buildRequesterCardHtml(req) {
   let step2Detail = t('stageStatusWait');
   if (req.status === 'new') {
     step2Class = 'active';
-    step2Icon = '⏳';
+    step2Icon = '<span class="material-symbols-outlined" style="font-size:14px;">schedule</span>';
     step2Detail = t('stageStatusWait');
   } else if (req.status === 'under_review') {
     step2Class = 'active';
-    step2Icon = '⏳';
+    step2Icon = '<span class="material-symbols-outlined" style="font-size:14px;">schedule</span>';
     step2Detail = t('stageStatusActiveReview');
   } else {
     step2Class = 'completed';
-    step2Icon = '✓';
+    step2Icon = '<span class="material-symbols-outlined" style="font-size:14px;">check</span>';
     step2Detail = AppState.lang === 'kh' ? 'បានពិនិត្យរួចរាល់' : 'Reviewed';
   }
 
@@ -2263,11 +2263,11 @@ function buildRequesterCardHtml(req) {
   let step3Detail = AppState.lang === 'kh' ? 'រង់ចាំការសម្រេច' : 'Pending Decision';
   if (req.status === 'approved' || req.status === 'completed') {
     step3Class = 'completed';
-    step3Icon = '✓';
+    step3Icon = '<span class="material-symbols-outlined" style="font-size:14px;">check</span>';
     step3Detail = t('statusApproved');
   } else if (req.status === 'rejected') {
     step3Class = 'declined';
-    step3Icon = '✕';
+    step3Icon = '<span class="material-symbols-outlined" style="font-size:14px;">close</span>';
     step3Detail = t('statusRejected');
   }
 
@@ -2277,15 +2277,15 @@ function buildRequesterCardHtml(req) {
   let step4Detail = AppState.lang === 'kh' ? 'រង់ចាំការអនុម័ត' : 'Awaiting Approval';
   if (req.status === 'completed') {
     step4Class = 'completed';
-    step4Icon = '★';
+    step4Icon = '<span class="material-symbols-outlined" style="font-size:14px;">done_all</span>';
     step4Detail = t('statusCompleted');
   } else if (req.status === 'approved') {
     step4Class = 'active';
-    step4Icon = '📦';
+    step4Icon = '<span class="material-symbols-outlined" style="font-size:14px;">local_shipping</span>';
     step4Detail = AppState.lang === 'kh' ? 'កំពុងរៀបចំបញ្ជាទិញ' : 'PO in progress';
   } else if (req.status === 'rejected') {
     step4Class = 'pending';
-    step4Icon = '✕';
+    step4Icon = '<span class="material-symbols-outlined" style="font-size:14px;">close</span>';
     step4Detail = AppState.lang === 'kh' ? 'បានផ្អាកការបញ្ជាទិញ' : 'Order stopped';
   }
 
@@ -2316,15 +2316,16 @@ function buildRequesterCardHtml(req) {
       <div class="mgmt-feedback-box declined">
         <div>
           <div class="mgmt-feedback-title">
-            <span>❌</span>
+            <span class="material-symbols-outlined" style="font-size:16px; color:#ef4444; margin-right:4px; vertical-align:middle;">cancel</span>
             <span>${t('mgmtRemarksTitle')}: ${t('statusRejected')}</span>
           </div>
           <div class="mgmt-feedback-text">
             "${req.remarks || 'No detailed reason provided.'}"
           </div>
         </div>
-        <button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; white-space:nowrap;">
-          🔄 ${t('btnResubmitModify')}
+        <button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
+          <span class="material-symbols-outlined" style="font-size:15px;">replay</span>
+          <span>${t('btnResubmitModify')}</span>
         </button>
       </div>
     `;
@@ -2333,15 +2334,16 @@ function buildRequesterCardHtml(req) {
       <div class="mgmt-feedback-box approved">
         <div>
           <div class="mgmt-feedback-title">
-            <span>✅</span>
+            <span class="material-symbols-outlined" style="font-size:16px; color:#10b981; margin-right:4px; vertical-align:middle;">verified</span>
             <span>${t('mgmtRemarksTitle')}: ${t('statusApproved')}</span>
           </div>
           <div class="mgmt-feedback-text">
             "${req.remarks || 'Approved by Management & Admin.'}"
           </div>
         </div>
-        <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" style="white-space:nowrap;">
-          🖨️ ${t('actionPrint')}
+        <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" style="white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
+          <span class="material-symbols-outlined" style="font-size:15px;">print</span>
+          <span>${t('actionPrint')}</span>
         </button>
       </div>
     `;
@@ -2350,7 +2352,7 @@ function buildRequesterCardHtml(req) {
       <div class="mgmt-feedback-box under_review">
         <div>
           <div class="mgmt-feedback-title">
-            <span>⏳</span>
+            <span class="material-symbols-outlined" style="font-size:16px; color:#f59e0b; margin-right:4px; vertical-align:middle;">schedule</span>
             <span>${t('mgmtRemarksTitle')}: ${t('statusUnderReview')}</span>
           </div>
           <div class="mgmt-feedback-text">
@@ -2475,8 +2477,9 @@ function buildRequesterCardHtml(req) {
 
       <!-- Footer Actions -->
       <div class="req-card-footer">
-        <div style="font-size:12.5px; color:var(--text-muted);">
-          👤 <strong>${req.requesterName}</strong> (${req.requesterEmail || ''})
+        <div style="font-size:12.5px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">
+          <span class="material-symbols-outlined" style="font-size:16px;">person</span>
+          <span><strong>${req.requesterName}</strong> (${req.requesterEmail || ''})</span>
         </div>
         <div style="display:flex; align-items:center; gap:14px;">
           <div class="req-total-badge">
@@ -2485,8 +2488,8 @@ function buildRequesterCardHtml(req) {
           </div>
           <div style="display:flex; gap:8px;">
             <button class="btn btn-sm btn-outline" onclick="openRequisitionDetail('${req.id}')">${t('actionView')}</button>
-            <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}">🖨️</button>
-            ${req.status === 'rejected' ? `<button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239;">🔄 ${t('btnResubmitModify')}</button>` : ''}
+            <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}"><span class="material-symbols-outlined" style="font-size:15px;">print</span></button>
+            ${req.status === 'rejected' ? `<button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; display:inline-flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:14px;">replay</span> <span>${t('btnResubmitModify')}</span></button>` : ''}
           </div>
         </div>
       </div>

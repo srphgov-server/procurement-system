@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Siem Reap Referral Hospital | ProcureFlow - Sourcing & Procurement</title>
   
+  <!-- Google Material Symbols (Outlined) & Material Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  
   <!-- Bootstrap 5 CSS & Bootstrap Icons CDN (with offline fallback to dynamics365.css) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -22,22 +26,12 @@
     <div class="d365-suite-left">
       <!-- 9-dot Waffle App Launcher -->
       <button type="button" class="d365-waffle-btn" title="App Launcher (Waffle)" onclick="toggleSidebarCollapse()">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
-          <circle cx="2" cy="2" r="1.7"/>
-          <circle cx="8" cy="2" r="1.7"/>
-          <circle cx="14" cy="2" r="1.7"/>
-          <circle cx="2" cy="8" r="1.7"/>
-          <circle cx="8" cy="8" r="1.7"/>
-          <circle cx="14" cy="8" r="1.7"/>
-          <circle cx="2" cy="14" r="1.7"/>
-          <circle cx="8" cy="14" r="1.7"/>
-          <circle cx="14" cy="14" r="1.7"/>
-        </svg>
+        <span class="material-symbols-outlined" style="font-size:20px;">apps</span>
       </button>
 
       <!-- App Branding -->
       <div class="d365-app-brand">
-        <span class="d365-logo-glyph">🏥</span>
+        <span class="d365-logo-glyph"><span class="material-symbols-outlined" style="font-size:20px; color:#38bdf8;">local_hospital</span></span>
         <span class="d365-brand-bold" data-i18n="hospitalName">Siem Reap Referral Hospital</span>
         <span class="d365-brand-divider">|</span>
         <span class="d365-brand-sub" data-i18n="appTitle">ProcureFlow</span>
@@ -48,7 +42,7 @@
     <!-- Suite Global Search -->
     <div class="d365-suite-center d-none d-lg-block">
       <div class="d365-suite-search">
-        <span class="d365-search-icon">🔍</span>
+        <span class="d365-search-icon material-symbols-outlined">search</span>
         <input type="text" class="d365-search-input" placeholder="Search across requisitions, items, vendors, departments..." data-i18n-ph="searchPlaceholder">
         <span class="d365-search-hint">Alt+Q</span>
       </div>
@@ -65,9 +59,9 @@
       <!-- Role / Persona Selector -->
       <div class="d365-role-box" title="Switch User Security Role">
         <select id="roleSelector" class="d365-role-select">
-          <option value="admin">🛡️ Administrator (Approver)</option>
-          <option value="management">👔 Management (Reviewer)</option>
-          <option value="requester">👨‍💼 Requester (Dept Staff)</option>
+          <option value="admin">Administrator (Approver)</option>
+          <option value="management">Management (Reviewer)</option>
+          <option value="requester">Requester (Dept Staff)</option>
         </select>
       </div>
       <span id="roleDescriptionText" class="d-none"></span>
@@ -80,12 +74,12 @@
 
       <!-- Quick Action Icons -->
       <button type="button" class="d365-icon-action-btn d-none d-md-inline-flex" title="Notifications">
-        🔔
+        <span class="material-symbols-outlined" style="font-size:18px;">notifications</span>
         <span class="d365-badge-pill"></span>
       </button>
 
       <button type="button" class="d365-icon-action-btn d-none d-md-inline-flex" title="System Settings" onclick="switchTab('departments')">
-        ⚙️
+        <span class="material-symbols-outlined" style="font-size:18px;">settings</span>
       </button>
 
       <!-- User Profile Badge -->
@@ -102,25 +96,25 @@
     <div class="d365-cmd-left">
       <!-- Primary New Requisition Action -->
       <button type="button" class="d365-cmd-btn d365-cmd-primary" onclick="switchTab('new-request')">
-        <span>➕</span>
+        <span class="material-symbols-outlined" style="font-size:16px;">add</span>
         <span data-i18n="navNewRequest">New Requisition</span>
       </button>
 
       <!-- Refresh Action -->
       <button type="button" class="d365-cmd-btn" onclick="renderAll()" title="Refresh Data">
-        <span>🔄</span>
+        <span class="material-symbols-outlined" style="font-size:16px;">refresh</span>
         <span>Refresh</span>
       </button>
 
       <!-- Export to Excel (CSV) -->
       <button type="button" class="d365-cmd-btn" id="navExportBtn">
-        <span>📊</span>
+        <span class="material-symbols-outlined" style="font-size:16px;">table_view</span>
         <span data-i18n="navExport">Export to Excel</span>
       </button>
 
       <!-- Print Voucher Action -->
       <button type="button" class="d365-cmd-btn" onclick="window.print()" title="Print Current View or Voucher">
-        <span>🖨️</span>
+        <span class="material-symbols-outlined" style="font-size:16px;">print</span>
         <span data-i18n="actionPrint">Print</span>
       </button>
 
@@ -128,13 +122,13 @@
 
       <!-- Quick Navigate to Requester Dashboard -->
       <button type="button" class="d365-cmd-btn" onclick="switchTab('requester-dashboard')" title="Requester Situation Portal">
-        <span>👤</span>
+        <span class="material-symbols-outlined" style="font-size:16px;">badge</span>
         <span data-i18n="navRequesterDashboard">Requester Portal</span>
       </button>
 
       <!-- Reset Demo Data -->
       <button type="button" class="d365-cmd-btn d365-cmd-danger" id="navResetBtn" title="Reset sample database to default">
-        <span>🗑️</span>
+        <span class="material-symbols-outlined" style="font-size:16px;">restart_alt</span>
         <span data-i18n="navReset">Reset Data</span>
       </button>
     </div>
@@ -161,7 +155,7 @@
       <div class="d365-sitemap-toggle-row">
         <span class="d365-sitemap-title">Sitemap</span>
         <button type="button" class="d365-sitemap-collapse-btn" title="Collapse / Expand Rail" onclick="toggleSidebarCollapse()">
-          ☰
+          <span class="material-symbols-outlined" style="font-size:18px;">menu</span>
         </button>
       </div>
 
@@ -170,12 +164,12 @@
         <div class="d365-nav-group-header">MY WORK</div>
 
         <a href="#" class="d365-nav-link nav-item active" data-nav-target="dashboard">
-          <span class="d365-nav-icon">📊</span>
+          <span class="d365-nav-icon material-symbols-outlined">analytics</span>
           <span class="d365-nav-text" data-i18n="navDashboard">Requisition Board & KPI</span>
         </a>
 
         <a href="#" class="d365-nav-link nav-item" data-nav-target="requester-dashboard" id="navRequesterDashboardItem">
-          <span class="d365-nav-icon">👤</span>
+          <span class="d365-nav-icon material-symbols-outlined">assignment_ind</span>
           <span class="d365-nav-text" data-i18n="navRequesterDashboard">Requester Dashboard</span>
         </a>
 
@@ -183,7 +177,7 @@
         <div class="d365-nav-group-header">PROCUREMENT</div>
 
         <a href="#" class="d365-nav-link nav-item" data-nav-target="new-request">
-          <span class="d365-nav-icon">📝</span>
+          <span class="d365-nav-icon material-symbols-outlined">post_add</span>
           <span class="d365-nav-text" data-i18n="navNewRequest">+ New Requisition</span>
         </a>
 
@@ -191,27 +185,27 @@
         <div class="d365-nav-group-header admin-only-nav">MASTER LISTS</div>
 
         <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="departments">
-          <span class="d365-nav-icon">🏢</span>
+          <span class="d365-nav-icon material-symbols-outlined">domain</span>
           <span class="d365-nav-text" data-i18n="navDepartments">Requesting Departments</span>
         </a>
 
         <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="priorities">
-          <span class="d365-nav-icon">⏱️</span>
+          <span class="d365-nav-icon material-symbols-outlined">speed</span>
           <span class="d365-nav-text" data-i18n="navPriorities">Urgency / Priority Levels</span>
         </a>
 
         <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="categories">
-          <span class="d365-nav-icon">🏷️</span>
+          <span class="d365-nav-icon material-symbols-outlined">category</span>
           <span class="d365-nav-text" data-i18n="navCategories">Category List</span>
         </a>
 
         <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="items">
-          <span class="d365-nav-icon">📦</span>
+          <span class="d365-nav-icon material-symbols-outlined">inventory_2</span>
           <span class="d365-nav-text" data-i18n="navItems">Item Catalog</span>
         </a>
 
         <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="users">
-          <span class="d365-nav-icon">👥</span>
+          <span class="d365-nav-icon material-symbols-outlined">group</span>
           <span class="d365-nav-text" data-i18n="navUsers">User Management</span>
         </a>
       </nav>
@@ -219,7 +213,7 @@
       <!-- Sitemap Area Switcher -->
       <div class="d365-sitemap-footer">
         <div class="d365-area-badge">
-          <span>🏥</span>
+          <span class="material-symbols-outlined" style="font-size:18px;">local_hospital</span>
           <span class="d365-area-text">SRPH Hospital Sourcing</span>
         </div>
         <span style="font-size:10px;">v2.0</span>
@@ -240,7 +234,7 @@
           </div>
           <div>
             <button class="btn btn-primary" onclick="switchTab('new-request')">
-              <span>➕</span> <span data-i18n="navNewRequest">+ New Requisition</span>
+              <span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">add</span> <span data-i18n="navNewRequest">+ New Requisition</span>
             </button>
           </div>
         </div>
@@ -254,7 +248,7 @@
           <div class="d365-kpi-card kpi-total" id="kpiTotalCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="kpiTotalRequests">Total Requisitions</span>
-              <span class="d365-kpi-icon">📑</span>
+              <span class="d365-kpi-icon material-symbols-outlined">assignment</span>
             </div>
             <div class="d365-kpi-value" id="kpiTotalCount">0</div>
             <div class="d365-kpi-subtext" id="kpiTotalSubtext" data-i18n="kpiAllDepts">All Departments</div>
@@ -264,7 +258,7 @@
           <div class="d365-kpi-card kpi-pending" id="kpiNewCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="kpiNewRequests">New / In Review</span>
-              <span class="d365-kpi-icon">⏳</span>
+              <span class="d365-kpi-icon material-symbols-outlined">pending_actions</span>
             </div>
             <div class="d365-kpi-value text-warning" id="kpiNewCount">0</div>
             <div class="d365-kpi-subtext" data-i18n="kpiAwaitingAction">Awaiting review</div>
@@ -274,7 +268,7 @@
           <div class="d365-kpi-card kpi-urgent" id="kpiUrgentCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="kpiUrgentRequests">Urgent & High</span>
-              <span class="d365-kpi-icon">🔥</span>
+              <span class="d365-kpi-icon material-symbols-outlined">emergency</span>
             </div>
             <div class="d365-kpi-value text-danger" id="kpiUrgentCount">0</div>
             <div class="d365-kpi-subtext">
@@ -287,7 +281,7 @@
           <div class="d365-kpi-card kpi-approved" id="kpiApprovedCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="kpiApprovedRequests">Approved</span>
-              <span class="d365-kpi-icon">✓</span>
+              <span class="d365-kpi-icon material-symbols-outlined">task_alt</span>
             </div>
             <div class="d365-kpi-value text-success" id="kpiApprovedCount">0</div>
             <div class="d365-kpi-subtext" data-i18n="kpiApprovedSubtext">Ready for PO issuance</div>
@@ -297,7 +291,7 @@
           <div class="d365-kpi-card kpi-value">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="kpiTotalValue">Est. Budget</span>
-              <span class="d365-kpi-icon">💲</span>
+              <span class="d365-kpi-icon material-symbols-outlined">payments</span>
             </div>
             <div class="d365-kpi-value" id="kpiTotalValue" style="color:var(--d365-purple); font-size:20px;">$0.00</div>
             <div class="d365-kpi-subtext" data-i18n="kpiTotalValueSubtext">Cumulative value</div>
@@ -311,7 +305,7 @@
             <div class="d365-filter-group">
               <!-- Search box -->
               <div class="d365-search-box">
-                <span style="margin-right:6px; color:#8a8886;">🔍</span>
+                <span class="material-symbols-outlined" style="margin-right:6px; color:#8a8886; font-size:18px;">search</span>
                 <input type="text" id="tableSearchInput" placeholder="Search ID, requester, department, purpose..." data-i18n-ph="searchPlaceholder">
               </div>
 
@@ -338,7 +332,7 @@
 
             <div>
               <button class="btn btn-sm btn-outline" onclick="renderAll()" title="Reset Filters">
-                <span>🔄</span> Reset Filters
+                <span class="material-symbols-outlined" style="font-size:15px; margin-right:3px;">filter_alt_off</span> Reset Filters
               </button>
             </div>
           </div>
@@ -402,7 +396,7 @@
           <div class="d365-kpi-card" id="reqKpiTotalCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiTotalTitle">My Requisitions</span>
-              <span class="d365-kpi-icon">📋</span>
+              <span class="d365-kpi-icon material-symbols-outlined">format_list_bulleted</span>
             </div>
             <div class="d365-kpi-value text-primary" id="reqKpiTotalCount">0</div>
             <div class="d365-kpi-subtext" data-i18n="requesterKpiTotalDesc">Total filed requests</div>
@@ -412,7 +406,7 @@
           <div class="d365-kpi-card" id="reqKpiReviewCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiReviewTitle">In Review</span>
-              <span class="d365-kpi-icon">⏳</span>
+              <span class="d365-kpi-icon material-symbols-outlined">schedule</span>
             </div>
             <div class="d365-kpi-value text-warning" id="reqKpiReviewCount">0</div>
             <div class="d365-kpi-subtext">
@@ -425,7 +419,7 @@
           <div class="d365-kpi-card" id="reqKpiApprovedCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiApprovedTitle">Approved</span>
-              <span class="d365-kpi-icon">✓</span>
+              <span class="d365-kpi-icon material-symbols-outlined">verified</span>
             </div>
             <div class="d365-kpi-value text-success" id="reqKpiApprovedCount">0</div>
             <div class="d365-kpi-subtext" data-i18n="requesterKpiApprovedDesc">Ready for purchasing</div>
@@ -435,7 +429,7 @@
           <div class="d365-kpi-card" id="reqKpiDeclinedCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiDeclinedTitle">Declined</span>
-              <span class="d365-kpi-icon">✕</span>
+              <span class="d365-kpi-icon material-symbols-outlined">cancel</span>
             </div>
             <div class="d365-kpi-value text-danger" id="reqKpiDeclinedCount">0</div>
             <div class="d365-kpi-subtext" data-i18n="requesterKpiDeclinedDesc">Needs modification</div>
@@ -445,7 +439,7 @@
           <div class="d365-kpi-card" id="reqKpiCompletedCard">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiCompletedTitle">Completed</span>
-              <span class="d365-kpi-icon">📦</span>
+              <span class="d365-kpi-icon material-symbols-outlined">inventory</span>
             </div>
             <div class="d365-kpi-value" id="reqKpiCompletedCount" style="color:var(--d365-purple);">0</div>
             <div class="d365-kpi-subtext" data-i18n="requesterKpiCompletedDesc">Delivered to department</div>
@@ -460,15 +454,16 @@
           <div class="d365-grid-toolbar">
             <div class="d365-filter-group">
               <div class="d365-search-box">
-                <span style="margin-right:6px; color:#8a8886;">🔍</span>
+                <span class="material-symbols-outlined" style="margin-right:6px; color:#8a8886; font-size:18px;">search</span>
                 <input type="text" id="requesterSearchInput" placeholder="Filter my requests by ID, item, or purpose...">
               </div>
               <select id="requesterPriorityFilter" class="d365-select-filter">
                 <option value="all" data-i18n="priorityAll">All Priorities</option>
               </select>
             </div>
-            <div style="font-size:12px; color:var(--d365-text-secondary);">
-              <span>⚡ Live Situation Feed</span>
+            <div style="font-size:12px; color:var(--d365-text-secondary); display:flex; align-items:center; gap:4px;">
+              <span class="material-symbols-outlined" style="font-size:16px; color:#38bdf8;">bolt</span>
+              <span>Live Situation Feed</span>
             </div>
           </div>
         </div>
@@ -490,7 +485,7 @@
           </div>
           <div>
             <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')">
-              ← <span data-i18n="navDashboard">Back to Board</span>
+              <span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">arrow_back</span> <span data-i18n="navDashboard">Back to Board</span>
             </button>
           </div>
         </div>
@@ -499,19 +494,19 @@
         <div class="d365-bpf-container">
           <div class="d365-bpf-bar">
             <div class="d365-bpf-stage active">
-              <span class="d365-bpf-stage-title"><span>📝</span> 1. Draft & Submit</span>
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">edit_document</span> 1. Draft & Submit</span>
               <span class="d365-bpf-stage-status">Current Stage</span>
             </div>
             <div class="d365-bpf-stage">
-              <span class="d365-bpf-stage-title"><span>👔</span> 2. Management Review</span>
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">rate_review</span> 2. Management Review</span>
               <span class="d365-bpf-stage-status">Next</span>
             </div>
             <div class="d365-bpf-stage">
-              <span class="d365-bpf-stage-title"><span>⚖️</span> 3. Approval Decision</span>
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">gavel</span> 3. Approval Decision</span>
               <span class="d365-bpf-stage-status">Pending</span>
             </div>
             <div class="d365-bpf-stage">
-              <span class="d365-bpf-stage-title"><span>📦</span> 4. Sourcing & Delivery</span>
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">local_shipping</span> 4. Sourcing & Delivery</span>
               <span class="d365-bpf-stage-status">Pending</span>
             </div>
           </div>
@@ -523,7 +518,7 @@
           <div class="d365-fasttab open">
             <div class="d365-fasttab-header" onclick="toggleFastTab(this)">
               <div class="d365-fasttab-title">
-                <span class="d365-fasttab-chevron">▶</span>
+                <span class="d365-fasttab-chevron material-symbols-outlined">chevron_right</span>
                 <span>General Information</span>
               </div>
               <span class="d365-fasttab-summary">Department, Priority, Requester, and Justification</span>
@@ -583,7 +578,7 @@
           <div class="d365-fasttab open">
             <div class="d365-fasttab-header" onclick="toggleFastTab(this)">
               <div class="d365-fasttab-title">
-                <span class="d365-fasttab-chevron">▶</span>
+                <span class="d365-fasttab-chevron material-symbols-outlined">chevron_right</span>
                 <span data-i18n="itemsSectionTitle">Requested Line Items</span>
               </div>
               <span class="d365-fasttab-summary">Category-first catalog item selection and custom entries</span>
@@ -592,7 +587,7 @@
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span style="font-size:12px; color:var(--d365-text-secondary);">Select the Category first to filter catalog items or enter custom item names</span>
                 <button type="button" class="btn btn-sm btn-outline" id="addNewLineBtn">
-                  <span>➕</span> <span data-i18n="addItemBtn">+ Add Line Item</span>
+                  <span class="material-symbols-outlined" style="font-size:16px; margin-right:3px;">add</span> <span data-i18n="addItemBtn">+ Add Line Item</span>
                 </button>
               </div>
 
@@ -628,7 +623,7 @@
           <div class="d-flex justify-content-end gap-2 mt-3">
             <button type="button" class="btn btn-outline" id="cancelRequestBtn" data-i18n="actionCancel">Cancel</button>
             <button type="submit" class="btn btn-primary" data-i18n="btnSubmitRequest">
-              <span>✓</span> Submit Procurement Request
+              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">send</span> Submit Procurement Request
             </button>
           </div>
         </form>
@@ -645,7 +640,7 @@
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddDepartmentModal()">
-              <span>➕</span> <span data-i18n="btnNewDepartment">+ Add New Department</span>
+              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">add</span> <span data-i18n="btnNewDepartment">+ Add New Department</span>
             </button>
           </div>
         </div>
@@ -684,7 +679,7 @@
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddPriorityModal()">
-              <span>➕</span> <span data-i18n="btnNewPriority">+ Add New Priority Level</span>
+              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">add</span> <span data-i18n="btnNewPriority">+ Add New Priority Level</span>
             </button>
           </div>
         </div>
@@ -725,7 +720,7 @@
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddCategoryModal()">
-              <span>➕</span> <span data-i18n="btnNewCategory">+ Add New Category</span>
+              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">add</span> <span data-i18n="btnNewCategory">+ Add New Category</span>
             </button>
           </div>
         </div>
@@ -763,7 +758,7 @@
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddItemModal()">
-              <span>➕</span> <span data-i18n="btnNewItem">+ Add New Item</span>
+              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">add</span> <span data-i18n="btnNewItem">+ Add New Item</span>
             </button>
           </div>
         </div>
@@ -802,7 +797,7 @@
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddUserModal()">
-              <span>➕</span> <span data-i18n="btnNewUser">+ Add New User</span>
+              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">add</span> <span data-i18n="btnNewUser">+ Add New User</span>
             </button>
           </div>
         </div>
@@ -841,13 +836,13 @@
     <div class="modal-container" style="max-width: 980px;">
       <div class="modal-header">
         <h3 data-i18n="modalDetailTitle">Procurement Requisition Details</h3>
-        <button type="button" class="btn btn-text" onclick="closeModal('requisitionDetailModal')">✕</button>
+        <button type="button" class="btn btn-text" onclick="closeModal('requisitionDetailModal')"><span class="material-symbols-outlined" style="font-size:20px;">close</span></button>
       </div>
       <div class="modal-body" id="requisitionDetailContent">
         <!-- Rendered by JS -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ <span data-i18n="actionPrint">Print / PDF</span></button>
+        <button type="button" class="btn btn-outline" onclick="window.print()"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">print</span> <span data-i18n="actionPrint">Print / PDF</span></button>
         <button type="button" class="btn btn-primary" onclick="closeModal('requisitionDetailModal')" data-i18n="actionClose">Close</button>
       </div>
     </div>
@@ -858,7 +853,7 @@
     <div class="modal-container" style="max-width: 520px;">
       <div class="modal-header">
         <h3 id="deptModalTitle" data-i18n="modalAddDeptTitle">Add Requesting Department</h3>
-        <button type="button" class="btn btn-text" onclick="closeModal('departmentModal')">✕</button>
+        <button type="button" class="btn btn-text" onclick="closeModal('departmentModal')"><span class="material-symbols-outlined" style="font-size:20px;">close</span></button>
       </div>
       <div class="modal-body">
         <div class="row g-2 mb-3">
@@ -903,7 +898,7 @@
     <div class="modal-container" style="max-width: 540px;">
       <div class="modal-header">
         <h3 id="prioModalTitle" data-i18n="modalAddPrioTitle">Add Priority Level</h3>
-        <button type="button" class="btn btn-text" onclick="closeModal('priorityModal')">✕</button>
+        <button type="button" class="btn btn-text" onclick="closeModal('priorityModal')"><span class="material-symbols-outlined" style="font-size:20px;">close</span></button>
       </div>
       <div class="modal-body">
         <div class="row g-2 mb-3">
@@ -966,7 +961,7 @@
     <div class="modal-container" style="max-width: 500px;">
       <div class="modal-header">
         <h3 id="catModalTitle" data-i18n="modalAddCatTitle">Add Category</h3>
-        <button type="button" class="btn btn-text" onclick="closeModal('categoryModal')">✕</button>
+        <button type="button" class="btn btn-text" onclick="closeModal('categoryModal')"><span class="material-symbols-outlined" style="font-size:20px;">close</span></button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
@@ -1005,7 +1000,7 @@
     <div class="modal-container" style="max-width: 550px;">
       <div class="modal-header">
         <h3 id="itemModalTitle" data-i18n="modalAddItemTitle">Add Catalog Item</h3>
-        <button type="button" class="btn btn-text" onclick="closeModal('itemModal')">✕</button>
+        <button type="button" class="btn btn-text" onclick="closeModal('itemModal')"><span class="material-symbols-outlined" style="font-size:20px;">close</span></button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
@@ -1054,7 +1049,7 @@
     <div class="modal-container" style="max-width: 500px;">
       <div class="modal-header">
         <h3 id="userModalTitle" data-i18n="modalAddUserTitle">Add User</h3>
-        <button type="button" class="btn btn-text" onclick="closeModal('userModal')">✕</button>
+        <button type="button" class="btn btn-text" onclick="closeModal('userModal')"><span class="material-symbols-outlined" style="font-size:20px;">close</span></button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
