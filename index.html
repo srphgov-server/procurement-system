@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProcureFlow - Procurement Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">📦</div>
+      <div class="brand-info">
+        <h1 data-i18n="appTitle">ProcureFlow</h1>
+        <p data-i18n="appSubtitle">Procurement Management</p>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-heading" data-i18n="navDashboard">Operations</div>
+      <a href="#" class="nav-item active" data-nav-target="dashboard">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span data-i18n="navDashboard">Requisition Board & KPI</span>
+      </a>
+
+      <a href="#" class="nav-item" data-nav-target="new-request">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <span data-i18n="navNewRequest">+ New Requisition</span>
+      </a>
+
+      <div class="nav-heading admin-only-nav" data-i18n="navMasterData">List Management</div>
+      
+      <a href="#" class="nav-item admin-only-nav" data-nav-target="categories">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+        <span data-i18n="navCategories">Category List</span>
+      </a>
+
+      <a href="#" class="nav-item admin-only-nav" data-nav-target="items">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        <span data-i18n="navItems">Item Catalog</span>
+      </a>
+
+      <a href="#" class="nav-item admin-only-nav" data-nav-target="users">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <span data-i18n="navUsers">User Management</span>
+      </a>
+
+      <div class="nav-heading" style="margin-top:auto;">System</div>
+      <a href="#" class="nav-item" id="navExportBtn">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <span data-i18n="navExport">Export Data (CSV)</span>
+      </a>
+
+      <a href="#" class="nav-item" id="navResetBtn" style="color: #f87171;">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span data-i18n="navReset">Reset Sample Data</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span>v1.0.0</span>
+      <span>Procurement Dept</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="main-wrapper">
+    
+    <!-- Topbar Header -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <!-- Role Switcher -->
+        <div class="role-badge-container">
+          <span class="role-badge-label" data-i18n="currentRole">Current Role:</span>
+          <select id="roleSelector" class="role-select">
+            <option value="admin">🛡️ Administrator (Approver)</option>
+            <option value="management">👔 Management (Reviewer)</option>
+            <option value="requester">👨‍💼 Requester (Dept Staff)</option>
+          </select>
+        </div>
+        <span id="roleDescriptionText" style="font-size:12px; color:var(--text-muted);"></span>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Khmer & English Language Switcher -->
+        <div class="lang-switch">
+          <button type="button" class="lang-btn active" id="langEnBtn">
+            <span>🇬🇧</span> English
+          </button>
+          <button type="button" class="lang-btn" id="langKhBtn">
+            <span>🇰🇭</span> ភាសាខ្មែរ
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main View Area -->
+    <main class="content-area">
+
+      <!-- View 1: Requisitions Board & KPI -->
+      <section id="view-dashboard" class="tab-view">
+        <div class="page-header">
+          <div class="page-title">
+            <h2 data-i18n="requisitionList">Requisition Orders</h2>
+            <p data-i18n="requisitionListSubtitle">Real-time list of all department procurement requests with priority KPI tracking</p>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="switchTab('new-request')">
+              <span data-i18n="navNewRequest">+ New Requisition</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Management Role Alert Banner -->
+        <div id="managementNoticeBanner" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; border-left:4px solid #2563eb; border-radius:8px; padding:12px 18px; margin-bottom:20px; align-items:center; justify-content:space-between; gap:12px;"></div>
+
+        <!-- KPI Box Grid (Requisition Priority & Status Tracking) -->
+        <div class="kpi-grid">
+          <!-- Total Requests -->
+          <div class="kpi-card total" id="kpiTotalCard">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="kpiTotalRequests">Total Requisitions</span>
+              <div class="kpi-icon-wrap">📑</div>
+            </div>
+            <div class="kpi-value" id="kpiTotalValue">0</div>
+            <div class="kpi-subtext" data-i18n="kpiClickToFilter">Click card to filter table</div>
+          </div>
+
+          <!-- New / Pending Review -->
+          <div class="kpi-card new" id="kpiNewCard">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="kpiNewPending">New / Pending Review</span>
+              <div class="kpi-icon-wrap">⏳</div>
+            </div>
+            <div class="kpi-value" id="kpiNewValue">0</div>
+            <div class="kpi-subtext">Needs review by Management</div>
+          </div>
+
+          <!-- Urgent / High Priority -->
+          <div class="kpi-card urgent" id="kpiUrgentCard">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="kpiUrgentHigh">Urgent & High Priority</span>
+              <div class="kpi-icon-wrap">
+                <span class="pulse-dot"></span>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiUrgentValue" style="color:var(--danger);">0</div>
+            <div class="kpi-subtext" data-i18n="kpiUrgentNote">Requires immediate attention</div>
+          </div>
+
+          <!-- Approved -->
+          <div class="kpi-card approved" id="kpiApprovedCard">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="kpiApproved">Approved Requests</span>
+              <div class="kpi-icon-wrap">✓</div>
+            </div>
+            <div class="kpi-value" id="kpiApprovedValue" style="color:var(--success);">0</div>
+            <div class="kpi-subtext">Approved & ready for PO</div>
+          </div>
+
+          <!-- Total Budget -->
+          <div class="kpi-card budget">
+            <div class="kpi-top">
+              <span class="kpi-label" data-i18n="kpiTotalBudget">Total Est. Value</span>
+              <div class="kpi-icon-wrap">💰</div>
+            </div>
+            <div class="kpi-value" id="kpiBudgetValue">$0.00</div>
+            <div class="kpi-subtext">Cumulative requests value</div>
+          </div>
+        </div>
+
+        <!-- Priority Breakdown & Quick Filter Bar -->
+        <div class="priority-breakdown-bar">
+          <div style="font-weight:700; display:flex; align-items:center; gap:8px;">
+            <span>🎯</span>
+            <span data-i18n="priority">Priority Tracker</span>:
+          </div>
+          <div class="priority-tags" id="priorityPillsContainer">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="filter-card">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="tableSearchInput" placeholder="Search ID, requester, department, purpose..." data-i18n-ph="searchPlaceholder">
+          </div>
+
+          <select id="filterDepartmentSelect" class="select-filter">
+            <option value="all">All Departments</option>
+          </select>
+
+          <select id="filterStatusSelect" class="select-filter">
+            <option value="all" data-i18n="statusAll">All Statuses</option>
+            <option value="new" data-i18n="statusNew">New</option>
+            <option value="under_review" data-i18n="statusUnderReview">Under Review</option>
+            <option value="approved" data-i18n="statusApproved">Approved</option>
+            <option value="rejected" data-i18n="statusRejected">Rejected</option>
+            <option value="completed" data-i18n="statusCompleted">Completed / Ordered</option>
+          </select>
+
+          <select id="filterPrioritySelect" class="select-filter">
+            <option value="all" data-i18n="priorityAll">All Priorities</option>
+            <option value="urgent" data-i18n="priorityUrgent">Urgent</option>
+            <option value="high" data-i18n="priorityHigh">High</option>
+            <option value="medium" data-i18n="priorityMedium">Medium</option>
+            <option value="low" data-i18n="priorityLow">Low</option>
+          </select>
+
+          <button type="button" class="btn btn-outline" id="clearFiltersBtn">
+            <span data-i18n="clearFilters">Clear Filters</span>
+          </button>
+
+          <div style="margin-left:auto; font-size:12.5px; color:var(--text-muted);" id="tableResultsCount"></div>
+        </div>
+
+        <!-- Requisitions Data Table -->
+        <div class="data-card">
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thReqId">Req ID</th>
+                  <th data-i18n="thDate">Date / Deadline</th>
+                  <th data-i18n="thDepartment">Department</th>
+                  <th data-i18n="thRequester">Requester</th>
+                  <th data-i18n="thItemsSummary">Items Summary</th>
+                  <th data-i18n="thTotalAmount">Est. Total ($)</th>
+                  <th data-i18n="thPriority">Priority</th>
+                  <th data-i18n="thStatus">Status</th>
+                  <th data-i18n="thActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="requisitionsTableBody">
+                <!-- Rendered dynamically by js/app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 2: New Requisition Request Form -->
+      <section id="view-new-request" class="tab-view" style="display:none;">
+        <div class="page-header">
+          <div class="page-title">
+            <h2 data-i18n="formTitle">New Procurement Requisition Form</h2>
+            <p data-i18n="formSubtitle">Submit a purchase request from your department for review and management approval</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')">
+              <span data-i18n="actionCancel">Back to Board</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-card" style="padding: 28px;">
+          <form id="newRequisitionForm">
+            <div class="form-grid">
+              <!-- Department -->
+              <div class="form-group">
+                <label for="formDepartmentSelect" data-i18n="deptLabel">Requesting Department *</label>
+                <select id="formDepartmentSelect" class="form-select" required>
+                  <!-- Populated by JS -->
+                </select>
+              </div>
+
+              <!-- Urgency / Priority -->
+              <div class="form-group">
+                <label for="formPrioritySelect" data-i18n="priorityLabel">Urgency / Priority Level *</label>
+                <select id="formPrioritySelect" class="form-select" required>
+                  <option value="medium" data-i18n="priorityMedium">Medium</option>
+                  <option value="urgent" data-i18n="priorityUrgent">Urgent (Immediate Project Need)</option>
+                  <option value="high" data-i18n="priorityHigh">High</option>
+                  <option value="low" data-i18n="priorityLow">Low (Routine)</option>
+                </select>
+              </div>
+
+              <!-- Requester Name -->
+              <div class="form-group">
+                <label for="formRequesterName" data-i18n="requesterNameLabel">Requester Name *</label>
+                <input type="text" id="formRequesterName" class="form-input" required placeholder="e.g. Sokha Chan" value="Sokha Chan">
+              </div>
+
+              <!-- Requester Email -->
+              <div class="form-group">
+                <label for="formRequesterEmail" data-i18n="requesterEmailLabel">Requester Email *</label>
+                <input type="email" id="formRequesterEmail" class="form-input" required placeholder="name@company.com" value="sokha.chan@company.com">
+              </div>
+
+              <!-- Request Date -->
+              <div class="form-group">
+                <label for="formRequestDate" data-i18n="requestDateLabel">Request Date *</label>
+                <input type="date" id="formRequestDate" class="form-input" required>
+              </div>
+
+              <!-- Required By Date -->
+              <div class="form-group">
+                <label for="formNeededDate" data-i18n="neededDateLabel">Required By Date</label>
+                <input type="date" id="formNeededDate" class="form-input">
+              </div>
+
+              <!-- Business Purpose / Justification -->
+              <div class="form-group col-full">
+                <label for="formPurposeText" data-i18n="purposeLabel">Business Purpose & Justification *</label>
+                <textarea id="formPurposeText" class="form-textarea" required placeholder="Explain why these items are required, intended project/use, and justification..." data-i18n-ph="purposePlaceholder"></textarea>
+              </div>
+            </div>
+
+            <!-- Requested Line Items Section -->
+            <div class="line-items-wrapper">
+              <div class="line-items-header">
+                <div>
+                  <h4 data-i18n="itemsSectionTitle">Requested Line Items</h4>
+                  <p style="font-size:12px; color:var(--text-muted);">Select pre-cataloged items or add custom non-catalog requisitions</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline" id="addNewLineBtn">
+                  <span data-i18n="addItemBtn">+ Add Line Item</span>
+                </button>
+              </div>
+
+              <div class="data-table-wrap">
+                <table class="items-entry-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width: 260px;" data-i18n="colItemSelect">Item Name / Catalog</th>
+                      <th style="min-width: 170px;" data-i18n="colCategory">Category</th>
+                      <th style="min-width: 180px;" data-i18n="colSpec">Specs / Description</th>
+                      <th style="width: 90px;" data-i18n="colQty">Qty</th>
+                      <th style="width: 100px;" data-i18n="colUnit">Unit</th>
+                      <th style="width: 120px;" data-i18n="colUnitPrice">Est. Unit ($)</th>
+                      <th style="width: 120px; text-align:right;" data-i18n="colLineTotal">Subtotal ($)</th>
+                      <th style="width: 50px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="lineItemsTbody">
+                    <!-- Dynamically populated rows -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Grand Total Box -->
+              <div class="grand-total-box">
+                <div class="grand-total-label" data-i18n="grandTotal">Estimated Grand Total:</div>
+                <div class="grand-total-amount" id="formGrandTotalDisplay">$0.00</div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+              <button type="button" class="btn btn-outline" id="cancelRequestBtn" data-i18n="actionCancel">Cancel</button>
+              <button type="submit" class="btn btn-primary" data-i18n="btnSubmitRequest">Submit Procurement Request</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- View 3: Master Data - Categories -->
+      <section id="view-categories" class="tab-view" style="display:none;">
+        <div class="page-header">
+          <div class="page-title">
+            <h2 data-i18n="catManagementTitle">Procurement Category List</h2>
+            <p data-i18n="catManagementSubtitle">Manage item classifications and procurement spend categories</p>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="openAddCategoryModal()">
+              <span data-i18n="btnNewCategory">+ Add New Category</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thCatCode">Code</th>
+                  <th data-i18n="thCatNameEn">Category Name (EN)</th>
+                  <th data-i18n="thCatNameKh">Category Name (KH)</th>
+                  <th data-i18n="thCatDesc">Description</th>
+                  <th data-i18n="thCatItemsCount">Items Count</th>
+                  <th data-i18n="thCatStatus">Status</th>
+                  <th data-i18n="thActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="categoriesTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 4: Master Data - Items -->
+      <section id="view-items" class="tab-view" style="display:none;">
+        <div class="page-header">
+          <div class="page-title">
+            <h2 data-i18n="itemManagementTitle">Procurement Item Catalog</h2>
+            <p data-i18n="itemManagementSubtitle">Standardized list of goods, equipment, and office supplies with estimated pricing</p>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="openAddItemModal()">
+              <span data-i18n="btnNewItem">+ Add New Item</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thItemCode">Item Code</th>
+                  <th data-i18n="thItemNameEn">Item Name (EN)</th>
+                  <th data-i18n="thItemNameKh">Item Name (KH)</th>
+                  <th data-i18n="thItemCat">Category</th>
+                  <th data-i18n="thItemUnit">Unit</th>
+                  <th data-i18n="thItemPrice">Est. Price ($)</th>
+                  <th data-i18n="thItemStatus">Status</th>
+                  <th data-i18n="thActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="itemsTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 5: Master Data - Users -->
+      <section id="view-users" class="tab-view" style="display:none;">
+        <div class="page-header">
+          <div class="page-title">
+            <h2 data-i18n="userManagementTitle">User & Role Management</h2>
+            <p data-i18n="userManagementSubtitle">Manage department accounts, review roles, and administrative permissions</p>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="openAddUserModal()">
+              <span data-i18n="btnNewUser">+ Add New User</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thUserId">User ID</th>
+                  <th data-i18n="thUserName">Full Name</th>
+                  <th data-i18n="thUserEmail">Email</th>
+                  <th data-i18n="thUserDept">Department</th>
+                  <th data-i18n="thUserRole">Role</th>
+                  <th data-i18n="thUserStatus">Status</th>
+                  <th data-i18n="thActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Requisition Detail Modal -->
+  <div class="modal-backdrop" id="requisitionDetailModal">
+    <div class="modal-container" style="max-width: 960px;">
+      <div class="modal-header">
+        <h3 data-i18n="modalDetailTitle">Procurement Requisition Details</h3>
+        <button type="button" class="btn btn-text" onclick="closeModal('requisitionDetailModal')">✕</button>
+      </div>
+      <div class="modal-body" id="requisitionDetailContent">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ <span data-i18n="actionPrint">Print / PDF</span></button>
+        <button type="button" class="btn btn-primary" onclick="closeModal('requisitionDetailModal')" data-i18n="actionClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-backdrop" id="categoryModal">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 id="catModalTitle" data-i18n="modalAddCatTitle">Add Category</h3>
+        <button type="button" class="btn btn-text" onclick="closeModal('categoryModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thCatCode">Category Code *</label>
+          <input type="text" id="catFormCode" class="form-input" placeholder="e.g. IT-EQ">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thCatNameEn">Name (English) *</label>
+          <input type="text" id="catFormNameEn" class="form-input" placeholder="e.g. IT & Electronics">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thCatNameKh">Name (Khmer)</label>
+          <input type="text" id="catFormNameKh" class="form-input" placeholder="e.g. ឧបករណ៍បច្ចេកវិទ្យា">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thCatDesc">Description</label>
+          <input type="text" id="catFormDesc" class="form-input" placeholder="Brief description...">
+        </div>
+        <div class="form-group">
+          <label data-i18n="thCatStatus">Status</label>
+          <select id="catFormStatus" class="form-select">
+            <option value="active" data-i18n="active">Active</option>
+            <option value="inactive" data-i18n="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('categoryModal')" data-i18n="actionCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveCategory()" data-i18n="actionSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item Modal -->
+  <div class="modal-backdrop" id="itemModal">
+    <div class="modal-container" style="max-width: 550px;">
+      <div class="modal-header">
+        <h3 id="itemModalTitle" data-i18n="modalAddItemTitle">Add Catalog Item</h3>
+        <button type="button" class="btn btn-text" onclick="closeModal('itemModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thItemCode">Item Code *</label>
+          <input type="text" id="itemFormCode" class="form-input" placeholder="e.g. LAPTOP-PRO">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thItemNameEn">Item Name (English) *</label>
+          <input type="text" id="itemFormNameEn" class="form-input" placeholder="e.g. Dell Latitude Laptop">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thItemNameKh">Item Name (Khmer)</label>
+          <input type="text" id="itemFormNameKh" class="form-input" placeholder="e.g. កុំព្យូទ័រយួរដៃ Dell">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thItemCat">Category *</label>
+          <select id="itemFormCategory" class="form-select"></select>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+          <div class="form-group">
+            <label data-i18n="thItemUnit">Unit *</label>
+            <input type="text" id="itemFormUnit" class="form-input" value="Unit" placeholder="Unit, Pcs, Box, Set...">
+          </div>
+          <div class="form-group">
+            <label data-i18n="thItemPrice">Est. Unit Price ($) *</label>
+            <input type="number" step="0.01" min="0" id="itemFormPrice" class="form-input" value="0.00">
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="thItemStatus">Status</label>
+          <select id="itemFormStatus" class="form-select">
+            <option value="active" data-i18n="active">Active</option>
+            <option value="inactive" data-i18n="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('itemModal')" data-i18n="actionCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveItem()" data-i18n="actionSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Modal -->
+  <div class="modal-backdrop" id="userModal">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 id="userModalTitle" data-i18n="modalAddUserTitle">Add User</h3>
+        <button type="button" class="btn btn-text" onclick="closeModal('userModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thUserName">Full Name *</label>
+          <input type="text" id="userFormName" class="form-input" placeholder="e.g. Sokha Chan">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thUserEmail">Email Address *</label>
+          <input type="email" id="userFormEmail" class="form-input" placeholder="e.g. sokha.chan@company.com">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thUserDept">Department *</label>
+          <select id="userFormDept" class="form-select"></select>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label data-i18n="thUserRole">Role *</label>
+          <select id="userFormRole" class="form-select">
+            <option value="requester" data-i18n="roleRequester">Requester (Dept Staff)</option>
+            <option value="management" data-i18n="roleManagement">Management (Reviewer)</option>
+            <option value="admin" data-i18n="roleAdmin">Administrator (Approver)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label data-i18n="thUserStatus">Status</label>
+          <select id="userFormStatus" class="form-select">
+            <option value="active" data-i18n="active">Active</option>
+            <option value="inactive" data-i18n="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('userModal')" data-i18n="actionCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveUser()" data-i18n="actionSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
