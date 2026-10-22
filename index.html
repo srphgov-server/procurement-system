@@ -3,495 +3,601 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ProcureFlow - Procurement Management System</title>
+  <title>Dynamics 365 | ProcureFlow - Sourcing & Procurement</title>
+  
+  <!-- Bootstrap 5 CSS & Bootstrap Icons CDN (with offline fallback to dynamics365.css) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Dynamics 365 Fluent Design System & Tokens -->
+  <link rel="stylesheet" href="css/dynamics365.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="d365-app-layout">
 
-  <!-- Sidebar Navigation -->
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-icon">📦</div>
-      <div class="brand-info">
-        <h1 data-i18n="appTitle">ProcureFlow</h1>
-        <p data-i18n="appSubtitle">Procurement Management</p>
+  <!-- =========================================================================
+       1. Microsoft 365 Suite Bar (Top Global Navigation Bar)
+       ========================================================================= -->
+  <header class="d365-suitebar">
+    <div class="d365-suite-left">
+      <!-- 9-dot Waffle App Launcher -->
+      <button type="button" class="d365-waffle-btn" title="App Launcher (Waffle)" onclick="toggleSidebarCollapse()">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+          <circle cx="2" cy="2" r="1.7"/>
+          <circle cx="8" cy="2" r="1.7"/>
+          <circle cx="14" cy="2" r="1.7"/>
+          <circle cx="2" cy="8" r="1.7"/>
+          <circle cx="8" cy="8" r="1.7"/>
+          <circle cx="14" cy="8" r="1.7"/>
+          <circle cx="2" cy="14" r="1.7"/>
+          <circle cx="8" cy="14" r="1.7"/>
+          <circle cx="14" cy="14" r="1.7"/>
+        </svg>
+      </button>
+
+      <!-- App Branding -->
+      <div class="d365-app-brand">
+        <span class="d365-logo-glyph">❖</span>
+        <span class="d365-brand-bold">Dynamics 365</span>
+        <span class="d365-brand-divider">|</span>
+        <span class="d365-brand-sub" data-i18n="appTitle">ProcureFlow</span>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2 d-none d-md-inline-block" style="font-size:10px; font-weight:600;">SUPPLY CHAIN</span>
       </div>
     </div>
 
-    <nav class="nav-menu">
-      <div class="nav-heading" data-i18n="navDashboard">Operations</div>
-      <a href="#" class="nav-item active" data-nav-target="dashboard">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <span data-i18n="navDashboard">Requisition Board & KPI</span>
-      </a>
-
-      <a href="#" class="nav-item" data-nav-target="requester-dashboard" id="navRequesterDashboardItem">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <span data-i18n="navRequesterDashboard">Requester Dashboard</span>
-      </a>
-
-      <a href="#" class="nav-item" data-nav-target="new-request">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-        </svg>
-        <span data-i18n="navNewRequest">+ New Requisition</span>
-      </a>
-
-      <div class="nav-heading admin-only-nav" data-i18n="navMasterData">List Management</div>
-      
-      <a href="#" class="nav-item admin-only-nav" data-nav-target="departments">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-        <span data-i18n="navDepartments">Requesting Departments</span>
-      </a>
-
-      <a href="#" class="nav-item admin-only-nav" data-nav-target="priorities">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        <span data-i18n="navPriorities">Urgency / Priority Levels</span>
-      </a>
-
-      <a href="#" class="nav-item admin-only-nav" data-nav-target="categories">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-        </svg>
-        <span data-i18n="navCategories">Category List</span>
-      </a>
-
-      <a href="#" class="nav-item admin-only-nav" data-nav-target="items">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
-        <span data-i18n="navItems">Item Catalog</span>
-      </a>
-
-      <a href="#" class="nav-item admin-only-nav" data-nav-target="users">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-        <span data-i18n="navUsers">User Management</span>
-      </a>
-
-      <div class="nav-heading" style="margin-top:auto;">System</div>
-      <a href="#" class="nav-item" id="navExportBtn">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
-        <span data-i18n="navExport">Export Data (CSV)</span>
-      </a>
-
-      <a href="#" class="nav-item" id="navResetBtn" style="color: #f87171;">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <span data-i18n="navReset">Reset Sample Data</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <span>v1.0.0</span>
-      <span>Procurement Dept</span>
+    <!-- Suite Global Search -->
+    <div class="d365-suite-center d-none d-lg-block">
+      <div class="d365-suite-search">
+        <span class="d365-search-icon">🔍</span>
+        <input type="text" class="d365-search-input" placeholder="Search across requisitions, items, vendors, departments..." data-i18n-ph="searchPlaceholder">
+        <span class="d365-search-hint">Alt+Q</span>
+      </div>
     </div>
-  </aside>
 
-  <!-- Main Content Wrapper -->
-  <div class="main-wrapper">
+    <!-- Suite Controls: Environment, Persona, Language, User -->
+    <div class="d365-suite-right">
+      <!-- Environment Pill -->
+      <div class="d365-env-tag d-none d-sm-inline-flex" title="Connected Environment">
+        <span class="pulse-dot"></span>
+        <span>USMF Production</span>
+      </div>
+
+      <!-- Role / Persona Selector -->
+      <div class="d365-role-box" title="Switch User Security Role">
+        <select id="roleSelector" class="d365-role-select">
+          <option value="admin">🛡️ Administrator (Approver)</option>
+          <option value="management">👔 Management (Reviewer)</option>
+          <option value="requester">👨‍💼 Requester (Dept Staff)</option>
+        </select>
+      </div>
+      <span id="roleDescriptionText" class="d-none"></span>
+
+      <!-- Language Toggle Switcher -->
+      <div class="d365-lang-toggle" title="Switch Language">
+        <button type="button" class="d365-lang-btn active" id="langEnBtn">EN</button>
+        <button type="button" class="d365-lang-btn" id="langKhBtn">ខ្មែរ</button>
+      </div>
+
+      <!-- Quick Action Icons -->
+      <button type="button" class="d365-icon-action-btn d-none d-md-inline-flex" title="Notifications">
+        🔔
+        <span class="d365-badge-pill"></span>
+      </button>
+
+      <button type="button" class="d365-icon-action-btn d-none d-md-inline-flex" title="System Settings" onclick="switchTab('departments')">
+        ⚙️
+      </button>
+
+      <!-- User Profile Badge -->
+      <div class="d365-avatar-circle" title="Logged in as Sokha Chan (Administrator)">
+        SC
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       2. Dynamics 365 Command Bar (Horizontal Action Ribbon)
+       ========================================================================= -->
+  <div class="d365-commandbar">
+    <div class="d365-cmd-left">
+      <!-- Primary New Requisition Action -->
+      <button type="button" class="d365-cmd-btn d365-cmd-primary" onclick="switchTab('new-request')">
+        <span>➕</span>
+        <span data-i18n="navNewRequest">New Requisition</span>
+      </button>
+
+      <!-- Refresh Action -->
+      <button type="button" class="d365-cmd-btn" onclick="renderAll()" title="Refresh Data">
+        <span>🔄</span>
+        <span>Refresh</span>
+      </button>
+
+      <!-- Export to Excel (CSV) -->
+      <button type="button" class="d365-cmd-btn" id="navExportBtn">
+        <span>📊</span>
+        <span data-i18n="navExport">Export to Excel</span>
+      </button>
+
+      <!-- Print Voucher Action -->
+      <button type="button" class="d365-cmd-btn" onclick="window.print()" title="Print Current View or Voucher">
+        <span>🖨️</span>
+        <span data-i18n="actionPrint">Print</span>
+      </button>
+
+      <div class="d365-cmd-divider"></div>
+
+      <!-- Quick Navigate to Requester Dashboard -->
+      <button type="button" class="d365-cmd-btn" onclick="switchTab('requester-dashboard')" title="Requester Situation Portal">
+        <span>👤</span>
+        <span data-i18n="navRequesterDashboard">Requester Portal</span>
+      </button>
+
+      <!-- Reset Demo Data -->
+      <button type="button" class="d365-cmd-btn d365-cmd-danger" id="navResetBtn" title="Reset sample database to default">
+        <span>🗑️</span>
+        <span data-i18n="navReset">Reset Data</span>
+      </button>
+    </div>
+
+    <!-- Right Breadcrumb Indicator -->
+    <div class="d365-cmd-right d-none d-md-flex">
+      <div class="d365-breadcrumb">
+        <span>Dynamics 365</span>
+        <span>›</span>
+        <span>Procurement & Sourcing</span>
+        <span>›</span>
+        <strong id="d365BreadcrumbCurrent" style="color:var(--d365-primary);">Requisitions</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. Main Body Wrapper: Sitemap Left Rail + Content Canvas
+       ========================================================================= -->
+  <div class="d365-body-wrapper">
     
-    <!-- Topbar Header -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <!-- Role Switcher -->
-        <div class="role-badge-container">
-          <span class="role-badge-label" data-i18n="currentRole">Current Role:</span>
-          <select id="roleSelector" class="role-select">
-            <option value="admin">🛡️ Administrator (Approver)</option>
-            <option value="management">👔 Management (Reviewer)</option>
-            <option value="requester">👨‍💼 Requester (Dept Staff)</option>
-          </select>
-        </div>
-        <span id="roleDescriptionText" style="font-size:12px; color:var(--text-muted);"></span>
+    <!-- Dynamics 365 Sitemap (Collapsible Left Navigation Rail) -->
+    <aside class="d365-sitemap">
+      <div class="d365-sitemap-toggle-row">
+        <span class="d365-sitemap-title">Sitemap</span>
+        <button type="button" class="d365-sitemap-collapse-btn" title="Collapse / Expand Rail" onclick="toggleSidebarCollapse()">
+          ☰
+        </button>
       </div>
 
-      <div class="topbar-right">
-        <!-- Khmer & English Language Switcher -->
-        <div class="lang-switch">
-          <button type="button" class="lang-btn active" id="langEnBtn">
-            <span>🇬🇧</span> English
-          </button>
-          <button type="button" class="lang-btn" id="langKhBtn">
-            <span>🇰🇭</span> ភាសាខ្មែរ
-          </button>
+      <nav class="d365-sitemap-nav">
+        <!-- Group 1: My Work -->
+        <div class="d365-nav-group-header">MY WORK</div>
+
+        <a href="#" class="d365-nav-link nav-item active" data-nav-target="dashboard">
+          <span class="d365-nav-icon">📊</span>
+          <span class="d365-nav-text" data-i18n="navDashboard">Requisition Board & KPI</span>
+        </a>
+
+        <a href="#" class="d365-nav-link nav-item" data-nav-target="requester-dashboard" id="navRequesterDashboardItem">
+          <span class="d365-nav-icon">👤</span>
+          <span class="d365-nav-text" data-i18n="navRequesterDashboard">Requester Dashboard</span>
+        </a>
+
+        <!-- Group 2: Procurement & Sourcing -->
+        <div class="d365-nav-group-header">PROCUREMENT</div>
+
+        <a href="#" class="d365-nav-link nav-item" data-nav-target="new-request">
+          <span class="d365-nav-icon">📝</span>
+          <span class="d365-nav-text" data-i18n="navNewRequest">+ New Requisition</span>
+        </a>
+
+        <!-- Group 3: Master Data & Admin Setup -->
+        <div class="d365-nav-group-header admin-only-nav">MASTER LISTS</div>
+
+        <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="departments">
+          <span class="d365-nav-icon">🏢</span>
+          <span class="d365-nav-text" data-i18n="navDepartments">Requesting Departments</span>
+        </a>
+
+        <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="priorities">
+          <span class="d365-nav-icon">⏱️</span>
+          <span class="d365-nav-text" data-i18n="navPriorities">Urgency / Priority Levels</span>
+        </a>
+
+        <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="categories">
+          <span class="d365-nav-icon">🏷️</span>
+          <span class="d365-nav-text" data-i18n="navCategories">Category List</span>
+        </a>
+
+        <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="items">
+          <span class="d365-nav-icon">📦</span>
+          <span class="d365-nav-text" data-i18n="navItems">Item Catalog</span>
+        </a>
+
+        <a href="#" class="d365-nav-link nav-item admin-only-nav" data-nav-target="users">
+          <span class="d365-nav-icon">👥</span>
+          <span class="d365-nav-text" data-i18n="navUsers">User Management</span>
+        </a>
+      </nav>
+
+      <!-- Sitemap Area Switcher -->
+      <div class="d365-sitemap-footer">
+        <div class="d365-area-badge">
+          <span>📦</span>
+          <span class="d365-area-text">Sourcing & Purchasing</span>
         </div>
+        <span style="font-size:10px;">v2.0</span>
       </div>
-    </header>
+    </aside>
 
-    <!-- Main View Area -->
-    <main class="content-area">
+    <!-- Main Content Canvas -->
+    <main class="d365-content-canvas">
 
-      <!-- View 1: Requisitions Board & KPI -->
+      <!-- =====================================================================
+           View 1: Requisitions Board & Priority KPI
+           ===================================================================== -->
       <section id="view-dashboard" class="tab-view">
-        <div class="page-header">
-          <div class="page-title">
+        <div class="d365-view-header">
+          <div class="d365-view-title">
             <h2 data-i18n="requisitionList">Requisition Orders</h2>
             <p data-i18n="requisitionListSubtitle">Real-time list of all department procurement requests with priority KPI tracking</p>
           </div>
           <div>
             <button class="btn btn-primary" onclick="switchTab('new-request')">
-              <span data-i18n="navNewRequest">+ New Requisition</span>
+              <span>➕</span> <span data-i18n="navNewRequest">+ New Requisition</span>
             </button>
           </div>
         </div>
 
         <!-- Management Role Alert Banner -->
-        <div id="managementNoticeBanner" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; border-left:4px solid #2563eb; border-radius:8px; padding:12px 18px; margin-bottom:20px; align-items:center; justify-content:space-between; gap:12px;"></div>
+        <div id="managementNoticeBanner" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; border-left:4px solid #2563eb; border-radius:4px; padding:10px 16px; margin-bottom:16px; align-items:center; justify-content:space-between; gap:12px;"></div>
 
-        <!-- KPI Box Grid (Requisition Priority & Status Tracking) -->
-        <div class="kpi-grid">
+        <!-- Dynamics 365 KPI Metric Tiles (5 Interactive Cards) -->
+        <div class="d365-kpi-row">
           <!-- Total Requests -->
-          <div class="kpi-card total" id="kpiTotalCard">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="kpiTotalRequests">Total Requisitions</span>
-              <div class="kpi-icon-wrap">📑</div>
+          <div class="d365-kpi-card kpi-total" id="kpiTotalCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="kpiTotalRequests">Total Requisitions</span>
+              <span class="d365-kpi-icon">📑</span>
             </div>
-            <div class="kpi-value" id="kpiTotalValue">0</div>
-            <div class="kpi-subtext" data-i18n="kpiClickToFilter">Click card to filter table</div>
+            <div class="d365-kpi-value" id="kpiTotalCount">0</div>
+            <div class="d365-kpi-subtext" id="kpiTotalSubtext" data-i18n="kpiAllDepts">All Departments</div>
           </div>
 
-          <!-- New / Pending Review -->
-          <div class="kpi-card new" id="kpiNewCard">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="kpiNewPending">New / Pending Review</span>
-              <div class="kpi-icon-wrap">⏳</div>
+          <!-- Pending Review (New) -->
+          <div class="d365-kpi-card kpi-pending" id="kpiNewCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="kpiNewRequests">New / In Review</span>
+              <span class="d365-kpi-icon">⏳</span>
             </div>
-            <div class="kpi-value" id="kpiNewValue">0</div>
-            <div class="kpi-subtext">Needs review by Management</div>
+            <div class="d365-kpi-value text-warning" id="kpiNewCount">0</div>
+            <div class="d365-kpi-subtext" data-i18n="kpiAwaitingAction">Awaiting review</div>
           </div>
 
-          <!-- Urgent / High Priority -->
-          <div class="kpi-card urgent" id="kpiUrgentCard">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="kpiUrgentHigh">Urgent & High Priority</span>
-              <div class="kpi-icon-wrap">
-                <span class="pulse-dot"></span>
-              </div>
+          <!-- Urgent & High Priority -->
+          <div class="d365-kpi-card kpi-urgent" id="kpiUrgentCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="kpiUrgentRequests">Urgent & High</span>
+              <span class="d365-kpi-icon">🔥</span>
             </div>
-            <div class="kpi-value" id="kpiUrgentValue" style="color:var(--danger);">0</div>
-            <div class="kpi-subtext" data-i18n="kpiUrgentNote">Requires immediate attention</div>
+            <div class="d365-kpi-value text-danger" id="kpiUrgentCount">0</div>
+            <div class="d365-kpi-subtext">
+              <span class="pulse-dot"></span>
+              <span data-i18n="kpiUrgentSubtext">Requires immediate sourcing</span>
+            </div>
           </div>
 
           <!-- Approved -->
-          <div class="kpi-card approved" id="kpiApprovedCard">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="kpiApproved">Approved Requests</span>
-              <div class="kpi-icon-wrap">✓</div>
+          <div class="d365-kpi-card kpi-approved" id="kpiApprovedCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="kpiApprovedRequests">Approved</span>
+              <span class="d365-kpi-icon">✓</span>
             </div>
-            <div class="kpi-value" id="kpiApprovedValue" style="color:var(--success);">0</div>
-            <div class="kpi-subtext">Approved & ready for PO</div>
+            <div class="d365-kpi-value text-success" id="kpiApprovedCount">0</div>
+            <div class="d365-kpi-subtext" data-i18n="kpiApprovedSubtext">Ready for PO issuance</div>
           </div>
 
-          <!-- Total Budget -->
-          <div class="kpi-card budget">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="kpiTotalBudget">Total Est. Value</span>
-              <div class="kpi-icon-wrap">💰</div>
+          <!-- Total Est. Budget -->
+          <div class="d365-kpi-card kpi-value">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="kpiTotalValue">Est. Budget</span>
+              <span class="d365-kpi-icon">💲</span>
             </div>
-            <div class="kpi-value" id="kpiBudgetValue">$0.00</div>
-            <div class="kpi-subtext">Cumulative requests value</div>
+            <div class="d365-kpi-value" id="kpiTotalValue" style="color:var(--d365-purple); font-size:20px;">$0.00</div>
+            <div class="d365-kpi-subtext" data-i18n="kpiTotalValueSubtext">Cumulative value</div>
           </div>
         </div>
 
-        <!-- Priority Breakdown & Quick Filter Bar -->
-        <div class="priority-breakdown-bar">
-          <div style="font-weight:700; display:flex; align-items:center; gap:8px;">
-            <span>🎯</span>
-            <span data-i18n="priority">Priority Tracker</span>:
+        <!-- Dynamics 365 Data Grid Card -->
+        <div class="d365-grid-card">
+          <!-- Toolbar & Search Filters -->
+          <div class="d365-grid-toolbar">
+            <div class="d365-filter-group">
+              <!-- Search box -->
+              <div class="d365-search-box">
+                <span style="margin-right:6px; color:#8a8886;">🔍</span>
+                <input type="text" id="tableSearchInput" placeholder="Search ID, requester, department, purpose..." data-i18n-ph="searchPlaceholder">
+              </div>
+
+              <!-- Department Filter -->
+              <select id="filterDepartmentSelect" class="d365-select-filter">
+                <option value="all">All Departments</option>
+              </select>
+
+              <!-- Status Filter -->
+              <select id="filterStatusSelect" class="d365-select-filter">
+                <option value="all" data-i18n="statusAll">All Statuses</option>
+                <option value="new" data-i18n="statusNew">New Request</option>
+                <option value="under_review" data-i18n="statusUnderReview">Under Review</option>
+                <option value="approved" data-i18n="statusApproved">Approved</option>
+                <option value="rejected" data-i18n="statusRejected">Rejected</option>
+                <option value="completed" data-i18n="statusCompleted">Completed / Ordered</option>
+              </select>
+
+              <!-- Priority Filter -->
+              <select id="filterPrioritySelect" class="d365-select-filter">
+                <option value="all" data-i18n="priorityAll">All Priorities</option>
+              </select>
+            </div>
+
+            <div>
+              <button class="btn btn-sm btn-outline" onclick="renderAll()" title="Reset Filters">
+                <span>🔄</span> Reset Filters
+              </button>
+            </div>
           </div>
-          <div class="priority-tags" id="priorityPillsContainer">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
 
-        <!-- Filter & Search Toolbar -->
-        <div class="filter-card">
-          <div class="search-input-wrap">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="tableSearchInput" placeholder="Search ID, requester, department, purpose..." data-i18n-ph="searchPlaceholder">
+          <!-- Priority Pills Filter Bar -->
+          <div class="d365-priority-bar" id="priorityPillsContainer">
+            <!-- Dynamically populated -->
           </div>
 
-          <select id="filterDepartmentSelect" class="select-filter">
-            <option value="all">All Departments</option>
-          </select>
-
-          <select id="filterStatusSelect" class="select-filter">
-            <option value="all" data-i18n="statusAll">All Statuses</option>
-            <option value="new" data-i18n="statusNew">New</option>
-            <option value="under_review" data-i18n="statusUnderReview">Under Review</option>
-            <option value="approved" data-i18n="statusApproved">Approved</option>
-            <option value="rejected" data-i18n="statusRejected">Rejected</option>
-            <option value="completed" data-i18n="statusCompleted">Completed / Ordered</option>
-          </select>
-
-          <select id="filterPrioritySelect" class="select-filter">
-            <option value="all" data-i18n="priorityAll">All Priorities</option>
-            <option value="urgent" data-i18n="priorityUrgent">Urgent</option>
-            <option value="high" data-i18n="priorityHigh">High</option>
-            <option value="medium" data-i18n="priorityMedium">Medium</option>
-            <option value="low" data-i18n="priorityLow">Low</option>
-          </select>
-
-          <button type="button" class="btn btn-outline" id="clearFiltersBtn">
-            <span data-i18n="clearFilters">Clear Filters</span>
-          </button>
-
-          <div style="margin-left:auto; font-size:12.5px; color:var(--text-muted);" id="tableResultsCount"></div>
-        </div>
-
-        <!-- Requisitions Data Table -->
-        <div class="data-card">
-          <div class="data-table-wrap">
-            <table class="data-table">
+          <!-- Table Container -->
+          <div class="table-responsive">
+            <table class="d365-data-table">
               <thead>
                 <tr>
-                  <th data-i18n="thReqId">Req ID</th>
-                  <th data-i18n="thDate">Date / Deadline</th>
-                  <th data-i18n="thDepartment">Department</th>
-                  <th data-i18n="thRequester">Requester</th>
-                  <th data-i18n="thItemsSummary">Items Summary</th>
-                  <th data-i18n="thTotalAmount">Est. Total ($)</th>
-                  <th data-i18n="thPriority">Priority</th>
-                  <th data-i18n="thStatus">Status</th>
-                  <th data-i18n="thActions">Actions</th>
+                  <th style="width: 120px;" data-i18n="thReqId">Req ID</th>
+                  <th style="width: 100px;" data-i18n="thDate">Date</th>
+                  <th style="width: 140px;" data-i18n="thDepartment">Department</th>
+                  <th style="width: 150px;" data-i18n="thRequester">Requester</th>
+                  <th style="width: 110px;" data-i18n="thPriority">Priority</th>
+                  <th style="min-width: 180px;" data-i18n="thItemsSummary">Items Summary</th>
+                  <th style="width: 110px; text-align:right;" data-i18n="thTotal">Est. Total</th>
+                  <th style="width: 120px;" data-i18n="thStatus">Status</th>
+                  <th style="width: 120px; text-align:center;" data-i18n="thActions">Actions</th>
                 </tr>
               </thead>
               <tbody id="requisitionsTableBody">
-                <!-- Rendered dynamically by js/app.js -->
+                <!-- Dynamically populated rows -->
               </tbody>
             </table>
           </div>
         </div>
       </section>
 
-      <!-- View: Separated Requester Dashboard (Situation Tracker) -->
+      <!-- =====================================================================
+           View 2: Requester Portal & Status Tracker
+           ===================================================================== -->
       <section id="view-requester-dashboard" class="tab-view" style="display:none;">
-        <div class="page-header">
-          <div class="page-title">
+        <div class="d365-view-header">
+          <div class="d365-view-title">
             <h2 data-i18n="requesterDashboardTitle">Requester Portal & Status Tracker</h2>
             <p data-i18n="requesterDashboardSubtitle">Monitor the real-time review, approval, and declining situation from Management for your requisitions</p>
           </div>
-          <div class="header-actions" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-            <div class="requester-profile-pill">
-              <span class="profile-label" data-i18n="requesterSelectPersona">Viewing as Requester:</span>
-              <select id="requesterPersonaSelect" class="form-select profile-select">
-                <!-- Populated dynamically by js/app.js -->
+          <div class="d-flex align-items-center gap-2">
+            <!-- Requester Persona Switcher -->
+            <div class="d365-role-box" style="background:#ffffff; border:1px solid var(--d365-border);">
+              <span style="font-size:12px; font-weight:600; color:var(--d365-text-secondary); margin-right:6px;" data-i18n="requesterSelectPersona">Persona:</span>
+              <select id="requesterPersonaSelect" class="form-select form-select-sm" style="border:none; padding:2px 8px; font-weight:600;">
+                <option value="all" data-i18n="requesterAllProfiles">All Requesters / All Departments</option>
+                <!-- Populated dynamically -->
               </select>
             </div>
             <button class="btn btn-primary" onclick="switchTab('new-request')">
-              <span data-i18n="navNewRequest">+ New Requisition</span>
+              <span>➕</span> <span data-i18n="navNewRequest">+ New Requisition</span>
             </button>
           </div>
         </div>
 
-        <!-- Management Situation Alerts -->
-        <div id="requesterDeclinedAlert" class="situation-alert alert-declined" style="display:none;">
-          <div class="alert-icon">⚠️</div>
-          <div class="alert-body">
-            <h4 data-i18n="declinedAlertTitle">Action Needed: Declined Request(s)</h4>
-            <p id="requesterDeclinedAlertText" data-i18n="declinedAlertMsg">Management has declined one or more of your requests. Please review the feedback reasons below and re-submit with revised specifications.</p>
-          </div>
-        </div>
-
-        <div id="requesterApprovedAlert" class="situation-alert alert-approved" style="display:none;">
-          <div class="alert-icon">🎉</div>
-          <div class="alert-body">
-            <h4 data-i18n="approvedAlertTitle">Great News: Request(s) Approved</h4>
-            <p id="requesterApprovedAlertText" data-i18n="approvedAlertMsg">Management has approved your request! Procurement will initiate purchasing.</p>
-          </div>
-        </div>
-
-        <!-- Management Situation KPI Metric Cards Grid -->
-        <div class="kpi-grid">
+        <!-- Management Situation KPI Metric Cards (5 Cards) -->
+        <div class="d365-kpi-row">
           <!-- Total My Requests -->
-          <div class="kpi-card total" id="reqKpiTotalCard" onclick="setRequesterSituationFilter('all')">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="requesterKpiTotalTitle">My Total Requests</span>
-              <div class="kpi-icon-wrap">📋</div>
+          <div class="d365-kpi-card" id="reqKpiTotalCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="requesterKpiTotalTitle">My Requisitions</span>
+              <span class="d365-kpi-icon">📋</span>
             </div>
-            <div class="kpi-value" id="reqKpiTotalVal">0</div>
-            <div class="kpi-subtext" id="reqKpiTotalAmt">$0.00</div>
+            <div class="d365-kpi-value text-primary" id="reqKpiTotalCount">0</div>
+            <div class="d365-kpi-subtext" data-i18n="requesterKpiTotalDesc">Total filed requests</div>
           </div>
 
-          <!-- Under Review by Management -->
-          <div class="kpi-card new" id="reqKpiReviewCard" onclick="setRequesterSituationFilter('under_review')">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="requesterKpiReviewTitle">In Review by Management</span>
-              <div class="kpi-icon-wrap">
-                <span class="pulse-dot" style="background:#f59e0b;"></span>
-              </div>
+          <!-- In Review by Management -->
+          <div class="d365-kpi-card" id="reqKpiReviewCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="requesterKpiReviewTitle">In Review</span>
+              <span class="d365-kpi-icon">⏳</span>
             </div>
-            <div class="kpi-value" id="reqKpiReviewVal" style="color:#d97706;">0</div>
-            <div class="kpi-subtext" data-i18n="requesterKpiReviewDesc">In queue or being evaluated</div>
+            <div class="d365-kpi-value text-warning" id="reqKpiReviewCount">0</div>
+            <div class="d365-kpi-subtext">
+              <span class="pulse-dot"></span>
+              <span data-i18n="requesterKpiReviewDesc">Under Management review</span>
+            </div>
           </div>
 
           <!-- Approved by Management -->
-          <div class="kpi-card approved" id="reqKpiApprovedCard" onclick="setRequesterSituationFilter('approved')">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="requesterKpiApprovedTitle">Approved by Management</span>
-              <div class="kpi-icon-wrap">✓</div>
+          <div class="d365-kpi-card" id="reqKpiApprovedCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="requesterKpiApprovedTitle">Approved</span>
+              <span class="d365-kpi-icon">✓</span>
             </div>
-            <div class="kpi-value" id="reqKpiApprovedVal" style="color:var(--success);">0</div>
-            <div class="kpi-subtext" data-i18n="requesterKpiApprovedDesc">Approved for procurement</div>
+            <div class="d365-kpi-value text-success" id="reqKpiApprovedCount">0</div>
+            <div class="d365-kpi-subtext" data-i18n="requesterKpiApprovedDesc">Ready for purchasing</div>
           </div>
 
           <!-- Declined by Management -->
-          <div class="kpi-card urgent" id="reqKpiDeclinedCard" onclick="setRequesterSituationFilter('rejected')">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="requesterKpiDeclinedTitle">Declined by Management</span>
-              <div class="kpi-icon-wrap" style="color:var(--danger); font-weight:800;">✕</div>
+          <div class="d365-kpi-card" id="reqKpiDeclinedCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="requesterKpiDeclinedTitle">Declined</span>
+              <span class="d365-kpi-icon">✕</span>
             </div>
-            <div class="kpi-value" id="reqKpiDeclinedVal" style="color:var(--danger);">0</div>
-            <div class="kpi-subtext" data-i18n="requesterKpiDeclinedDesc">Requires specification revision</div>
+            <div class="d365-kpi-value text-danger" id="reqKpiDeclinedCount">0</div>
+            <div class="d365-kpi-subtext" data-i18n="requesterKpiDeclinedDesc">Needs modification</div>
           </div>
 
-          <!-- Completed / Delivered -->
-          <div class="kpi-card budget" id="reqKpiCompletedCard" onclick="setRequesterSituationFilter('completed')">
-            <div class="kpi-top">
-              <span class="kpi-label" data-i18n="requesterKpiCompletedTitle">Completed & Delivered</span>
-              <div class="kpi-icon-wrap">📦</div>
+          <!-- Completed & Delivered -->
+          <div class="d365-kpi-card" id="reqKpiCompletedCard">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="requesterKpiCompletedTitle">Completed</span>
+              <span class="d365-kpi-icon">📦</span>
             </div>
-            <div class="kpi-value" id="reqKpiCompletedVal" style="color:#6366f1;">0</div>
-            <div class="kpi-subtext" data-i18n="requesterKpiCompletedDesc">Delivered to department</div>
+            <div class="d365-kpi-value" id="reqKpiCompletedCount" style="color:var(--d365-purple);">0</div>
+            <div class="d365-kpi-subtext" data-i18n="requesterKpiCompletedDesc">Delivered to department</div>
           </div>
         </div>
 
-        <!-- Situation Quick Filter Pills & Toolbar -->
-        <div class="filter-card requester-toolbar" style="margin-bottom: 22px;">
-          <!-- Situation Filter Pills -->
-          <div class="situation-pills" id="situationTabsContainer">
-            <button type="button" class="situation-pill active" data-sit="all" onclick="setRequesterSituationFilter('all')">
-              <span data-i18n="situationTabAll">All My Requests</span> <span class="badge badge-pill-count" id="sitCountAll">0</span>
-            </button>
-            <button type="button" class="situation-pill" data-sit="under_review" onclick="setRequesterSituationFilter('under_review')">
-              <span data-i18n="situationTabReview">⏳ In Review</span> <span class="badge badge-pill-count" id="sitCountReview">0</span>
-            </button>
-            <button type="button" class="situation-pill" data-sit="approved" onclick="setRequesterSituationFilter('approved')">
-              <span data-i18n="situationTabApproved">✅ Approved</span> <span class="badge badge-pill-count" id="sitCountApproved">0</span>
-            </button>
-            <button type="button" class="situation-pill" data-sit="rejected" onclick="setRequesterSituationFilter('rejected')">
-              <span data-i18n="situationTabDeclined">❌ Declined</span> <span class="badge badge-pill-count" id="sitCountDeclined">0</span>
-            </button>
-            <button type="button" class="situation-pill" data-sit="completed" onclick="setRequesterSituationFilter('completed')">
-              <span data-i18n="situationTabCompleted">📦 Completed</span> <span class="badge badge-pill-count" id="sitCountCompleted">0</span>
-            </button>
-          </div>
+        <!-- Management Feedback Action Banner -->
+        <div id="requesterActionBanner" style="display:none; margin-bottom:16px;"></div>
 
-          <div class="requester-search-group">
-            <div class="search-input-wrap" style="width:240px;">
-              <span class="search-icon">🔍</span>
-              <input type="text" id="requesterSearchInput" placeholder="Search my requests..." data-i18n-ph="searchPlaceholder">
+        <!-- Filters Bar for Requester View -->
+        <div class="d365-grid-card mb-3">
+          <div class="d365-grid-toolbar">
+            <div class="d365-filter-group">
+              <div class="d365-search-box">
+                <span style="margin-right:6px; color:#8a8886;">🔍</span>
+                <input type="text" id="requesterSearchInput" placeholder="Filter my requests by ID, item, or purpose...">
+              </div>
+              <select id="requesterPriorityFilter" class="d365-select-filter">
+                <option value="all" data-i18n="priorityAll">All Priorities</option>
+              </select>
             </div>
-            <select id="requesterPriorityFilter" class="select-filter" style="width:130px;">
-              <option value="all" data-i18n="priorityAll">All Priorities</option>
-              <option value="urgent" data-i18n="priorityUrgent">Urgent</option>
-              <option value="high" data-i18n="priorityHigh">High</option>
-              <option value="medium" data-i18n="priorityMedium">Medium</option>
-              <option value="low" data-i18n="priorityLow">Low</option>
-            </select>
+            <div style="font-size:12px; color:var(--d365-text-secondary);">
+              <span>⚡ Live Situation Feed</span>
+            </div>
           </div>
         </div>
 
-        <!-- Requester Cards & Situations Feed -->
-        <div id="requesterListContainer" class="requester-cards-feed">
-          <!-- Rendered dynamically by js/app.js -->
+        <!-- Cards Feed with 4-Stage Stepper -->
+        <div id="requesterCardsContainer" class="requester-feed">
+          <!-- Dynamically populated cards -->
         </div>
       </section>
 
-      <!-- View 2: New Requisition Request Form -->
+      <!-- =====================================================================
+           View 3: New Procurement Requisition Form (Dynamics 365 FastTabs)
+           ===================================================================== -->
       <section id="view-new-request" class="tab-view" style="display:none;">
-        <div class="page-header">
-          <div class="page-title">
-            <h2 data-i18n="formTitle">New Procurement Requisition Form</h2>
+        <div class="d365-view-header">
+          <div class="d365-view-title">
+            <h2 data-i18n="formTitle">New Procurement Purchase Requisition</h2>
             <p data-i18n="formSubtitle">Submit a purchase request from your department for review and management approval</p>
           </div>
           <div>
             <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')">
-              <span data-i18n="actionCancel">Back to Board</span>
+              ← <span data-i18n="navDashboard">Back to Board</span>
             </button>
           </div>
         </div>
 
-        <div class="data-card" style="padding: 28px;">
-          <form id="newRequisitionForm">
-            <div class="form-grid">
-              <!-- Department -->
-              <div class="form-group">
-                <label for="formDepartmentSelect" data-i18n="deptLabel">Requesting Department *</label>
-                <select id="formDepartmentSelect" class="form-select" required>
-                  <!-- Populated by JS -->
-                </select>
-              </div>
+        <!-- Business Process Flow Chevron Bar for New Requisition -->
+        <div class="d365-bpf-container">
+          <div class="d365-bpf-bar">
+            <div class="d365-bpf-stage active">
+              <span class="d365-bpf-stage-title"><span>📝</span> 1. Draft & Submit</span>
+              <span class="d365-bpf-stage-status">Current Stage</span>
+            </div>
+            <div class="d365-bpf-stage">
+              <span class="d365-bpf-stage-title"><span>👔</span> 2. Management Review</span>
+              <span class="d365-bpf-stage-status">Next</span>
+            </div>
+            <div class="d365-bpf-stage">
+              <span class="d365-bpf-stage-title"><span>⚖️</span> 3. Approval Decision</span>
+              <span class="d365-bpf-stage-status">Pending</span>
+            </div>
+            <div class="d365-bpf-stage">
+              <span class="d365-bpf-stage-title"><span>📦</span> 4. Sourcing & Delivery</span>
+              <span class="d365-bpf-stage-status">Pending</span>
+            </div>
+          </div>
+        </div>
 
-              <!-- Urgency / Priority -->
-              <div class="form-group">
-                <label for="formPrioritySelect" data-i18n="priorityLabel">Urgency / Priority Level *</label>
-                <select id="formPrioritySelect" class="form-select" required>
-                  <option value="medium" data-i18n="priorityMedium">Medium</option>
-                  <option value="urgent" data-i18n="priorityUrgent">Urgent (Immediate Project Need)</option>
-                  <option value="high" data-i18n="priorityHigh">High</option>
-                  <option value="low" data-i18n="priorityLow">Low (Routine)</option>
-                </select>
+        <form id="newRequisitionForm">
+          
+          <!-- FastTab 1: General Information -->
+          <div class="d365-fasttab open">
+            <div class="d365-fasttab-header" onclick="toggleFastTab(this)">
+              <div class="d365-fasttab-title">
+                <span class="d365-fasttab-chevron">▶</span>
+                <span>General Information</span>
               </div>
+              <span class="d365-fasttab-summary">Department, Priority, Requester, and Justification</span>
+            </div>
+            <div class="d365-fasttab-body">
+              <div class="row g-3">
+                <!-- Requesting Department -->
+                <div class="col-12 col-md-4">
+                  <label for="formDepartmentSelect" class="form-label" data-i18n="deptLabel">Requesting Department *</label>
+                  <select id="formDepartmentSelect" class="form-select" required>
+                    <!-- Populated by JS -->
+                  </select>
+                </div>
 
-              <!-- Requester Name -->
-              <div class="form-group">
-                <label for="formRequesterName" data-i18n="requesterNameLabel">Requester Name *</label>
-                <input type="text" id="formRequesterName" class="form-input" required placeholder="e.g. Sokha Chan" value="Sokha Chan">
-              </div>
+                <!-- Urgency / Priority Level -->
+                <div class="col-12 col-md-4">
+                  <label for="formPrioritySelect" class="form-label" data-i18n="priorityLabel">Urgency / Priority Level *</label>
+                  <select id="formPrioritySelect" class="form-select" required>
+                    <!-- Populated dynamically by JS with SLA -->
+                  </select>
+                </div>
 
-              <!-- Requester Email -->
-              <div class="form-group">
-                <label for="formRequesterEmail" data-i18n="requesterEmailLabel">Requester Email *</label>
-                <input type="email" id="formRequesterEmail" class="form-input" required placeholder="name@company.com" value="sokha.chan@company.com">
-              </div>
+                <!-- Requester Name -->
+                <div class="col-12 col-md-4">
+                  <label for="formRequesterName" class="form-label" data-i18n="requesterNameLabel">Requester Name *</label>
+                  <input type="text" id="formRequesterName" class="form-control" required placeholder="e.g. Sokha Chan" value="Sokha Chan">
+                </div>
 
-              <!-- Request Date -->
-              <div class="form-group">
-                <label for="formRequestDate" data-i18n="requestDateLabel">Request Date *</label>
-                <input type="date" id="formRequestDate" class="form-input" required>
-              </div>
+                <!-- Requester Email -->
+                <div class="col-12 col-md-4">
+                  <label for="formRequesterEmail" class="form-label" data-i18n="requesterEmailLabel">Requester Email *</label>
+                  <input type="email" id="formRequesterEmail" class="form-control" required placeholder="e.g. sokha.chan@company.com" value="sokha.chan@company.com">
+                </div>
 
-              <!-- Required By Date -->
-              <div class="form-group">
-                <label for="formNeededDate" data-i18n="neededDateLabel">Required By Date</label>
-                <input type="date" id="formNeededDate" class="form-input">
-              </div>
+                <!-- Request Date -->
+                <div class="col-12 col-md-4">
+                  <label for="formRequestDate" class="form-label" data-i18n="requestDateLabel">Request Date *</label>
+                  <input type="date" id="formRequestDate" class="form-control" required>
+                </div>
 
-              <!-- Business Purpose / Justification -->
-              <div class="form-group col-full">
-                <label for="formPurposeText" data-i18n="purposeLabel">Business Purpose & Justification *</label>
-                <textarea id="formPurposeText" class="form-textarea" required placeholder="Explain why these items are required, intended project/use, and justification..." data-i18n-ph="purposePlaceholder"></textarea>
+                <!-- Needed By Date -->
+                <div class="col-12 col-md-4">
+                  <label for="formNeededDate" class="form-label" data-i18n="neededDateLabel">Required By Date</label>
+                  <input type="date" id="formNeededDate" class="form-control">
+                </div>
+
+                <!-- Business Purpose & Justification -->
+                <div class="col-12">
+                  <label for="formPurposeText" class="form-label" data-i18n="purposeLabel">Business Purpose & Justification *</label>
+                  <textarea id="formPurposeText" class="form-control" rows="2" required placeholder="Explain why these items are required, intended project/use, and justification..." data-i18n-ph="purposePlaceholder"></textarea>
+                </div>
               </div>
             </div>
+          </div>
 
-            <!-- Requested Line Items Section -->
-            <div class="line-items-wrapper">
-              <div class="line-items-header">
-                <div>
-                  <h4 data-i18n="itemsSectionTitle">Requested Line Items</h4>
-                  <p style="font-size:12px; color:var(--text-muted);">Select pre-cataloged items or add custom non-catalog requisitions</p>
-                </div>
+          <!-- FastTab 2: Lines (Requested Items - Category-First) -->
+          <div class="d365-fasttab open">
+            <div class="d365-fasttab-header" onclick="toggleFastTab(this)">
+              <div class="d365-fasttab-title">
+                <span class="d365-fasttab-chevron">▶</span>
+                <span data-i18n="itemsSectionTitle">Requested Line Items</span>
+              </div>
+              <span class="d365-fasttab-summary">Category-first catalog item selection and custom entries</span>
+            </div>
+            <div class="d365-fasttab-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span style="font-size:12px; color:var(--d365-text-secondary);">Select the Category first to filter catalog items or enter custom item names</span>
                 <button type="button" class="btn btn-sm btn-outline" id="addNewLineBtn">
-                  <span data-i18n="addItemBtn">+ Add Line Item</span>
+                  <span>➕</span> <span data-i18n="addItemBtn">+ Add Line Item</span>
                 </button>
               </div>
 
-              <div class="data-table-wrap">
-                <table class="items-entry-table">
+              <div class="table-responsive">
+                <table class="d365-data-table" style="background:#ffffff; border:1px solid var(--d365-border); border-radius:4px;">
                   <thead>
                     <tr>
                       <th style="min-width: 190px;" data-i18n="colCategory">Category</th>
@@ -511,38 +617,42 @@
               </div>
 
               <!-- Grand Total Box -->
-              <div class="grand-total-box">
-                <div class="grand-total-label" data-i18n="grandTotal">Estimated Grand Total:</div>
-                <div class="grand-total-amount" id="formGrandTotalDisplay">$0.00</div>
+              <div class="d-flex align-items-center justify-content-end gap-3 mt-3 p-3 bg-light border rounded-1">
+                <span class="fw-bold fs-6" data-i18n="grandTotal">Estimated Grand Total:</span>
+                <span class="fs-4 fw-bold text-primary font-monospace" id="formGrandTotalDisplay">$0.00</span>
               </div>
             </div>
+          </div>
 
-            <!-- Form Actions -->
-            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-              <button type="button" class="btn btn-outline" id="cancelRequestBtn" data-i18n="actionCancel">Cancel</button>
-              <button type="submit" class="btn btn-primary" data-i18n="btnSubmitRequest">Submit Procurement Request</button>
-            </div>
-          </form>
-        </div>
+          <!-- Form Action Bar -->
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-outline" id="cancelRequestBtn" data-i18n="actionCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" data-i18n="btnSubmitRequest">
+              <span>✓</span> Submit Procurement Request
+            </button>
+          </div>
+        </form>
       </section>
 
-      <!-- View: Master Data - Requesting Departments -->
+      <!-- =====================================================================
+           View 4: Master Data - Requesting Departments
+           ===================================================================== -->
       <section id="view-departments" class="tab-view" style="display:none;">
-        <div class="page-header">
-          <div class="page-title">
+        <div class="d365-view-header">
+          <div class="d365-view-title">
             <h2 data-i18n="deptManagementTitle">Requesting Department Management</h2>
             <p data-i18n="deptManagementSubtitle">Manage company departments, procurement codes, bilingual titles, and active statuses</p>
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddDepartmentModal()">
-              <span data-i18n="btnNewDepartment">+ Add New Department</span>
+              <span>➕</span> <span data-i18n="btnNewDepartment">+ Add New Department</span>
             </button>
           </div>
         </div>
 
-        <div class="data-card">
-          <div class="data-table-wrap">
-            <table class="data-table">
+        <div class="d365-grid-card">
+          <div class="table-responsive">
+            <table class="d365-data-table">
               <thead>
                 <tr>
                   <th data-i18n="thDeptCode">Dept Code</th>
@@ -563,23 +673,25 @@
         </div>
       </section>
 
-      <!-- View: Master Data - Urgency & Priority Levels -->
+      <!-- =====================================================================
+           View 5: Master Data - Urgency & Priority Levels
+           ===================================================================== -->
       <section id="view-priorities" class="tab-view" style="display:none;">
-        <div class="page-header">
-          <div class="page-title">
+        <div class="d365-view-header">
+          <div class="d365-view-title">
             <h2 data-i18n="prioManagementTitle">Urgency / Priority Level Management</h2>
             <p data-i18n="prioManagementSubtitle">Configure requisition urgency tiers, turnaround SLAs, bilingual labels, and visual badges</p>
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddPriorityModal()">
-              <span data-i18n="btnNewPriority">+ Add New Priority Level</span>
+              <span>➕</span> <span data-i18n="btnNewPriority">+ Add New Priority Level</span>
             </button>
           </div>
         </div>
 
-        <div class="data-card">
-          <div class="data-table-wrap">
-            <table class="data-table">
+        <div class="d365-grid-card">
+          <div class="table-responsive">
+            <table class="d365-data-table">
               <thead>
                 <tr>
                   <th data-i18n="thPrioCode">Priority Code</th>
@@ -602,23 +714,25 @@
         </div>
       </section>
 
-      <!-- View 3: Master Data - Categories -->
+      <!-- =====================================================================
+           View 6: Master Data - Categories
+           ===================================================================== -->
       <section id="view-categories" class="tab-view" style="display:none;">
-        <div class="page-header">
-          <div class="page-title">
+        <div class="d365-view-header">
+          <div class="d365-view-title">
             <h2 data-i18n="catManagementTitle">Procurement Category List</h2>
             <p data-i18n="catManagementSubtitle">Manage item classifications and procurement spend categories</p>
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddCategoryModal()">
-              <span data-i18n="btnNewCategory">+ Add New Category</span>
+              <span>➕</span> <span data-i18n="btnNewCategory">+ Add New Category</span>
             </button>
           </div>
         </div>
 
-        <div class="data-card">
-          <div class="data-table-wrap">
-            <table class="data-table">
+        <div class="d365-grid-card">
+          <div class="table-responsive">
+            <table class="d365-data-table">
               <thead>
                 <tr>
                   <th data-i18n="thCatCode">Code</th>
@@ -638,23 +752,25 @@
         </div>
       </section>
 
-      <!-- View 4: Master Data - Items -->
+      <!-- =====================================================================
+           View 7: Master Data - Items Catalog
+           ===================================================================== -->
       <section id="view-items" class="tab-view" style="display:none;">
-        <div class="page-header">
-          <div class="page-title">
+        <div class="d365-view-header">
+          <div class="d365-view-title">
             <h2 data-i18n="itemManagementTitle">Procurement Item Catalog</h2>
             <p data-i18n="itemManagementSubtitle">Standardized list of goods, equipment, and office supplies with estimated pricing</p>
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddItemModal()">
-              <span data-i18n="btnNewItem">+ Add New Item</span>
+              <span>➕</span> <span data-i18n="btnNewItem">+ Add New Item</span>
             </button>
           </div>
         </div>
 
-        <div class="data-card">
-          <div class="data-table-wrap">
-            <table class="data-table">
+        <div class="d365-grid-card">
+          <div class="table-responsive">
+            <table class="d365-data-table">
               <thead>
                 <tr>
                   <th data-i18n="thItemCode">Item Code</th>
@@ -675,23 +791,25 @@
         </div>
       </section>
 
-      <!-- View 5: Master Data - Users -->
+      <!-- =====================================================================
+           View 8: Master Data - Users & Roles
+           ===================================================================== -->
       <section id="view-users" class="tab-view" style="display:none;">
-        <div class="page-header">
-          <div class="page-title">
+        <div class="d365-view-header">
+          <div class="d365-view-title">
             <h2 data-i18n="userManagementTitle">User & Role Management</h2>
             <p data-i18n="userManagementSubtitle">Manage department accounts, review roles, and administrative permissions</p>
           </div>
           <div>
             <button class="btn btn-primary" onclick="openAddUserModal()">
-              <span data-i18n="btnNewUser">+ Add New User</span>
+              <span>➕</span> <span data-i18n="btnNewUser">+ Add New User</span>
             </button>
           </div>
         </div>
 
-        <div class="data-card">
-          <div class="data-table-wrap">
-            <table class="data-table">
+        <div class="d365-grid-card">
+          <div class="table-responsive">
+            <table class="d365-data-table">
               <thead>
                 <tr>
                   <th data-i18n="thUserId">User ID</th>
@@ -714,9 +832,13 @@
     </main>
   </div>
 
-  <!-- Requisition Detail Modal -->
+  <!-- =========================================================================
+       Modals & Flyouts (Dynamics 365 Dialogs)
+       ========================================================================= -->
+
+  <!-- 1. Requisition Detail Modal -->
   <div class="modal-backdrop" id="requisitionDetailModal">
-    <div class="modal-container" style="max-width: 960px;">
+    <div class="modal-container" style="max-width: 980px;">
       <div class="modal-header">
         <h3 data-i18n="modalDetailTitle">Procurement Requisition Details</h3>
         <button type="button" class="btn btn-text" onclick="closeModal('requisitionDetailModal')">✕</button>
@@ -731,7 +853,7 @@
     </div>
   </div>
 
-  <!-- Department Modal -->
+  <!-- 2. Department Modal -->
   <div class="modal-backdrop" id="departmentModal">
     <div class="modal-container" style="max-width: 520px;">
       <div class="modal-header">
@@ -739,30 +861,30 @@
         <button type="button" class="btn btn-text" onclick="closeModal('departmentModal')">✕</button>
       </div>
       <div class="modal-body">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-          <div class="form-group">
-            <label data-i18n="thDeptCode">Dept Code *</label>
-            <input type="text" id="deptFormCode" class="form-input" placeholder="e.g. DEPT-SEC" required>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label" data-i18n="thDeptCode">Dept Code *</label>
+            <input type="text" id="deptFormCode" class="form-control" placeholder="e.g. DEPT-SEC" required>
           </div>
-          <div class="form-group">
-            <label data-i18n="thDeptId">Dept Key / ID *</label>
-            <input type="text" id="deptFormId" class="form-input" placeholder="e.g. Security" required>
+          <div class="col-6">
+            <label class="form-label" data-i18n="thDeptId">Dept Key / ID *</label>
+            <input type="text" id="deptFormId" class="form-control" placeholder="e.g. Security" required>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thDeptNameEn">Department Name (English) *</label>
-          <input type="text" id="deptFormNameEn" class="form-input" placeholder="e.g. Security & Safety Dept" required>
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thDeptNameEn">Department Name (English) *</label>
+          <input type="text" id="deptFormNameEn" class="form-control" placeholder="e.g. Security & Safety Dept" required>
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thDeptNameKh">Department Name (Khmer)</label>
-          <input type="text" id="deptFormNameKh" class="form-input" placeholder="e.g. ផ្នែកសន្តិសុខ និងសុវត្ថិភាព">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thDeptNameKh">Department Name (Khmer)</label>
+          <input type="text" id="deptFormNameKh" class="form-control" placeholder="e.g. ផ្នែកសន្តិសុខ និងសុវត្ថិភាព">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thDeptDesc">Description</label>
-          <input type="text" id="deptFormDesc" class="form-input" placeholder="Department mandate or procurement scope...">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thDeptDesc">Description</label>
+          <input type="text" id="deptFormDesc" class="form-control" placeholder="Department mandate or procurement scope...">
         </div>
-        <div class="form-group">
-          <label data-i18n="thDeptStatus">Status</label>
+        <div>
+          <label class="form-label" data-i18n="thDeptStatus">Status</label>
           <select id="deptFormStatus" class="form-select">
             <option value="active" data-i18n="active">Active</option>
             <option value="inactive" data-i18n="inactive">Inactive</option>
@@ -776,7 +898,7 @@
     </div>
   </div>
 
-  <!-- Priority Modal -->
+  <!-- 3. Priority Modal -->
   <div class="modal-backdrop" id="priorityModal">
     <div class="modal-container" style="max-width: 540px;">
       <div class="modal-header">
@@ -784,31 +906,31 @@
         <button type="button" class="btn btn-text" onclick="closeModal('priorityModal')">✕</button>
       </div>
       <div class="modal-body">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-          <div class="form-group">
-            <label data-i18n="thPrioCode">Priority Code *</label>
-            <input type="text" id="prioFormCode" class="form-input" placeholder="e.g. PRI-CRIT" required>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label" data-i18n="thPrioCode">Priority Code *</label>
+            <input type="text" id="prioFormCode" class="form-control" placeholder="e.g. PRI-CRIT" required>
           </div>
-          <div class="form-group">
-            <label data-i18n="thPrioKey">Priority Key / ID *</label>
-            <input type="text" id="prioFormId" class="form-input" placeholder="e.g. critical" required>
+          <div class="col-6">
+            <label class="form-label" data-i18n="thPrioKey">Priority Key / ID *</label>
+            <input type="text" id="prioFormId" class="form-control" placeholder="e.g. critical" required>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thPrioNameEn">Priority Name (English) *</label>
-          <input type="text" id="prioFormNameEn" class="form-input" placeholder="e.g. Critical (24/7)" required>
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thPrioNameEn">Priority Name (English) *</label>
+          <input type="text" id="prioFormNameEn" class="form-control" placeholder="e.g. Critical (24/7)" required>
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thPrioNameKh">Priority Name (Khmer)</label>
-          <input type="text" id="prioFormNameKh" class="form-input" placeholder="e.g. សំខាន់បំផុត">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thPrioNameKh">Priority Name (Khmer)</label>
+          <input type="text" id="prioFormNameKh" class="form-control" placeholder="e.g. សំខាន់បំផុត">
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-          <div class="form-group">
-            <label data-i18n="thPrioSla">Target SLA (Hours) *</label>
-            <input type="number" min="1" id="prioFormSla" class="form-input" value="24" placeholder="24">
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label" data-i18n="thPrioSla">Target SLA (Hours) *</label>
+            <input type="number" min="1" id="prioFormSla" class="form-control" value="24" placeholder="24">
           </div>
-          <div class="form-group">
-            <label data-i18n="thPrioColor">Color / Theme *</label>
+          <div class="col-6">
+            <label class="form-label" data-i18n="thPrioColor">Color / Theme *</label>
             <select id="prioFormColor" class="form-select">
               <option value="#ef4444" style="color:#ef4444; font-weight:700;">🔴 Red (Critical/Urgent)</option>
               <option value="#f97316" style="color:#f97316; font-weight:700;">🟠 Orange (High)</option>
@@ -820,12 +942,12 @@
             </select>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thPrioDesc">Description</label>
-          <input type="text" id="prioFormDesc" class="form-input" placeholder="Guidelines on when to select this urgency tier...">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thPrioDesc">Description</label>
+          <input type="text" id="prioFormDesc" class="form-control" placeholder="Guidelines on when to select this urgency tier...">
         </div>
-        <div class="form-group">
-          <label data-i18n="thDeptStatus">Status</label>
+        <div>
+          <label class="form-label" data-i18n="thDeptStatus">Status</label>
           <select id="prioFormStatus" class="form-select">
             <option value="active" data-i18n="active">Active</option>
             <option value="inactive" data-i18n="inactive">Inactive</option>
@@ -839,7 +961,7 @@
     </div>
   </div>
 
-  <!-- Category Modal -->
+  <!-- 4. Category Modal -->
   <div class="modal-backdrop" id="categoryModal">
     <div class="modal-container" style="max-width: 500px;">
       <div class="modal-header">
@@ -847,24 +969,24 @@
         <button type="button" class="btn btn-text" onclick="closeModal('categoryModal')">✕</button>
       </div>
       <div class="modal-body">
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thCatCode">Category Code *</label>
-          <input type="text" id="catFormCode" class="form-input" placeholder="e.g. IT-EQ">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thCatCode">Category Code *</label>
+          <input type="text" id="catFormCode" class="form-control" placeholder="e.g. IT-EQ">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thCatNameEn">Name (English) *</label>
-          <input type="text" id="catFormNameEn" class="form-input" placeholder="e.g. IT & Electronics">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thCatNameEn">Name (English) *</label>
+          <input type="text" id="catFormNameEn" class="form-control" placeholder="e.g. IT & Electronics">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thCatNameKh">Name (Khmer)</label>
-          <input type="text" id="catFormNameKh" class="form-input" placeholder="e.g. ឧបករណ៍បច្ចេកវិទ្យា">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thCatNameKh">Name (Khmer)</label>
+          <input type="text" id="catFormNameKh" class="form-control" placeholder="e.g. ឧបករណ៍បច្ចេកវិទ្យា">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thCatDesc">Description</label>
-          <input type="text" id="catFormDesc" class="form-input" placeholder="Brief description...">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thCatDesc">Description</label>
+          <input type="text" id="catFormDesc" class="form-control" placeholder="Brief description...">
         </div>
-        <div class="form-group">
-          <label data-i18n="thCatStatus">Status</label>
+        <div>
+          <label class="form-label" data-i18n="thCatStatus">Status</label>
           <select id="catFormStatus" class="form-select">
             <option value="active" data-i18n="active">Active</option>
             <option value="inactive" data-i18n="inactive">Inactive</option>
@@ -878,7 +1000,7 @@
     </div>
   </div>
 
-  <!-- Item Modal -->
+  <!-- 5. Item Modal -->
   <div class="modal-backdrop" id="itemModal">
     <div class="modal-container" style="max-width: 550px;">
       <div class="modal-header">
@@ -886,34 +1008,34 @@
         <button type="button" class="btn btn-text" onclick="closeModal('itemModal')">✕</button>
       </div>
       <div class="modal-body">
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thItemCode">Item Code *</label>
-          <input type="text" id="itemFormCode" class="form-input" placeholder="e.g. LAPTOP-PRO">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thItemCode">Item Code *</label>
+          <input type="text" id="itemFormCode" class="form-control" placeholder="e.g. LAPTOP-PRO">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thItemNameEn">Item Name (English) *</label>
-          <input type="text" id="itemFormNameEn" class="form-input" placeholder="e.g. Dell Latitude Laptop">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thItemNameEn">Item Name (English) *</label>
+          <input type="text" id="itemFormNameEn" class="form-control" placeholder="e.g. Dell Latitude Laptop">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thItemNameKh">Item Name (Khmer)</label>
-          <input type="text" id="itemFormNameKh" class="form-input" placeholder="e.g. កុំព្យូទ័រយួរដៃ Dell">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thItemNameKh">Item Name (Khmer)</label>
+          <input type="text" id="itemFormNameKh" class="form-control" placeholder="e.g. កុំព្យូទ័រយួរដៃ Dell">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thItemCat">Category *</label>
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thItemCat">Category *</label>
           <select id="itemFormCategory" class="form-select"></select>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-          <div class="form-group">
-            <label data-i18n="thItemUnit">Unit *</label>
-            <input type="text" id="itemFormUnit" class="form-input" value="Unit" placeholder="Unit, Pcs, Box, Set...">
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label" data-i18n="thItemUnit">Unit *</label>
+            <input type="text" id="itemFormUnit" class="form-control" value="Unit" placeholder="Unit, Pcs, Box, Set...">
           </div>
-          <div class="form-group">
-            <label data-i18n="thItemPrice">Est. Unit Price ($) *</label>
-            <input type="number" step="0.01" min="0" id="itemFormPrice" class="form-input" value="0.00">
+          <div class="col-6">
+            <label class="form-label" data-i18n="thItemPrice">Est. Unit Price ($) *</label>
+            <input type="number" step="0.01" min="0" id="itemFormPrice" class="form-control" value="0.00">
           </div>
         </div>
-        <div class="form-group">
-          <label data-i18n="thItemStatus">Status</label>
+        <div>
+          <label class="form-label" data-i18n="thItemStatus">Status</label>
           <select id="itemFormStatus" class="form-select">
             <option value="active" data-i18n="active">Active</option>
             <option value="inactive" data-i18n="inactive">Inactive</option>
@@ -927,7 +1049,7 @@
     </div>
   </div>
 
-  <!-- User Modal -->
+  <!-- 6. User Modal -->
   <div class="modal-backdrop" id="userModal">
     <div class="modal-container" style="max-width: 500px;">
       <div class="modal-header">
@@ -935,28 +1057,28 @@
         <button type="button" class="btn btn-text" onclick="closeModal('userModal')">✕</button>
       </div>
       <div class="modal-body">
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thUserName">Full Name *</label>
-          <input type="text" id="userFormName" class="form-input" placeholder="e.g. Sokha Chan">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thUserName">Full Name *</label>
+          <input type="text" id="userFormName" class="form-control" placeholder="e.g. Sokha Chan">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thUserEmail">Email Address *</label>
-          <input type="email" id="userFormEmail" class="form-input" placeholder="e.g. sokha.chan@company.com">
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thUserEmail">Email Address *</label>
+          <input type="email" id="userFormEmail" class="form-control" placeholder="e.g. sokha.chan@company.com">
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thUserDept">Department *</label>
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thUserDept">Department *</label>
           <select id="userFormDept" class="form-select"></select>
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label data-i18n="thUserRole">Role *</label>
+        <div class="mb-3">
+          <label class="form-label" data-i18n="thUserRole">Role *</label>
           <select id="userFormRole" class="form-select">
             <option value="requester" data-i18n="roleRequester">Requester (Dept Staff)</option>
             <option value="management" data-i18n="roleManagement">Management (Reviewer)</option>
             <option value="admin" data-i18n="roleAdmin">Administrator (Approver)</option>
           </select>
         </div>
-        <div class="form-group">
-          <label data-i18n="thUserStatus">Status</label>
+        <div>
+          <label class="form-label" data-i18n="thUserStatus">Status</label>
           <select id="userFormStatus" class="form-select">
             <option value="active" data-i18n="active">Active</option>
             <option value="inactive" data-i18n="inactive">Inactive</option>
@@ -971,9 +1093,9 @@
   </div>
 
   <!-- Toast Notification Container -->
-  <div class="toast-container" id="toastContainer"></div>
+  <div id="toastContainer"></div>
 
-  <!-- Scripts -->
+  <!-- Application Scripts -->
   <script src="js/i18n.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>

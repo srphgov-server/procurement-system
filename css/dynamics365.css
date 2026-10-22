@@ -1,0 +1,1451 @@
+/* ==========================================================================
+   Microsoft Dynamics 365 & Bootstrap 5 Design System
+   ProcureFlow - Enterprise Procurement & Supply Chain Sourcing
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Dynamics 365 & Fluent 2 Color Tokens */
+  --d365-suitebar-bg: #002050;
+  --d365-suitebar-text: #ffffff;
+  --d365-suitebar-hover: rgba(255, 255, 255, 0.12);
+  
+  --d365-primary: #0078d4;
+  --d365-primary-hover: #106ebe;
+  --d365-primary-active: #005a9e;
+  --d365-primary-subtle: #eff6fc;
+  --d365-primary-border: #c7e0f4;
+  
+  --d365-commandbar-bg: #ffffff;
+  --d365-commandbar-border: #edebe9;
+  --d365-commandbar-hover: #f3f2f1;
+  
+  --d365-canvas-bg: #faf9f8;
+  --d365-card-bg: #ffffff;
+  --d365-border: #edebe9;
+  --d365-border-subtle: #f3f2f1;
+  --d365-border-strong: #8a8886;
+  
+  --d365-text-primary: #201f1e;
+  --d365-text-secondary: #605e5c;
+  --d365-text-disabled: #a19f9d;
+  
+  /* Status Color Palette (Fluent) */
+  --d365-success: #107c41;
+  --d365-success-subtle: #dff6dd;
+  --d365-success-border: #92c353;
+  
+  --d365-warning: #d83b01;
+  --d365-warning-subtle: #fed9cc;
+  --d365-warning-border: #ea6100;
+  
+  --d365-danger: #a80000;
+  --d365-danger-subtle: #fde7e9;
+  --d365-danger-border: #d13438;
+  
+  --d365-info: #0078d4;
+  --d365-info-subtle: #deecf9;
+  --d365-info-border: #71afe5;
+  
+  --d365-purple: #5c2d91;
+  --d365-purple-subtle: #f6ecff;
+  
+  --d365-sitemap-width: 250px;
+  --d365-sitemap-collapsed-width: 56px;
+  --d365-suitebar-height: 48px;
+  --d365-cmdbar-height: 44px;
+  
+  --d365-font-stack: 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+  --d365-shadow-card: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.08), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.05);
+  --d365-shadow-flyout: 0 6.4px 14.4px 0 rgba(0, 0, 0, 0.13), 0 1.2px 3.6px 0 rgba(0, 0, 0, 0.1);
+  --d365-shadow-dialog: 0 25.6px 57.6px 0 rgba(0, 0, 0, 0.22), 0 4.8px 14.4px 0 rgba(0, 0, 0, 0.18);
+  
+  --bs-primary: #0078d4;
+  --bs-primary-rgb: 0, 120, 212;
+  --bs-body-font-family: var(--d365-font-stack);
+  --bs-body-bg: var(--d365-canvas-bg);
+  --bs-body-color: var(--d365-text-primary);
+}
+
+/* ==========================================================================
+   Base & Reset
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--d365-font-stack);
+  font-size: 13.5px;
+  color: var(--d365-text-primary);
+  background-color: var(--d365-canvas-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
+}
+
+a {
+  color: var(--d365-primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Dynamics 365 App Shell Layout
+   ========================================================================== */
+.d365-app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* ==========================================================================
+   1. Microsoft 365 Suite Bar (Top Global Bar)
+   ========================================================================== */
+.d365-suitebar {
+  height: var(--d365-suitebar-height);
+  background-color: var(--d365-suitebar-bg);
+  color: var(--d365-suitebar-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.d365-suite-left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.d365-waffle-btn {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.15s ease;
+}
+.d365-waffle-btn:hover {
+  background-color: var(--d365-suitebar-hover);
+}
+
+.d365-app-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  user-select: none;
+}
+.d365-app-brand .d365-logo-glyph {
+  font-size: 18px;
+  color: #26b5ff;
+}
+.d365-app-brand .d365-brand-bold {
+  font-weight: 700;
+  color: #ffffff;
+}
+.d365-app-brand .d365-brand-divider {
+  opacity: 0.35;
+  font-weight: 300;
+  margin: 0 2px;
+}
+.d365-app-brand .d365-brand-sub {
+  font-weight: 400;
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+/* Suite Search Bar */
+.d365-suite-center {
+  flex: 1;
+  max-width: 520px;
+  margin: 0 16px;
+  position: relative;
+}
+.d365-suite-search {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 4px 10px;
+  color: #ffffff;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.d365-suite-search:focus-within {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.d365-suite-search:focus-within .d365-search-icon,
+.d365-suite-search:focus-within .d365-search-input {
+  color: #201f1e;
+}
+.d365-suite-search:focus-within .d365-search-input::placeholder {
+  color: #8a8886;
+}
+.d365-suite-search:focus-within .d365-search-hint {
+  color: #605e5c;
+  border-color: #c8c6c4;
+}
+.d365-search-icon {
+  font-size: 14px;
+  color: #cbd5e1;
+  margin-right: 8px;
+}
+.d365-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12.5px;
+  color: #ffffff;
+  font-family: inherit;
+}
+.d365-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+.d365-search-hint {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 6px;
+  user-select: none;
+}
+
+/* Suite Right Controls */
+.d365-suite-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.d365-env-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  color: #6ee7b7;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Role Selector in Suite Bar */
+.d365-role-box {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+.d365-role-select {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  padding-right: 4px;
+}
+.d365-role-select option {
+  background-color: #ffffff;
+  color: #201f1e;
+}
+
+/* Language Toggle in Suite Bar */
+.d365-lang-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.d365-lang-btn {
+  padding: 3px 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.d365-lang-btn.active {
+  background: #ffffff;
+  color: var(--d365-suitebar-bg);
+}
+
+.d365-icon-action-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  position: relative;
+  transition: background-color 0.15s ease;
+}
+.d365-icon-action-btn:hover {
+  background-color: var(--d365-suitebar-hover);
+}
+.d365-badge-pill {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  background-color: #ef4444;
+  border-radius: 50%;
+}
+
+.d365-avatar-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0078d4, #5c2d91);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  user-select: none;
+}
+
+/* ==========================================================================
+   2. Dynamics 365 Command Bar (Action Ribbon)
+   ========================================================================== */
+.d365-commandbar {
+  height: var(--d365-cmdbar-height);
+  background-color: var(--d365-commandbar-bg);
+  border-bottom: 1px solid var(--d365-commandbar-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  position: sticky;
+  top: var(--d365-suitebar-height);
+  z-index: 1040;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.d365-cmd-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.d365-cmd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--d365-text-primary);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.d365-cmd-btn:hover {
+  background-color: var(--d365-commandbar-hover);
+  border-color: #edebe9;
+}
+.d365-cmd-btn:active {
+  background-color: #edebe9;
+}
+.d365-cmd-btn.d365-cmd-primary {
+  background-color: var(--d365-primary);
+  color: #ffffff;
+  border-color: var(--d365-primary);
+  font-weight: 600;
+}
+.d365-cmd-btn.d365-cmd-primary:hover {
+  background-color: var(--d365-primary-hover);
+  border-color: var(--d365-primary-hover);
+}
+.d365-cmd-btn.d365-cmd-danger {
+  color: var(--d365-danger);
+}
+.d365-cmd-btn.d365-cmd-danger:hover {
+  background-color: var(--d365-danger-subtle);
+  border-color: #fca5a5;
+}
+
+.d365-cmd-divider {
+  width: 1px;
+  height: 20px;
+  background-color: #edebe9;
+  margin: 0 4px;
+}
+
+.d365-cmd-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11.5px;
+  color: var(--d365-text-secondary);
+}
+.d365-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ==========================================================================
+   3. Body Layout: Left Sitemap Rail + Main Content Canvas
+   ========================================================================== */
+.d365-body-wrapper {
+  display: flex;
+  flex: 1;
+  position: relative;
+  min-height: calc(100vh - var(--d365-suitebar-height) - var(--d365-cmdbar-height));
+}
+
+/* Left Sitemap Navigation Rail */
+.d365-sitemap {
+  width: var(--d365-sitemap-width);
+  background-color: #ffffff;
+  border-right: 1px solid var(--d365-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  z-index: 1030;
+}
+
+.d365-sitemap-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--d365-border-subtle);
+}
+.d365-sitemap-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--d365-text-secondary);
+}
+.d365-sitemap-collapse-btn {
+  background: transparent;
+  border: none;
+  color: var(--d365-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.d365-sitemap-collapse-btn:hover {
+  background-color: var(--d365-border-subtle);
+  color: var(--d365-text-primary);
+}
+
+.d365-sitemap-nav {
+  padding: 10px 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.d365-nav-group-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a8886;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 12px 10px 4px 10px;
+}
+
+.d365-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  color: var(--d365-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  position: relative;
+  margin-bottom: 2px;
+}
+.d365-nav-link:hover {
+  background-color: var(--d365-commandbar-hover);
+  color: var(--d365-text-primary);
+  text-decoration: none;
+}
+.d365-nav-link.active {
+  background-color: var(--d365-primary-subtle);
+  color: var(--d365-primary);
+  font-weight: 600;
+}
+.d365-nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  background-color: var(--d365-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.d365-nav-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--d365-text-secondary);
+  flex-shrink: 0;
+}
+.d365-nav-link.active .d365-nav-icon {
+  color: var(--d365-primary);
+}
+
+/* Sitemap Collapsed Mode */
+.d365-app-layout.sidebar-collapsed .d365-sitemap {
+  width: var(--d365-sitemap-collapsed-width);
+}
+.d365-app-layout.sidebar-collapsed .d365-sitemap-title,
+.d365-app-layout.sidebar-collapsed .d365-nav-group-header,
+.d365-app-layout.sidebar-collapsed .d365-nav-text,
+.d365-app-layout.sidebar-collapsed .d365-area-text,
+.d365-app-layout.sidebar-collapsed .d365-sitemap-footer span {
+  display: none !important;
+}
+.d365-app-layout.sidebar-collapsed .d365-nav-link {
+  justify-content: center;
+  padding: 8px 0;
+}
+
+/* Sitemap Footer / Area Switcher */
+.d365-sitemap-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--d365-border);
+  background-color: #faf9f8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--d365-text-secondary);
+}
+.d365-area-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--d365-primary);
+}
+
+/* ==========================================================================
+   4. Main Content Canvas
+   ========================================================================== */
+.d365-content-canvas {
+  flex: 1;
+  padding: 18px 24px 40px 24px;
+  background-color: var(--d365-canvas-bg);
+  overflow-y: auto;
+}
+
+/* Page Header */
+.d365-view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.d365-view-title h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--d365-text-primary);
+  margin-bottom: 2px;
+  letter-spacing: -0.3px;
+}
+.d365-view-title p {
+  font-size: 12.5px;
+  color: var(--d365-text-secondary);
+  margin: 0;
+}
+
+/* ==========================================================================
+   5. Business Process Flow (BPF) Chevron Stage Gate
+   ========================================================================== */
+.d365-bpf-container {
+  background: #ffffff;
+  border: 1px solid var(--d365-border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 18px;
+  box-shadow: var(--d365-shadow-card);
+}
+.d365-bpf-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  overflow-x: auto;
+}
+.d365-bpf-stage {
+  flex: 1;
+  min-width: 150px;
+  padding: 7px 14px 7px 18px;
+  background-color: #f3f2f1;
+  color: var(--d365-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%);
+  user-select: none;
+  transition: all 0.2s ease;
+}
+.d365-bpf-stage:first-child {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+  border-radius: 3px 0 0 3px;
+}
+.d365-bpf-stage:last-child {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10px 50%);
+  border-radius: 0 3px 3px 0;
+}
+.d365-bpf-stage.completed {
+  background-color: var(--d365-success-subtle);
+  color: var(--d365-success);
+}
+.d365-bpf-stage.active {
+  background-color: var(--d365-primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+.d365-bpf-stage.declined {
+  background-color: var(--d365-danger-subtle);
+  color: var(--d365-danger);
+}
+.d365-bpf-stage-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.d365-bpf-stage-status {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   6. Dynamics 365 Metric KPI Cards
+   ========================================================================== */
+.d365-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.d365-kpi-card {
+  background: var(--d365-card-bg);
+  border: 1px solid var(--d365-border);
+  border-radius: 4px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--d365-shadow-card);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+.d365-kpi-card:hover {
+  border-color: #c8c6c4;
+  box-shadow: var(--d365-shadow-flyout);
+  transform: translateY(-1px);
+}
+.d365-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--d365-primary);
+}
+.d365-kpi-card.kpi-total::before { background-color: #0078d4; }
+.d365-kpi-card.kpi-pending::before { background-color: #f59e0b; }
+.d365-kpi-card.kpi-urgent::before { background-color: #ef4444; }
+.d365-kpi-card.kpi-approved::before { background-color: #107c41; }
+.d365-kpi-card.kpi-value::before { background-color: #5c2d91; }
+
+.d365-kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.d365-kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--d365-text-secondary);
+}
+.d365-kpi-icon {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.d365-kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--d365-text-primary);
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+.d365-kpi-subtext {
+  font-size: 11px;
+  color: var(--d365-text-disabled);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   7. Dynamics 365 Data Grids & Filter Toolbars
+   ========================================================================== */
+.d365-grid-card {
+  background: #ffffff;
+  border: 1px solid var(--d365-border);
+  border-radius: 4px;
+  box-shadow: var(--d365-shadow-card);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.d365-grid-toolbar {
+  padding: 10px 14px;
+  background: #faf9f8;
+  border-bottom: 1px solid var(--d365-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.d365-filter-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.d365-search-box {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--d365-border);
+  border-radius: 4px;
+  padding: 5px 8px;
+  width: 250px;
+}
+.d365-search-box input {
+  border: none;
+  outline: none;
+  font-size: 12.5px;
+  width: 100%;
+  font-family: inherit;
+  color: var(--d365-text-primary);
+}
+
+.d365-select-filter {
+  background: #ffffff;
+  border: 1px solid var(--d365-border);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  color: var(--d365-text-primary);
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.d365-select-filter:focus {
+  border-color: var(--d365-primary);
+  box-shadow: 0 0 0 1px var(--d365-primary);
+}
+
+/* Priority Pills Bar */
+.d365-priority-bar {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--d365-border);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+}
+.d365-pill {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  background: #f3f2f1;
+  color: var(--d365-text-secondary);
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.d365-pill:hover {
+  background: #edebe9;
+  color: var(--d365-text-primary);
+}
+.d365-pill.active {
+  background: var(--d365-primary-subtle);
+  color: var(--d365-primary);
+  border-color: var(--d365-primary-border);
+  font-weight: 600;
+}
+.d365-pill.urgent.active {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+/* High-Density Fluent Grid */
+.d365-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.d365-data-table th {
+  background-color: #faf9f8;
+  color: var(--d365-text-secondary);
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--d365-border);
+  white-space: nowrap;
+  user-select: none;
+}
+.d365-data-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--d365-border-subtle);
+  vertical-align: middle;
+  color: var(--d365-text-primary);
+}
+.d365-data-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Record Key Monospace Badge */
+.d365-record-key {
+  font-family: Consolas, 'SFMono-Regular', Menlo, Monaco, monospace;
+  font-weight: 700;
+  color: var(--d365-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.d365-record-key:hover {
+  text-decoration: underline;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.badge-status-new {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.badge-status-under_review {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.badge-status-approved {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.badge-status-rejected {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.badge-status-completed {
+  background-color: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+.badge-priority-urgent {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-weight: 700;
+}
+.badge-priority-high {
+  background-color: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #ffedd5;
+}
+.badge-priority-medium {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+}
+.badge-priority-low {
+  background-color: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background-color: currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-kf 1.6s infinite ease-in-out;
+}
+@keyframes pulse-kf {
+  0% { transform: scale(0.95); opacity: 0.6; }
+  50% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.6; }
+}
+
+/* ==========================================================================
+   8. Dynamics 365 FastTabs (Collapsible Form Sections)
+   ========================================================================== */
+.d365-fasttab {
+  background: #ffffff;
+  border: 1px solid var(--d365-border);
+  border-radius: 4px;
+  margin-bottom: 14px;
+  box-shadow: var(--d365-shadow-card);
+  overflow: hidden;
+}
+.d365-fasttab-header {
+  padding: 10px 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.15s ease;
+}
+.d365-fasttab-header:hover {
+  background-color: #faf9f8;
+}
+.d365-fasttab.open .d365-fasttab-header {
+  border-bottom-color: var(--d365-border);
+}
+.d365-fasttab-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--d365-text-primary);
+}
+.d365-fasttab-chevron {
+  font-size: 12px;
+  color: var(--d365-text-secondary);
+  transition: transform 0.2s ease;
+}
+.d365-fasttab.open .d365-fasttab-chevron {
+  transform: rotate(90deg);
+}
+.d365-fasttab-summary {
+  font-size: 11.5px;
+  color: var(--d365-text-secondary);
+}
+.d365-fasttab-body {
+  padding: 16px;
+  display: none;
+}
+.d365-fasttab.open .d365-fasttab-body {
+  display: block;
+}
+
+/* Form Controls Fluent */
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--d365-text-secondary);
+  margin-bottom: 4px;
+}
+.form-control, .form-select {
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid var(--d365-border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: var(--d365-text-primary);
+  background-color: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--d365-primary);
+  box-shadow: 0 0 0 1px var(--d365-primary);
+  outline: none;
+}
+
+/* ==========================================================================
+   9. Requester Portal Cards & Timeline Stepper
+   ========================================================================== */
+.requester-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.req-feed-card {
+  background: #ffffff;
+  border: 1px solid var(--d365-border);
+  border-radius: 4px;
+  box-shadow: var(--d365-shadow-card);
+  padding: 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.req-feed-card:hover {
+  border-color: #c8c6c4;
+  box-shadow: var(--d365-shadow-flyout);
+}
+.req-feed-card.status-rejected {
+  border-left: 4px solid var(--d365-danger);
+}
+.req-feed-card.status-approved {
+  border-left: 4px solid var(--d365-success);
+}
+.req-feed-card.status-under_review {
+  border-left: 4px solid #f59e0b;
+}
+
+.req-stepper-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 0;
+  position: relative;
+  padding: 0 10px;
+}
+.req-stepper-line {
+  position: absolute;
+  top: 14px;
+  left: 30px;
+  right: 30px;
+  height: 2px;
+  background-color: #edebe9;
+  z-index: 1;
+}
+.req-step-node {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.req-step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #edebe9;
+  color: var(--d365-text-disabled);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+}
+.req-step-node.completed .req-step-circle {
+  background: var(--d365-success);
+  border-color: var(--d365-success);
+  color: #ffffff;
+}
+.req-step-node.active .req-step-circle {
+  background: var(--d365-primary);
+  border-color: var(--d365-primary);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px var(--d365-primary-subtle);
+}
+.req-step-node.declined .req-step-circle {
+  background: var(--d365-danger);
+  border-color: var(--d365-danger);
+  color: #ffffff;
+}
+.req-step-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--d365-text-secondary);
+}
+
+/* ==========================================================================
+   10. Modals & Dialogs (Dynamics 365 Flyout / Dialog)
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1060;
+  padding: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.modal-backdrop.open {
+  display: flex !important;
+  opacity: 1 !important;
+}
+.modal-container {
+  background: #ffffff;
+  border-radius: 4px;
+  border: 1px solid var(--d365-border);
+  box-shadow: var(--d365-shadow-dialog);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: d365-modal-in 0.2s ease-out;
+}
+@keyframes d365-modal-in {
+  from { transform: scale(0.96) translateY(-10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.modal-header {
+  padding: 12px 18px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--d365-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--d365-text-primary);
+  margin: 0;
+}
+.modal-body {
+  padding: 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+.modal-footer {
+  padding: 12px 18px;
+  background: #faf9f8;
+  border-top: 1px solid var(--d365-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Toasts */
+#toastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  box-shadow: var(--d365-shadow-flyout);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toast-in 0.25s ease;
+}
+@keyframes toast-in {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.toast.success { background-color: var(--d365-success); }
+.toast.danger { background-color: var(--d365-danger); }
+.toast.warning { background-color: #d97706; }
+.toast.info { background-color: var(--d365-primary); }
+
+/* Buttons Fluent */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-decoration: none;
+}
+.btn-primary {
+  background-color: var(--d365-primary);
+  color: #ffffff;
+  border-color: var(--d365-primary);
+}
+.btn-primary:hover {
+  background-color: var(--d365-primary-hover);
+  border-color: var(--d365-primary-hover);
+  color: #ffffff;
+}
+.btn-outline {
+  background-color: #ffffff;
+  color: var(--d365-text-primary);
+  border-color: var(--d365-border);
+}
+.btn-outline:hover {
+  background-color: #f3f2f1;
+  border-color: #c8c6c4;
+}
+.btn-danger {
+  background-color: #ffffff;
+  color: var(--d365-danger);
+  border-color: #fecaca;
+}
+.btn-danger:hover {
+  background-color: var(--d365-danger-subtle);
+  border-color: var(--d365-danger);
+}
+.btn-success {
+  background-color: var(--d365-success);
+  color: #ffffff;
+}
+.btn-success:hover {
+  background-color: #0e6b37;
+}
+.btn-warning {
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+.btn-warning:hover {
+  background-color: #d97706;
+}
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+.btn-text {
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  color: var(--d365-text-secondary);
+}
+.btn-text:hover {
+  background-color: #edebe9;
+  color: var(--d365-text-primary);
+}
+
+/* ==========================================================================
+   Dynamics 365 / Fluent Modal Dialog System
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  z-index: 2100 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.2s ease !important;
+}
+
+.modal-backdrop.open {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.modal-container {
+  background-color: #ffffff !important;
+  border-radius: 6px !important;
+  box-shadow: var(--d365-shadow-dialog) !important;
+  border: 1px solid var(--d365-border) !important;
+  max-width: 900px;
+  width: 100% !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  transform: translateY(20px) scale(0.98) !important;
+  transition: transform 0.22s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+}
+
+.modal-backdrop.open .modal-container {
+  transform: translateY(0) scale(1) !important;
+}
+
+.modal-header {
+  padding: 16px 22px !important;
+  border-bottom: 1px solid var(--d365-border) !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background-color: #faf9f8 !important;
+}
+
+.modal-header h3 {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: var(--d365-text-primary) !important;
+  margin: 0 !important;
+}
+
+.modal-body {
+  padding: 22px !important;
+  overflow-y: auto !important;
+  flex: 1 !important;
+  background-color: #ffffff !important;
+}
+
+.modal-footer {
+  padding: 14px 22px !important;
+  border-top: 1px solid var(--d365-border) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  background-color: #faf9f8 !important;
+}
+
+/* Toast Notifications */
+#toastContainer, .toast-container {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  pointer-events: none !important;
+}
+
+#toastContainer .toast, .toast {
+  background-color: #201f1e !important;
+  color: #ffffff !important;
+  padding: 12px 18px !important;
+  border-radius: 4px !important;
+  box-shadow: var(--d365-shadow-dialog) !important;
+  font-size: 13px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  animation: slideUp 0.25s ease-out !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+#toastContainer .toast.success { background-color: #0e6b37 !important; border-left: 5px solid #107c41 !important; }
+#toastContainer .toast.danger { background-color: #a80000 !important; border-left: 5px solid #d13438 !important; }
+#toastContainer .toast.info { background-color: #005a9e !important; border-left: 5px solid #0078d4 !important; }
+#toastContainer .toast.warning { background-color: #b03800 !important; border-left: 5px solid #d83b01 !important; }
+
+/* Print Stylesheet */
+@media print {
+  .d365-suitebar,
+  .d365-commandbar,
+  .d365-sitemap,
+  .d365-kpi-row,
+  .d365-grid-toolbar,
+  .d365-priority-bar,
+  .modal-footer,
+  .btn,
+  #toastContainer {
+    display: none !important;
+  }
+  .d365-body-wrapper, .d365-content-canvas {
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+  .modal-backdrop {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  .modal-container {
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

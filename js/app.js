@@ -173,13 +173,29 @@ function initNavigation() {
 function switchTab(tab) {
   AppState.currentTab = tab;
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  const activeNav = document.querySelector(`[data-nav-target="${tab}"]`);
-  if (activeNav) activeNav.classList.add('active');
+  const activeNav = document.querySelectorAll(`[data-nav-target="${tab}"]`);
+  activeNav.forEach(el => el.classList.add('active'));
 
   // Toggle view visibility
   document.querySelectorAll('.tab-view').forEach(view => {
     view.style.display = view.id === `view-${tab}` ? 'block' : 'none';
   });
+
+  // Update Dynamics 365 Command Bar Breadcrumb
+  const breadcrumbEl = document.getElementById('d365BreadcrumbCurrent');
+  if (breadcrumbEl) {
+    const tabMap = {
+      'dashboard': t('requisitionList') || 'Requisitions',
+      'requester-dashboard': t('requesterDashboardTitle') || 'Requester Portal',
+      'new-request': t('formTitle') || 'New Requisition',
+      'departments': t('deptManagementTitle') || 'Requesting Departments',
+      'priorities': t('prioManagementTitle') || 'Priority Levels',
+      'categories': t('catManagementTitle') || 'Categories',
+      'items': t('itemManagementTitle') || 'Item Catalog',
+      'users': t('userManagementTitle') || 'Users'
+    };
+    breadcrumbEl.textContent = tabMap[tab] || tab;
+  }
 
   // If opening request form, refresh catalog options and reset line items
   if (tab === 'new-request') {
@@ -190,6 +206,17 @@ function switchTab(tab) {
 
   renderCurrentTabView();
 }
+
+window.toggleSidebarCollapse = function() {
+  document.body.classList.toggle('sidebar-collapsed');
+};
+
+window.toggleFastTab = function(headerEl) {
+  const fasttab = headerEl.closest('.d365-fasttab');
+  if (fasttab) {
+    fasttab.classList.toggle('open');
+  }
+};
 
 function renderAll() {
   updateLanguageUI();
@@ -1131,6 +1158,64 @@ window.openRequisitionDetail = function(reqId) {
     `;
   }
 
+  // Calculate Dynamics 365 BPF Stages
+  let bpfStage1 = 'completed';
+  let bpfStage2 = 'pending';
+  let bpfStage3 = 'pending';
+  let bpfStage4 = 'pending';
+  let bpfStage2Status = 'In Review Queue';
+  let bpfStage3Status = 'Pending Decision';
+  let bpfStage4Status = 'PO Issuance';
+
+  if (req.status === 'under_review') {
+    bpfStage2 = 'active';
+    bpfStage2Status = 'Active Review';
+  } else if (req.status === 'approved') {
+    bpfStage2 = 'completed';
+    bpfStage2Status = 'Reviewed ✓';
+    bpfStage3 = 'completed';
+    bpfStage3Status = 'Approved ✓';
+    bpfStage4 = 'active';
+    bpfStage4Status = 'PO Processing';
+  } else if (req.status === 'rejected') {
+    bpfStage2 = 'completed';
+    bpfStage2Status = 'Reviewed';
+    bpfStage3 = 'declined';
+    bpfStage3Status = 'Declined ✕';
+    bpfStage4 = 'pending';
+    bpfStage4Status = 'Halted';
+  } else if (req.status === 'completed') {
+    bpfStage2 = 'completed';
+    bpfStage2Status = 'Reviewed ✓';
+    bpfStage3 = 'completed';
+    bpfStage3Status = 'Approved ✓';
+    bpfStage4 = 'completed';
+    bpfStage4Status = 'Delivered ★';
+  }
+
+  const bpfHtml = `
+    <div class="d365-bpf-container mb-3">
+      <div class="d365-bpf-bar">
+        <div class="d365-bpf-stage ${bpfStage1}">
+          <span class="d365-bpf-stage-title"><span>📝</span> 1. Draft & Submitted</span>
+          <span class="d365-bpf-stage-status">${req.requestDate}</span>
+        </div>
+        <div class="d365-bpf-stage ${bpfStage2}">
+          <span class="d365-bpf-stage-title"><span>👔</span> 2. Management Review</span>
+          <span class="d365-bpf-stage-status">${bpfStage2Status}</span>
+        </div>
+        <div class="d365-bpf-stage ${bpfStage3}">
+          <span class="d365-bpf-stage-title"><span>⚖️</span> 3. Approval Decision</span>
+          <span class="d365-bpf-stage-status">${bpfStage3Status}</span>
+        </div>
+        <div class="d365-bpf-stage ${bpfStage4}">
+          <span class="d365-bpf-stage-title"><span>📦</span> 4. Fulfillment & PO</span>
+          <span class="d365-bpf-stage-status">${bpfStage4Status}</span>
+        </div>
+      </div>
+    </div>
+  `;
+
   container.innerHTML = `
     <!-- Print-only header -->
     <div class="print-only-header">
@@ -1138,6 +1223,9 @@ window.openRequisitionDetail = function(reqId) {
       <p>Company Procurement Department | Official Purchase Request Voucher</p>
       <hr style="margin: 15px 0;" />
     </div>
+
+    <!-- Dynamics 365 Business Process Flow Chevron Gate -->
+    ${bpfHtml}
 
     <!-- General Info Grid -->
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; background:#f8fafc; padding:16px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:20px;">

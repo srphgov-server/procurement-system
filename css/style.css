@@ -1,32 +1,32 @@
-/* Google Fonts for English and Khmer */
+/* Microsoft Dynamics 365 & Fluent Design Bridge */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
-  --success: #10b981;
-  --success-light: #ecfdf5;
-  --warning: #f59e0b;
-  --warning-light: #fffbeb;
-  --danger: #ef4444;
-  --danger-light: #fef2f2;
-  --info: #6366f1;
-  --info-light: #eef2ff;
+  --primary: #0078d4;
+  --primary-hover: #106ebe;
+  --primary-light: #eff6fc;
+  --success: #107c41;
+  --success-light: #dff6dd;
+  --warning: #d83b01;
+  --warning-light: #fed9cc;
+  --danger: #a80000;
+  --danger-light: #fde7e9;
+  --info: #0078d4;
+  --info-light: #deecf9;
   
-  --bg-main: #f8fafc;
+  --bg-main: #faf9f8;
   --bg-card: #ffffff;
-  --border-color: #e2e8f0;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --border-color: #edebe9;
+  --text-main: #201f1e;
+  --text-muted: #605e5c;
+  --text-light: #8a8886;
   
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --shadow-sm: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.08), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 6.4px 14.4px 0 rgba(0, 0, 0, 0.13), 0 1.2px 3.6px 0 rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 25.6px 57.6px 0 rgba(0, 0, 0, 0.22), 0 4.8px 14.4px 0 rgba(0, 0, 0, 0.18);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
 }
 
 * {
@@ -36,13 +36,14 @@
 }
 
 body {
-  font-family: 'Kantumruy Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
   line-height: 1.5;
-  font-size: 14.5px;
+  font-size: 13.5px;
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
 }
 
 /* Sidebar Styles */

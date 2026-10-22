@@ -1,12 +1,41 @@
-# ProcureFlow - Procurement Management Application (ប្រព័ន្ធគ្រប់គ្រងលទ្ធកម្ម)
+# Dynamics 365 | ProcureFlow - Sourcing & Procurement (ប្រព័ន្ធគ្រប់គ្រងលទ្ធកម្ម)
 
-A full-featured, bilingual (**English** & **Khmer / ភាសាខ្មែរ**) Procurement Management System designed to handle departmental purchase requisitions, priority tracking with real-time KPI metrics, role-based workflows for Management and Administrators, and master list management.
+A full-featured, enterprise-grade Procurement Management System modeled after **Microsoft Dynamics 365 (Supply Chain Management & Procurement)**, built with the **Bootstrap library** and **Fluent 2 design system**. Features full bilingual support (**English** & **Khmer / ភាសាខ្មែរ**), departmental purchase requisitions, priority tracking with real-time KPI metrics, role-based workflows for Management and Administrators, and master list management.
+
+---
+
+## 🎨 Microsoft Dynamics 365 Design Architecture & Bootstrap Integration
+
+- **Microsoft 365 Top Suite Bar (`#002050` Deep Navy)**:
+  - 9-dot Waffle App Launcher button with sidebar toggle.
+  - Global Dynamics 365 App Branding with `USMF Production` environment status tag.
+  - Global Suite Search with `Alt+Q` keyboard shortcut hint.
+  - Role/Persona security switcher, bilingual toggle (`EN` / `ខ្មែរ`), quick notifications, and user avatar.
+- **Dynamics 365 Command Bar (Horizontal Action Ribbon)**:
+  - High-efficiency enterprise toolbar: `+ New Requisition`, `Refresh`, `Export to Excel`, `Print Voucher`, `Requester Portal`, and `Reset Data`.
+  - Dynamic breadcrumb navigation trail (`Dynamics 365 › Procurement & Sourcing › Requisitions`).
+- **Collapsible Left Sitemap Rail (Navigation Bar)**:
+  - Enterprise sitemap grouped into: `MY WORK` (Board & Requester Portal), `PROCUREMENT` (New Requisition), and `MASTER LISTS` (Departments, Urgency/Priorities, Categories, Catalog, Users).
+  - Hamburger expand/collapse toggle with smooth width animation.
+  - Dynamic active indicator highlighting current workspace view.
+- **Business Process Flow (BPF) Chevron Stage Gate Bar**:
+  - Visible 4-stage sequential chevron gate: `1. Draft & Submitted` ➔ `2. Management Review` ➔ `3. Approval Decision` ➔ `4. Sourcing & Delivery`.
+  - Dynamic state tracking for requisitions showing real-time stage progression and decisions.
+- **Dynamics 365 FastTabs in Forms**:
+  - Collapsible, summarized FastTabs for `General Information` and `Requested Line Items`.
+  - Clean chevron toggles and live header summaries.
+- **Fluent High-Density Data Grids & KPI Tiles**:
+  - High-density data grid with monospace requisition tags (`REQ-2026-001`), interactive sorting, and status pills.
+  - Interactive KPI metric cards with accent indicator bars and pulsating urgency dots.
+- **Bootstrap 5 Library**:
+  - Modern, responsive 12-column grid system, utility classes, and Bootstrap Icons.
 
 ---
 
 ## 🌟 Key Features
 
 ### 1. Department Requisition Form (ទម្រង់ស្នើសុំលទ្ធកម្ម)
+- **FastTab Structure**: Organized into `General Information` and `Requested Line Items`.
 - **Department & Priority Selection**: Dynamically loaded from Master List Management with real-time SLA hours tracking.
 - **Requester Information**: Name, Email, Request Date, Required-by Date, and Business Justification.
 - **Category-First Requested Line Items (ជ្រើសរើសប្រភេទមុខទំនិញជាមុន)**:
