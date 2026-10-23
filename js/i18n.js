@@ -291,6 +291,22 @@ const i18n = {
     noRequesterRequests: "No requests found for this requester account or filter.",
     cloneToastSuccess: "Loaded details into New Requisition form. You can now modify and re-submit!",
 
+    // Requisition Editing & Lock Rules
+    editRequisition: "Edit Requisition",
+    actionEditRequisition: "Edit Requisition",
+    editFormTitle: "Edit Procurement Purchase Requisition",
+    editFormSubtitle: "Modify requisition details, quantities, and line items while status is still New",
+    btnUpdateRequest: "Update Procurement Request",
+    reqUpdatedSuccess: "Requisition updated successfully: ",
+    actionEditLocked: "Edit Locked",
+    editLockedTooltip: "Editing unavailable: This transaction has already been reviewed or approved by Management.",
+    editLockedBadge: "Reviewed / Approved (Locked)",
+    editLockedWarning: "Cannot edit this requisition because it has already been reviewed or approved by Management.",
+    stageBpf1: "1. Draft & Submit",
+    stageBpf2: "2. Management Review",
+    stageBpf3: "3. Approval Decision",
+    stageBpf4: "4. Sourcing & Delivery",
+
     // Departments
     deptIT: "Information Technology (IT)",
     deptHR: "Human Resources (HR)",
@@ -592,6 +608,22 @@ const i18n = {
     approvedAlertMsg: "ថ្នាក់ដឹកនាំបានអនុម័តសំណើរបស់អ្នករួចរាល់ហើយ! ផ្នែកលទ្ធកម្មនឹងចាប់ផ្តើមការបញ្ជាទិញ។",
     noRequesterRequests: "មិនមានសំណើសម្រាប់គណនីអ្នកស្នើសុំនេះ ឬតាមការត្រងនេះទេ។",
     cloneToastSuccess: "បានទាញទិន្នន័យចូលក្នុងទម្រង់ស្នើសុំថ្មី! អ្នកអាចកែសម្រួល និងដាក់ស្នើឡើងវិញបាន។",
+
+    // Requisition Editing & Lock Rules
+    editRequisition: "កែសម្រួលសំណើ",
+    actionEditRequisition: "កែសម្រួលសំណើ",
+    editFormTitle: "កែសម្រួលសំណើសុំទិញសម្ភារៈ",
+    editFormSubtitle: "កែប្រែព័ត៌មានលម្អិត បរិមាណ និងមុខទំនិញក្នុងខណៈពេលដែលស្ថានភាពនៅតែថ្មី (New)",
+    btnUpdateRequest: "ធ្វើបច្ចុប្បន្នភាពសំណើ",
+    reqUpdatedSuccess: "សំណើត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ៖ ",
+    actionEditLocked: "បានចាក់សោ",
+    editLockedTooltip: "មិនអាចកែសម្រួលបានទេ៖ ប្រតិបត្តិការនេះត្រូវបានត្រួតពិនិត្យ ឬអនុម័តដោយថ្នាក់ដឹកនាំរួចរាល់ហើយ។",
+    editLockedBadge: "បានពិនិត្យ/អនុម័ត (ជាប់សោ)",
+    editLockedWarning: "មិនអាចកែសម្រួលសំណើនេះបានទេ ព្រោះវាត្រូវបានត្រួតពិនិត្យ ឬអនុម័តដោយថ្នាក់ដឹកនាំរួចហើយ។",
+    stageBpf1: "១. សេចក្តីព្រាង & ដាក់ស្នើ",
+    stageBpf2: "២. ការពិនិត្យដោយថ្នាក់ដឹកនាំ",
+    stageBpf3: "៣. ការសម្រេចអនុម័ត",
+    stageBpf4: "៤. លទ្ធកម្ម & ការដឹកជញ្ជូន",
 
     // Departments
     deptIT: "ព័ត៌មានវិទ្យា (IT)",

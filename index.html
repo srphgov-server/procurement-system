@@ -95,7 +95,7 @@
   <div class="d365-commandbar">
     <div class="d365-cmd-left">
       <!-- Primary New Requisition Action -->
-      <button type="button" class="d365-cmd-btn d365-cmd-primary" onclick="switchTab('new-request')">
+      <button type="button" class="d365-cmd-btn d365-cmd-primary" onclick="startNewRequisition()">
         <span class="material-symbols-outlined" style="font-size:16px;">add</span>
         <span data-i18n="navNewRequest">New Requisition</span>
       </button>
@@ -242,7 +242,7 @@
             <p data-i18n="requisitionListSubtitle">Real-time list of all department procurement requests with priority KPI tracking</p>
           </div>
           <div>
-            <button class="btn btn-primary" onclick="switchTab('new-request')">
+            <button class="btn btn-primary" onclick="startNewRequisition()">
               <span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">add</span> <span data-i18n="navNewRequest">+ New Requisition</span>
             </button>
           </div>
@@ -393,7 +393,7 @@
                 <!-- Populated dynamically -->
               </select>
             </div>
-            <button class="btn btn-primary" onclick="switchTab('new-request')">
+            <button class="btn btn-primary" onclick="startNewRequisition()">
               <span>➕</span> <span data-i18n="navNewRequest">+ New Requisition</span>
             </button>
           </div>
@@ -489,12 +489,12 @@
       <section id="view-new-request" class="tab-view" style="display:none;">
         <div class="d365-view-header">
           <div class="d365-view-title">
-            <h2 data-i18n="formTitle">New Procurement Purchase Requisition</h2>
-            <p data-i18n="formSubtitle">Submit a purchase request from your department for review and management approval</p>
+            <h2 id="formViewHeading" data-i18n="formTitle">New Procurement Purchase Requisition</h2>
+            <p id="formViewSubheading" data-i18n="formSubtitle">Submit a purchase request from your department for review and management approval</p>
           </div>
           <div>
-            <button type="button" class="btn btn-outline" onclick="switchTab('dashboard')">
-              <span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">arrow_back</span> <span data-i18n="navDashboard">Back to Board</span>
+            <button type="button" class="btn btn-outline" onclick="cancelRequisitionForm()">
+              <span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">arrow_back</span> <span data-i18n="actionCancel">Back</span>
             </button>
           </div>
         </div>
@@ -502,20 +502,20 @@
         <!-- Business Process Flow Chevron Bar for New Requisition -->
         <div class="d365-bpf-container">
           <div class="d365-bpf-bar">
-            <div class="d365-bpf-stage active">
-              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">edit_document</span> 1. Draft & Submit</span>
-              <span class="d365-bpf-stage-status">Current Stage</span>
+            <div class="d365-bpf-stage active" id="formBpfStage1">
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">edit_document</span> <span data-i18n="stageBpf1">1. Draft & Submit</span></span>
+              <span class="d365-bpf-stage-status" id="formBpfStage1Status">Current Stage</span>
             </div>
-            <div class="d365-bpf-stage">
-              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">rate_review</span> 2. Management Review</span>
+            <div class="d365-bpf-stage" id="formBpfStage2">
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">rate_review</span> <span data-i18n="stageBpf2">2. Management Review</span></span>
               <span class="d365-bpf-stage-status">Next</span>
             </div>
-            <div class="d365-bpf-stage">
-              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">gavel</span> 3. Approval Decision</span>
+            <div class="d365-bpf-stage" id="formBpfStage3">
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">gavel</span> <span data-i18n="stageBpf3">3. Approval Decision</span></span>
               <span class="d365-bpf-stage-status">Pending</span>
             </div>
-            <div class="d365-bpf-stage">
-              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">local_shipping</span> 4. Sourcing & Delivery</span>
+            <div class="d365-bpf-stage" id="formBpfStage4">
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">local_shipping</span> <span data-i18n="stageBpf4">4. Sourcing & Delivery</span></span>
               <span class="d365-bpf-stage-status">Pending</span>
             </div>
           </div>
@@ -630,9 +630,10 @@
 
           <!-- Form Action Bar -->
           <div class="d-flex justify-content-end gap-2 mt-3">
-            <button type="button" class="btn btn-outline" id="cancelRequestBtn" data-i18n="actionCancel">Cancel</button>
-            <button type="submit" class="btn btn-primary" data-i18n="btnSubmitRequest">
-              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">send</span> Submit Procurement Request
+            <button type="button" class="btn btn-outline" id="cancelRequestBtn" onclick="cancelRequisitionForm()" data-i18n="actionCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="submitRequisitionBtn">
+              <span class="material-symbols-outlined" id="submitRequisitionIcon" style="font-size:18px; margin-right:4px;">send</span>
+              <span id="submitRequisitionText" data-i18n="btnSubmitRequest">Submit Procurement Request</span>
             </button>
           </div>
         </form>
@@ -982,7 +983,7 @@
       <div class="modal-body" id="requisitionDetailContent">
         <!-- Rendered by JS -->
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" id="requisitionDetailModalFooter">
         <button type="button" class="btn btn-outline" onclick="window.print()"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">print</span> <span data-i18n="actionPrint">Print / PDF</span></button>
         <button type="button" class="btn btn-primary" onclick="closeModal('requisitionDetailModal')" data-i18n="actionClose">Close</button>
       </div>
