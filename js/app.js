@@ -1736,19 +1736,50 @@ function populateApprovedFilterDropdowns() {
   if (currentVal) deptSelect.value = currentVal;
 }
 
+window.filterApprovedByKpi = function(kpiType) {
+  const statusSelect = document.getElementById('approvedFilterStatus');
+  const typeSelect = document.getElementById('approvedFilterType');
+  const cards = document.querySelectorAll('#approvedKpiRow .d365-kpi-card');
+  cards.forEach(c => c.classList.remove('active-filter'));
+
+  if (kpiType === 'all') {
+    if (statusSelect) statusSelect.value = 'all';
+    if (typeSelect) typeSelect.value = 'all';
+    document.getElementById('approvedKpiCardTotal')?.classList.add('active-filter');
+  } else if (kpiType === 'full') {
+    if (statusSelect) statusSelect.value = 'all';
+    if (typeSelect) typeSelect.value = 'full';
+    document.getElementById('approvedKpiCardFull')?.classList.add('active-filter');
+  } else if (kpiType === 'partial') {
+    if (statusSelect) statusSelect.value = 'all';
+    if (typeSelect) typeSelect.value = 'partial';
+    document.getElementById('approvedKpiCardPartial')?.classList.add('active-filter');
+  } else if (kpiType === 'completed') {
+    if (statusSelect) statusSelect.value = 'completed';
+    if (typeSelect) typeSelect.value = 'all';
+    document.getElementById('approvedKpiCardCompleted')?.classList.add('active-filter');
+  }
+  renderApprovedListView();
+};
+
 window.resetApprovedFilters = function() {
   const searchInput = document.getElementById('approvedSearchInput');
   const deptSelect = document.getElementById('approvedFilterDept');
+  const statusSelect = document.getElementById('approvedFilterStatus');
   const typeSelect = document.getElementById('approvedFilterType');
   if (searchInput) searchInput.value = '';
   if (deptSelect) deptSelect.value = 'all';
+  if (statusSelect) statusSelect.value = 'all';
   if (typeSelect) typeSelect.value = 'all';
+  const cards = document.querySelectorAll('#approvedKpiRow .d365-kpi-card');
+  cards.forEach(c => c.classList.remove('active-filter'));
   renderApprovedListView();
 };
 
 function initApprovedListListeners() {
   const searchInput = document.getElementById('approvedSearchInput');
   const deptSelect = document.getElementById('approvedFilterDept');
+  const statusSelect = document.getElementById('approvedFilterStatus');
   const typeSelect = document.getElementById('approvedFilterType');
 
   if (searchInput) {
@@ -1756,6 +1787,9 @@ function initApprovedListListeners() {
   }
   if (deptSelect) {
     deptSelect.addEventListener('change', () => renderApprovedListView());
+  }
+  if (statusSelect) {
+    statusSelect.addEventListener('change', () => renderApprovedListView());
   }
   if (typeSelect) {
     typeSelect.addEventListener('change', () => renderApprovedListView());
@@ -1768,6 +1802,7 @@ window.renderApprovedListView = function() {
 
   const search = (document.getElementById('approvedSearchInput')?.value || '').toLowerCase().trim();
   const deptFilter = document.getElementById('approvedFilterDept')?.value || 'all';
+  const statusFilter = document.getElementById('approvedFilterStatus')?.value || 'all';
   const typeFilter = document.getElementById('approvedFilterType')?.value || 'all';
 
   const allReqs = AppData.getRequisitions();
@@ -1775,19 +1810,32 @@ window.renderApprovedListView = function() {
 
   // Calculate KPIs on all approved
   const totalOrders = approvedList.length;
+  const fullApprovalCount = approvedList.filter(r => r.approvalType === 'full' || (!r.approvalType && (r.approvedTotal === undefined || r.approvedTotal === r.totalAmount))).length;
+  const partialApprovalCount = approvedList.filter(r => r.approvalType === 'partial' || (r.approvedTotal !== undefined && r.approvedTotal < r.totalAmount)).length;
+  const completedCount = approvedList.filter(r => r.status === 'completed').length;
   const totalApprovedSpend = approvedList.reduce((sum, r) => sum + (r.approvedTotal !== undefined ? r.approvedTotal : r.totalAmount), 0);
   const totalOriginalSpend = approvedList.reduce((sum, r) => sum + r.totalAmount, 0);
-  const totalAllocatedItems = approvedList.reduce((sum, r) => {
-    return sum + (r.items || []).filter(itm => (itm.approvedQty !== undefined ? itm.approvedQty : itm.qty) > 0).length;
-  }, 0);
-  const fullApprovalCount = approvedList.filter(r => r.approvalType === 'full' || (!r.approvalType && (r.approvedTotal === undefined || r.approvedTotal === r.totalAmount))).length;
-  const fullApprovalPercent = totalOrders > 0 ? Math.round((fullApprovalCount / totalOrders) * 100) : 0;
 
-  // Update KPI tiles
+  // Update 5 KPI tiles
   const elOrders = document.getElementById('kpiApprovedOrdersCount');
   if (elOrders) elOrders.textContent = totalOrders;
   const elOrdersSub = document.getElementById('kpiApprovedOrdersSubtitle');
-  if (elOrdersSub) elOrdersSub.textContent = AppState.lang === 'kh' ? 'សំណើបានអនុម័តសកម្ម' : 'Active approved orders';
+  if (elOrdersSub) elOrdersSub.textContent = AppState.lang === 'kh' ? 'សំណើបានអនុម័តទាំងអស់' : 'All approved requisitions';
+
+  const elFull = document.getElementById('kpiApprovedFullCount');
+  if (elFull) elFull.textContent = fullApprovalCount;
+  const elFullSub = document.getElementById('kpiApprovedFullSubtitle');
+  if (elFullSub) elFullSub.textContent = AppState.lang === 'kh' ? 'អនុម័តបរិមាណ ១០០%' : '100% quantity approved';
+
+  const elPartial = document.getElementById('kpiApprovedPartialCount');
+  if (elPartial) elPartial.textContent = partialApprovalCount;
+  const elPartialSub = document.getElementById('kpiApprovedPartialSubtitle');
+  if (elPartialSub) elPartialSub.textContent = AppState.lang === 'kh' ? 'កម្រិតតាមស្តុកជាក់ស្តែង' : 'Limited by management';
+
+  const elCompleted = document.getElementById('kpiApprovedCompletedCount');
+  if (elCompleted) elCompleted.textContent = completedCount;
+  const elCompletedSub = document.getElementById('kpiApprovedCompletedSubtitle');
+  if (elCompletedSub) elCompletedSub.textContent = AppState.lang === 'kh' ? 'បានបញ្ជាទិញ & ប្រគល់រួច' : 'Delivered & closed orders';
 
   const elSpend = document.getElementById('kpiApprovedTotalSpend');
   if (elSpend) elSpend.textContent = formatCurrency(totalApprovedSpend);
@@ -1801,19 +1849,12 @@ window.renderApprovedListView = function() {
     }
   }
 
-  const elItems = document.getElementById('kpiAllocatedItemsCount');
-  if (elItems) elItems.textContent = totalAllocatedItems;
-  const elItemsSub = document.getElementById('kpiAllocatedItemsSubtitle');
-  if (elItemsSub) elItemsSub.textContent = AppState.lang === 'kh' ? 'មុខទំនិញត្រូវបានបែងចែក' : 'Individual items allocated';
-
-  const elRate = document.getElementById('kpiFullApprovalRatePercent');
-  if (elRate) elRate.textContent = `${fullApprovalPercent}%`;
-  const elRateSub = document.getElementById('kpiFullApprovalRateSubtitle');
-  if (elRateSub) elRateSub.textContent = AppState.lang === 'kh' ? `${fullApprovalCount} ក្នុងចំណោម ${totalOrders} អនុម័តពេញលេញ` : `${fullApprovalCount} of ${totalOrders} fully allocated`;
-
   // Apply filters
   if (deptFilter !== 'all') {
     approvedList = approvedList.filter(r => r.department === deptFilter);
+  }
+  if (statusFilter !== 'all') {
+    approvedList = approvedList.filter(r => r.status === statusFilter);
   }
   if (typeFilter === 'full') {
     approvedList = approvedList.filter(r => r.approvalType === 'full' || (!r.approvalType && r.approvedTotal === r.totalAmount));
@@ -1837,7 +1878,7 @@ window.renderApprovedListView = function() {
   if (approvedList.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="text-center py-4 text-muted">
+        <td colspan="10" class="text-center py-4 text-muted">
           <span class="material-symbols-outlined" style="font-size:36px; color:#94a3b8; display:block; margin-bottom:8px;">fact_check</span>
           ${t('noRecordsFound')}
         </td>
@@ -1850,6 +1891,7 @@ window.renderApprovedListView = function() {
     const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
     const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
     const prioBadge = getPriorityBadge(req.priority);
+    const statusBadge = getStatusBadge(req.status);
     const approvedTotal = req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount;
     const isPartial = req.approvalType === 'partial' || approvedTotal < req.totalAmount;
 
@@ -1858,7 +1900,7 @@ window.renderApprovedListView = function() {
       const appQty = itm.approvedQty !== undefined ? itm.approvedQty : itm.qty;
       const chipClass = appQty === itm.qty ? 'bg-light text-success border-success' : (appQty > 0 ? 'bg-light text-warning-emphasis border-warning' : 'bg-light text-danger border-danger');
       return `<span class="badge border ${chipClass} me-1 mb-1" style="font-weight:500; font-size:11.5px;" title="${itm.itemName}">
-        ${itm.itemName.slice(0, 22)}${itm.itemName.length > 22 ? '...' : ''}: <strong>${appQty}/${itm.qty} ${itm.unit}</strong>
+        ${itm.itemName.slice(0, 20)}${itm.itemName.length > 20 ? '...' : ''}: <strong>${appQty}/${itm.qty} ${itm.unit}</strong>
       </span>`;
     }).join('');
 
@@ -1877,6 +1919,7 @@ window.renderApprovedListView = function() {
           <small class="text-muted">${req.requesterEmail || ''}</small>
         </td>
         <td>${prioBadge}</td>
+        <td>${statusBadge}</td>
         <td>
           ${isPartial 
             ? `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning">${t('approvalTypePartial')}</span>` 

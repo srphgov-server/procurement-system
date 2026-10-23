@@ -758,6 +758,15 @@ a:hover {
 .d365-kpi-card.kpi-urgent::before { background-color: #ef4444; }
 .d365-kpi-card.kpi-approved::before { background-color: #107c41; }
 .d365-kpi-card.kpi-value::before { background-color: #5c2d91; }
+.d365-kpi-card.kpi-full::before { background-color: #0078d4; }
+.d365-kpi-card.kpi-partial::before { background-color: #d83b01; }
+.d365-kpi-card.kpi-completed::before { background-color: #5c2d91; }
+
+.d365-kpi-card.active-filter {
+  box-shadow: 0 0 0 2px var(--d365-primary), var(--d365-shadow-card) !important;
+  border-color: var(--d365-primary) !important;
+  background-color: #f8fafc !important;
+}
 
 .d365-kpi-header {
   display: flex;

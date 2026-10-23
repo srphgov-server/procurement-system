@@ -854,54 +854,63 @@
           </div>
         </div>
 
-        <!-- KPI Metrics Ribbon for Approved Orders -->
-        <div class="row g-3 mb-4" id="approvedKpisContainer">
-          <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #107c41 !important;">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-secondary small fw-semibold" data-i18n="kpiApprovedOrders">Approved Orders</span>
-                <span class="material-symbols-outlined text-success" style="font-size:22px;">verified</span>
-              </div>
-              <h3 class="fw-bold mb-0 text-success" id="kpiApprovedOrdersCount">0</h3>
-              <small class="text-muted" id="kpiApprovedOrdersSubtitle">Active approved orders</small>
+        <!-- Dynamics 365 KPI Metric Tiles for Team Management: Approved Allocations (5 Interactive Cards) -->
+        <div class="d365-kpi-row mb-3" id="approvedKpiRow">
+          <!-- Card 1: Total Approved Orders -->
+          <div class="d365-kpi-card kpi-approved" id="approvedKpiCardTotal" onclick="filterApprovedByKpi('all')" style="cursor:pointer;" title="Click to view all approved requisitions">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="kpiApprovedOrders">Approved Orders</span>
+              <span class="d365-kpi-icon material-symbols-outlined">verified</span>
             </div>
+            <div class="d365-kpi-value text-success" id="kpiApprovedOrdersCount">0</div>
+            <div class="d365-kpi-subtext" id="kpiApprovedOrdersSubtitle">All approved requisitions</div>
           </div>
-          <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #0078d4 !important;">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-secondary small fw-semibold" data-i18n="kpiApprovedSpend">Approved Commitment</span>
-                <span class="material-symbols-outlined text-primary" style="font-size:22px;">payments</span>
-              </div>
-              <h3 class="fw-bold mb-0 text-primary" id="kpiApprovedTotalSpend">$0.00</h3>
-              <small class="text-muted" id="kpiApprovedSavedDiff">Allocated budget</small>
+
+          <!-- Card 2: 100% Full Allocation -->
+          <div class="d365-kpi-card kpi-full" id="approvedKpiCardFull" onclick="filterApprovedByKpi('full')" style="cursor:pointer;" title="Click to view full 100% allocations">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="approvalTypeFull">100% Full Approval</span>
+              <span class="d365-kpi-icon material-symbols-outlined" style="color:#0078d4;">check_circle</span>
             </div>
+            <div class="d365-kpi-value" style="color:#0078d4;" id="kpiApprovedFullCount">0</div>
+            <div class="d365-kpi-subtext" id="kpiApprovedFullSubtitle">100% quantity approved</div>
           </div>
-          <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #5c2d91 !important;">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-secondary small fw-semibold" data-i18n="kpiAllocatedItems">Allocated Line Items</span>
-                <span class="material-symbols-outlined" style="color:#5c2d91; font-size:22px;">inventory_2</span>
-              </div>
-              <h3 class="fw-bold mb-0" style="color:#5c2d91;" id="kpiAllocatedItemsCount">0</h3>
-              <small class="text-muted" id="kpiAllocatedItemsSubtitle">Individual items allocated</small>
+
+          <!-- Card 3: Limited / Partial Allocation -->
+          <div class="d365-kpi-card kpi-partial" id="approvedKpiCardPartial" onclick="filterApprovedByKpi('partial')" style="cursor:pointer;" title="Click to view limited / partial allocations">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="approvalTypePartial">Partial / Adjusted</span>
+              <span class="d365-kpi-icon material-symbols-outlined" style="color:#d83b01;">tune</span>
             </div>
+            <div class="d365-kpi-value" style="color:#d83b01;" id="kpiApprovedPartialCount">0</div>
+            <div class="d365-kpi-subtext" id="kpiApprovedPartialSubtitle">Limited by management</div>
           </div>
-          <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #d83b01 !important;">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-secondary small fw-semibold" data-i18n="kpiFullApprovalRate">Full Approval Rate</span>
-                <span class="material-symbols-outlined text-warning" style="font-size:22px;">pie_chart</span>
-              </div>
-              <h3 class="fw-bold mb-0 text-warning" id="kpiFullApprovalRatePercent">0%</h3>
-              <small class="text-muted" id="kpiFullApprovalRateSubtitle">100% full allocations</small>
+
+          <!-- Card 4: Completed & Ordered -->
+          <div class="d365-kpi-card kpi-completed" id="approvedKpiCardCompleted" onclick="filterApprovedByKpi('completed')" style="cursor:pointer;" title="Click to view completed and delivered orders">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="statusCompleted">Completed / Ordered</span>
+              <span class="d365-kpi-icon material-symbols-outlined" style="color:#5c2d91;">local_shipping</span>
             </div>
+            <div class="d365-kpi-value" style="color:#5c2d91;" id="kpiApprovedCompletedCount">0</div>
+            <div class="d365-kpi-subtext" id="kpiApprovedCompletedSubtitle">Delivered & closed orders</div>
+          </div>
+
+          <!-- Card 5: Total Approved Budget Commitment -->
+          <div class="d365-kpi-card kpi-value" id="approvedKpiCardSpend" onclick="filterApprovedByKpi('all')" style="cursor:pointer;" title="Total approved commitment value">
+            <div class="d365-kpi-header">
+              <span class="d365-kpi-label" data-i18n="kpiApprovedSpend">Approved Commitment</span>
+              <span class="d365-kpi-icon material-symbols-outlined">payments</span>
+            </div>
+            <div class="d365-kpi-value" id="kpiApprovedTotalSpend">$0.00</div>
+            <div class="d365-kpi-subtext" id="kpiApprovedSavedDiff">Allocated budget</div>
           </div>
         </div>
 
         <!-- Filter & Search Toolbar -->
         <div class="d365-grid-toolbar mb-3 p-3 bg-white rounded shadow-sm border">
           <div class="row g-2 align-items-center">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="input-group input-group-sm">
                 <span class="input-group-text bg-light border-end-0"><span class="material-symbols-outlined" style="font-size:16px;">search</span></span>
                 <input type="text" id="approvedSearchInput" class="form-control border-start-0" placeholder="Search approved ID, department, requester...">
@@ -912,11 +921,18 @@
                 <option value="all">All Departments</option>
               </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+              <select id="approvedFilterStatus" class="form-select form-select-sm">
+                <option value="all">All Statuses</option>
+                <option value="approved">Approved</option>
+                <option value="completed">Completed / Ordered</option>
+              </select>
+            </div>
+            <div class="col-md-2">
               <select id="approvedFilterType" class="form-select form-select-sm">
-                <option value="all">All Allocations (Full & Partial)</option>
-                <option value="full">100% Full Approval Only</option>
-                <option value="partial">Limited / Partial Allocations Only</option>
+                <option value="all">All Allocations</option>
+                <option value="full">100% Full Approval</option>
+                <option value="partial">Limited / Partial</option>
               </select>
             </div>
             <div class="col-md-2 text-end">
@@ -927,18 +943,19 @@
 
         <!-- Data Grid -->
         <div class="data-table-wrap shadow-sm rounded border bg-white">
-          <table class="data-table table mb-0">
+          <table class="data-table table mb-0" id="approvedTable">
             <thead>
               <tr>
-                <th style="width:110px;">Req ID</th>
-                <th>Department</th>
-                <th>Requester</th>
-                <th style="width:110px;">Priority</th>
-                <th>Approval Type</th>
+                <th style="width:110px;" data-i18n="thReqId">Req ID</th>
+                <th data-i18n="thDepartment">Department</th>
+                <th data-i18n="thRequester">Requester</th>
+                <th style="width:105px;" data-i18n="thPriority">Priority</th>
+                <th style="width:125px;" data-i18n="thStatus">Status</th>
+                <th style="width:140px;" data-i18n="colAllocationStatus">Approval Type</th>
                 <th>Item Allocations (Approved / Req)</th>
-                <th style="text-align:right;">Approved Total</th>
-                <th>Approved Date & By</th>
-                <th style="text-align:center; width:130px;">Actions</th>
+                <th style="text-align:right; width:125px;" data-i18n="totalApprovedBudget">Approved Total</th>
+                <th style="width:150px;" data-i18n="approvedDateLabel">Approved Date & By</th>
+                <th style="text-align:center; width:110px;" data-i18n="thActions">Actions</th>
               </tr>
             </thead>
             <tbody id="approvedTableBody">
