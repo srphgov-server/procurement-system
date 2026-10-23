@@ -296,14 +296,14 @@
             <div class="d365-kpi-subtext" data-i18n="kpiApprovedSubtext">Ready for PO issuance</div>
           </div>
 
-          <!-- Total Est. Budget -->
+          <!-- Total Items Needed -->
           <div class="d365-kpi-card kpi-value">
             <div class="d365-kpi-header">
-              <span class="d365-kpi-label" data-i18n="kpiTotalValue">Est. Budget</span>
-              <span class="d365-kpi-icon material-symbols-outlined">payments</span>
+              <span class="d365-kpi-label" data-i18n="kpiTotalValue">Total Items Needed</span>
+              <span class="d365-kpi-icon material-symbols-outlined">inventory_2</span>
             </div>
-            <div class="d365-kpi-value" id="kpiTotalValue" style="color:var(--d365-purple); font-size:20px;">$0.00</div>
-            <div class="d365-kpi-subtext" data-i18n="kpiTotalValueSubtext">Cumulative value</div>
+            <div class="d365-kpi-value" id="kpiTotalValue" style="color:var(--d365-purple); font-size:20px;">0 Items</div>
+            <div class="d365-kpi-subtext" data-i18n="kpiTotalValueSubtext">Cumulative item units</div>
           </div>
         </div>
 
@@ -362,7 +362,7 @@
                   <th style="width: 150px;" data-i18n="thRequester">Requester</th>
                   <th style="width: 110px;" data-i18n="thPriority">Priority</th>
                   <th style="min-width: 180px;" data-i18n="thItemsSummary">Items Summary</th>
-                  <th style="width: 110px; text-align:right;" data-i18n="thTotal">Est. Total</th>
+                  <th style="width: 140px; text-align:right;" data-i18n="thTotal">Total Items / Qty</th>
                   <th style="width: 120px;" data-i18n="thStatus">Status</th>
                   <th style="width: 120px; text-align:center;" data-i18n="thActions">Actions</th>
                 </tr>
@@ -606,11 +606,9 @@
                     <tr>
                       <th style="min-width: 190px;" data-i18n="colCategory">Category</th>
                       <th style="min-width: 280px;" data-i18n="colCatalogItem">Select Catalog Item or Custom Name</th>
-                      <th style="min-width: 180px;" data-i18n="colSpec">Specs / Description</th>
-                      <th style="width: 90px;" data-i18n="colQty">Qty</th>
-                      <th style="width: 100px;" data-i18n="colUnit">Unit</th>
-                      <th style="width: 120px;" data-i18n="colUnitPrice">Est. Unit ($)</th>
-                      <th style="width: 120px; text-align:right;" data-i18n="colLineTotal">Subtotal ($)</th>
+                      <th style="min-width: 220px;" data-i18n="colSpec">Specs / Description</th>
+                      <th style="width: 110px;" data-i18n="colQty">Qty Needed</th>
+                      <th style="width: 120px;" data-i18n="colUnit">Unit</th>
                       <th style="width: 50px;"></th>
                     </tr>
                   </thead>
@@ -622,8 +620,8 @@
 
               <!-- Grand Total Box -->
               <div class="d-flex align-items-center justify-content-end gap-3 mt-3 p-3 bg-light border rounded-1">
-                <span class="fw-bold fs-6" data-i18n="grandTotal">Estimated Grand Total:</span>
-                <span class="fs-4 fw-bold text-primary font-monospace" id="formGrandTotalDisplay">$0.00</span>
+                <span class="fw-bold fs-6" data-i18n="grandTotal">Total Items Needed:</span>
+                <span class="fs-4 fw-bold text-primary font-monospace" id="formGrandTotalDisplay">0 items (0 units)</span>
               </div>
             </div>
           </div>
@@ -897,14 +895,14 @@
             <div class="d365-kpi-subtext" id="kpiApprovedCompletedSubtitle">Delivered & closed orders</div>
           </div>
 
-          <!-- Card 5: Total Approved Budget Commitment -->
-          <div class="d365-kpi-card kpi-value" id="approvedKpiCardSpend" onclick="filterApprovedByKpi('all')" style="cursor:pointer;" title="Total approved commitment value">
+          <!-- Card 5: Total Approved Item Quantity -->
+          <div class="d365-kpi-card kpi-value" id="approvedKpiCardSpend" onclick="filterApprovedByKpi('all')" style="cursor:pointer;" title="Total approved item quantity">
             <div class="d365-kpi-header">
-              <span class="d365-kpi-label" data-i18n="kpiApprovedSpend">Approved Commitment</span>
-              <span class="d365-kpi-icon material-symbols-outlined">payments</span>
+              <span class="d365-kpi-label" data-i18n="kpiApprovedSpend">Approved Item Qty</span>
+              <span class="d365-kpi-icon material-symbols-outlined">inventory</span>
             </div>
-            <div class="d365-kpi-value" id="kpiApprovedTotalSpend">$0.00</div>
-            <div class="d365-kpi-subtext" id="kpiApprovedSavedDiff">Allocated budget</div>
+            <div class="d365-kpi-value" id="kpiApprovedTotalSpend">0 Units</div>
+            <div class="d365-kpi-subtext" id="kpiApprovedSavedDiff">Allocated units</div>
           </div>
         </div>
 
@@ -954,7 +952,7 @@
                 <th style="width:125px;" data-i18n="thStatus">Status</th>
                 <th style="width:140px;" data-i18n="colAllocationStatus">Approval Type</th>
                 <th>Item Allocations (Approved / Req)</th>
-                <th style="text-align:right; width:125px;" data-i18n="totalApprovedBudget">Approved Total</th>
+                <th style="text-align:right; width:135px;" data-i18n="totalApprovedBudget">Approved Qty</th>
                 <th style="width:150px;" data-i18n="approvedDateLabel">Approved Date & By</th>
                 <th style="text-align:center; width:110px;" data-i18n="thActions">Actions</th>
               </tr>

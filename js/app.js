@@ -312,13 +312,29 @@ function renderKPIs() {
   const newPendingCount = requisitions.filter(r => r.status === 'new' || r.status === 'under_review').length;
   const urgentHighCount = requisitions.filter(r => r.priority === 'urgent' || r.priority === 'high').length;
   const approvedCount = requisitions.filter(r => r.status === 'approved' || r.status === 'completed').length;
-  const totalBudget = requisitions.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
+  
+  let totalItemRows = 0;
+  let totalUnits = 0;
+  requisitions.forEach(r => {
+    const items = r.items || [];
+    totalItemRows += items.length;
+    items.forEach(it => {
+      totalUnits += (Number(it.qty) || 0);
+    });
+  });
 
-  document.getElementById('kpiTotalValue').textContent = totalCount;
-  document.getElementById('kpiNewValue').textContent = newPendingCount;
-  document.getElementById('kpiUrgentValue').textContent = urgentHighCount;
-  document.getElementById('kpiApprovedValue').textContent = approvedCount;
-  document.getElementById('kpiBudgetValue').textContent = formatCurrency(totalBudget);
+  const elTotal = document.getElementById('kpiTotalCount');
+  if (elTotal) elTotal.textContent = totalCount;
+  const elNew = document.getElementById('kpiNewCount');
+  if (elNew) elNew.textContent = newPendingCount;
+  const elUrgent = document.getElementById('kpiUrgentCount');
+  if (elUrgent) elUrgent.textContent = urgentHighCount;
+  const elApproved = document.getElementById('kpiApprovedCount');
+  if (elApproved) elApproved.textContent = approvedCount;
+  const elVal = document.getElementById('kpiTotalValue');
+  if (elVal) {
+    elVal.textContent = `${totalItemRows} items (${totalUnits} units)`;
+  }
 }
 
 function initKPIListeners() {
@@ -582,6 +598,7 @@ function renderRequisitionsTable() {
     const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
     const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
     const itemsCount = req.items ? req.items.length : 0;
+    const totalUnits = (req.items || []).reduce((sum, itm) => sum + (Number(itm.qty) || 0), 0);
     const firstItem = req.items && req.items[0] ? req.items[0].itemName : '-';
     const itemsPreview = itemsCount > 1 ? `${firstItem} (+${itemsCount - 1} more)` : firstItem;
 
@@ -613,14 +630,17 @@ function renderRequisitionsTable() {
           <div style="font-weight:600;">${req.requesterName}</div>
           <div style="font-size:11px; color:var(--text-light);">${req.requesterEmail || ''}</div>
         </td>
+        <td>${priorityBadge}</td>
         <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${firstItem}">
           ${itemsPreview}
         </td>
-        <td><strong>${formatCurrency(req.totalAmount)}</strong></td>
-        <td>${priorityBadge}</td>
+        <td style="text-align:right;">
+          <strong style="color:var(--d365-purple);">${itemsCount} ${t('itemsLabel') || 'items'}</strong>
+          <div style="font-size:11.5px; color:var(--text-muted); font-weight:600;">(${totalUnits} ${t('unitsLabel') || 'units'})</div>
+        </td>
         <td>${statusBadge}</td>
         <td>
-          <div style="display:flex; gap:6px;">
+          <div style="display:flex; gap:6px; justify-content:center;">
             ${actionBtnHtml}
             <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}"><span class="material-symbols-outlined" style="font-size:15px;">print</span></button>
           </div>
@@ -936,17 +956,11 @@ function addLineItemRow(data = null) {
     <td>
       <input type="text" class="form-input item-spec" placeholder="Specs, brand, model..." />
     </td>
-    <td style="width: 90px;">
-      <input type="number" min="1" value="1" class="form-input item-qty" oninput="calculateRowSubtotal('${rowId}')" />
-    </td>
-    <td style="width: 100px;">
-      <input type="text" value="Unit" class="form-input item-unit" placeholder="Unit" />
+    <td style="width: 110px;">
+      <input type="number" min="1" value="1" class="form-input item-qty" oninput="updateGrandTotal()" />
     </td>
     <td style="width: 120px;">
-      <input type="number" step="0.01" min="0" value="0.00" class="form-input item-price" oninput="calculateRowSubtotal('${rowId}')" />
-    </td>
-    <td style="width: 120px; font-weight:700; text-align:right;">
-      <span class="item-subtotal">$0.00</span>
+      <input type="text" value="Unit" class="form-input item-unit" placeholder="Unit" />
     </td>
     <td style="width: 50px; text-align:center;">
       <button type="button" class="btn btn-sm btn-text" onclick="removeLineItemRow('${rowId}')" title="${t('actionDelete')}"><span class="material-symbols-outlined" style="font-size:16px; color:#ef4444;">delete</span></button>
@@ -965,17 +979,15 @@ function addLineItemRow(data = null) {
     const specInput = tr.querySelector('.item-spec');
     const qtyInput = tr.querySelector('.item-qty');
     const unitInput = tr.querySelector('.item-unit');
-    const priceInput = tr.querySelector('.item-price');
 
     if (data.spec) specInput.value = data.spec;
     if (data.qty !== undefined) qtyInput.value = data.qty;
     if (data.unit) unitInput.value = data.unit;
-    if (data.unitPrice !== undefined) priceInput.value = Number(data.unitPrice).toFixed(2);
   } else {
     populateRowItemsDropdown(rowId, initialCatId, '', '');
   }
 
-  calculateRowSubtotal(rowId);
+  updateGrandTotal();
 }
 
 window.onCategoryChanged = function(rowId, categoryId) {
@@ -1069,13 +1081,6 @@ function refreshLineItemsLanguage() {
 }
 
 window.calculateRowSubtotal = function(rowId) {
-  const row = document.getElementById(rowId);
-  if (!row) return;
-  const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-  const price = parseFloat(row.querySelector('.item-price').value) || 0;
-  const subtotal = qty * price;
-  row.querySelector('.item-subtotal').textContent = formatCurrency(subtotal);
-  row.setAttribute('data-subtotal', subtotal.toFixed(2));
   updateGrandTotal();
 };
 
@@ -1092,12 +1097,16 @@ window.removeLineItemRow = function(rowId) {
 
 function updateGrandTotal() {
   const rows = document.querySelectorAll('#lineItemsTbody tr');
-  let total = 0;
+  let totalItems = rows.length;
+  let totalQty = 0;
   rows.forEach(r => {
-    total += parseFloat(r.getAttribute('data-subtotal')) || 0;
+    const qtyInput = r.querySelector('.item-qty');
+    totalQty += qtyInput ? (parseFloat(qtyInput.value) || 0) : 0;
   });
   const el = document.getElementById('formGrandTotalDisplay');
-  if (el) el.textContent = formatCurrency(total);
+  if (el) {
+    el.textContent = `${totalItems} ${t('itemsLabel') || 'items'} (${totalQty} ${t('unitsLabel') || 'units'})`;
+  }
 }
 
 function handleFormSubmit(e) {
@@ -1121,11 +1130,9 @@ function handleFormSubmit(e) {
     const catSelect = row.querySelector('.item-category-select');
     const catalogSelect = row.querySelector('.item-catalog-select');
     const customInput = row.querySelector('.item-custom-name');
-    const spec = row.querySelector('.item-spec').value.trim();
-    const qty = parseFloat(row.querySelector('.item-qty').value) || 1;
-    const unit = row.querySelector('.item-unit').value.trim() || 'Unit';
-    const unitPrice = parseFloat(row.querySelector('.item-price').value) || 0;
-    const subtotal = qty * unitPrice;
+    const spec = (row.querySelector('.item-spec')?.value || '').trim();
+    const qty = parseFloat(row.querySelector('.item-qty')?.value) || 1;
+    const unit = (row.querySelector('.item-unit')?.value || '').trim() || 'Unit';
 
     if (!catSelect || !catSelect.value) {
       validationError = 'Please select a Category for all line items.';
@@ -1134,14 +1141,14 @@ function handleFormSubmit(e) {
 
     let itemName = '';
     let itemId = '';
-    if (catalogSelect.value === 'custom') {
-      itemName = customInput.value.trim();
+    if (catalogSelect && catalogSelect.value === 'custom') {
+      itemName = customInput ? customInput.value.trim() : '';
       if (!itemName) {
         validationError = 'Please enter a custom item name for custom line items.';
         return;
       }
       itemId = 'custom-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-    } else if (catalogSelect.value) {
+    } else if (catalogSelect && catalogSelect.value) {
       const itm = AppData.getItems().find(i => i.id === catalogSelect.value);
       itemName = itm ? (AppState.lang === 'kh' ? (itm.nameKh || itm.nameEn) : (itm.nameEn || itm.nameKh)) : 'Item';
       itemId = catalogSelect.value;
@@ -1160,8 +1167,8 @@ function handleFormSubmit(e) {
       spec,
       qty,
       unit,
-      unitPrice,
-      subtotal
+      unitPrice: 0,
+      subtotal: 0
     });
   });
 
@@ -1283,6 +1290,7 @@ window.openRequisitionDetail = function(reqId) {
   const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
 
   // Build items table (Requested Items Breakdown)
+  const totalReqQty = (req.items || []).reduce((sum, itm) => sum + (Number(itm.qty) || 0), 0);
   const itemsHtml = req.items.map((item, idx) => {
     const cat = AppData.getCategories().find(c => c.id === item.categoryId);
     const catName = cat ? (AppState.lang === 'kh' ? cat.nameKh : cat.nameEn) : item.categoryId;
@@ -1294,9 +1302,7 @@ window.openRequisitionDetail = function(reqId) {
           <div style="font-size:12px; color:var(--text-light);">${item.spec || '-'}</div>
         </td>
         <td><span class="badge" style="background:#f1f5f9;">${catName}</span></td>
-        <td>${item.qty} ${item.unit}</td>
-        <td>${formatCurrency(item.unitPrice)}</td>
-        <td style="text-align:right; font-weight:700;">${formatCurrency(item.subtotal)}</td>
+        <td style="text-align:right; font-weight:700;">${item.qty} ${item.unit}</td>
       </tr>
     `;
   }).join('');
@@ -1311,25 +1317,24 @@ window.openRequisitionDetail = function(reqId) {
     // Interactive Management Allocation Form
     const rowsHtml = req.items.map((item, idx) => {
       const initApprovedQty = item.approvedQty !== undefined ? item.approvedQty : item.qty;
-      const initApprovedSubtotal = Number((initApprovedQty * item.unitPrice).toFixed(2));
       return `
-        <tr class="approved-item-row" data-index="${idx}" data-unit-price="${item.unitPrice}" data-max-qty="${item.qty}">
+        <tr class="approved-item-row" data-index="${idx}" data-max-qty="${item.qty}">
           <td style="font-weight:700; width:40px;">#${idx + 1}</td>
           <td>
             <div style="font-weight:700; color:var(--d365-text-primary);">${item.itemName}</div>
             <div style="font-size:12px; color:var(--text-light);">${item.spec || '-'}</div>
           </td>
-          <td style="width:125px;">
+          <td style="width:130px;">
             <span class="badge" style="background:#f1f5f9; font-size:12px; color:#334155; font-weight:600;">
               ${item.qty} ${item.unit}
             </span>
           </td>
-          <td style="width:160px;">
+          <td style="width:170px;">
             <div class="d-flex align-items-center gap-1">
               <input type="number" 
                      id="approvedQtyInput_${idx}" 
                      class="form-control form-control-sm text-center fw-bold approved-qty-field" 
-                     style="width:85px; border-color:#107c41; font-size:13px;"
+                     style="width:90px; border-color:#107c41; font-size:13px;"
                      min="0" 
                      max="${item.qty}" 
                      step="1"
@@ -1339,11 +1344,7 @@ window.openRequisitionDetail = function(reqId) {
             </div>
             <small class="text-muted" style="font-size:10.5px;">Max: ${item.qty} ${item.unit}</small>
           </td>
-          <td style="width:110px; font-weight:600;">${formatCurrency(item.unitPrice)}</td>
-          <td style="width:130px; text-align:right; font-weight:700; color:#107c41;" id="approvedSubtotalSpan_${idx}">
-            ${formatCurrency(initApprovedSubtotal)}
-          </td>
-          <td style="width:140px; text-align:center;" id="allocationStatusBadge_${idx}">
+          <td style="width:150px; text-align:center;" id="allocationStatusBadge_${idx}">
             ${initApprovedQty === item.qty 
               ? `<span class="badge" style="background:#dff6dd; color:#107c41; border:1px solid #92c353;">100% Full</span>`
               : (initApprovedQty > 0 
@@ -1354,11 +1355,11 @@ window.openRequisitionDetail = function(reqId) {
       `;
     }).join('');
 
-    const currentApprovedTotal = (req.items || []).reduce((acc, itm) => {
+    const currentApprovedTotalUnits = (req.items || []).reduce((acc, itm) => {
       const q = itm.approvedQty !== undefined ? itm.approvedQty : itm.qty;
-      return acc + (q * itm.unitPrice);
+      return acc + Number(q || 0);
     }, 0);
-    const variance = currentApprovedTotal - req.totalAmount;
+    const varianceQty = currentApprovedTotalUnits - totalReqQty;
 
     approvedSectionHtml = `
       <div class="card mb-4 border" style="border-color:#107c41 !important; background:#ffffff; box-shadow:0 2px 8px rgba(16,124,65,0.08);">
@@ -1388,11 +1389,9 @@ window.openRequisitionDetail = function(reqId) {
                 <tr>
                   <th style="width:40px;">#</th>
                   <th>${t('colItemSelect')}</th>
-                  <th style="width:125px;">${t('colQty')} (Req)</th>
-                  <th style="width:160px; color:#107c41;">${t('colApprovedQty')}</th>
-                  <th style="width:110px;">${t('colUnitPrice')}</th>
-                  <th style="text-align:right; width:130px; color:#107c41;">${t('colApprovedSubtotal')}</th>
-                  <th style="text-align:center; width:140px;">${t('colAllocationStatus')}</th>
+                  <th style="width:130px;">${t('colQty')} (Req)</th>
+                  <th style="width:170px; color:#107c41;">${t('colApprovedQty')}</th>
+                  <th style="text-align:center; width:150px;">${t('colAllocationStatus')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1400,12 +1399,12 @@ window.openRequisitionDetail = function(reqId) {
               </tbody>
               <tfoot class="table-light">
                 <tr style="font-weight:700;">
-                  <td colspan="4" class="text-end text-secondary small">${t('totalRequestedBudget')}: <strong>${formatCurrency(req.totalAmount)}</strong></td>
+                  <td colspan="2" class="text-end text-secondary small">${t('totalRequestedBudget')}: <strong>${totalReqQty} ${t('unitsLabel') || 'units'}</strong></td>
                   <td class="text-end" style="color:#107c41;">${t('totalApprovedBudget')}:</td>
-                  <td class="text-end" style="font-size:15px; color:#107c41;" id="approvalModalApprovedTotal">${formatCurrency(currentApprovedTotal)}</td>
+                  <td style="font-size:15px; color:#107c41;" id="approvalModalApprovedTotal">${currentApprovedTotalUnits} ${t('unitsLabel') || 'units'}</td>
                   <td class="text-center" id="approvalModalVariance">
-                    <span class="badge ${variance >= 0 ? 'bg-success' : 'bg-warning text-dark'}" style="font-size:11px;">
-                      ${variance >= 0 ? 'Match (100%)' : formatCurrency(variance)}
+                    <span class="badge ${varianceQty >= 0 ? 'bg-success' : 'bg-warning text-dark'}" style="font-size:11px;">
+                      ${varianceQty >= 0 ? 'Match (100%)' : `${varianceQty} ${t('unitsLabel') || 'units'}`}
                     </span>
                   </td>
                 </tr>
@@ -1435,9 +1434,10 @@ window.openRequisitionDetail = function(reqId) {
     `;
   } else if (isApprovedOrCompleted) {
     // Read-only Approved Allocation Breakdown
+    let totalAppUnits = 0;
     const rowsHtml = req.items.map((item, idx) => {
       const appQty = item.approvedQty !== undefined ? item.approvedQty : item.qty;
-      const appSubtotal = item.approvedSubtotal !== undefined ? item.approvedSubtotal : item.subtotal;
+      totalAppUnits += Number(appQty || 0);
       const isFull = appQty === item.qty;
       const isZero = appQty === 0;
 
@@ -1452,8 +1452,6 @@ window.openRequisitionDetail = function(reqId) {
           <td>
             <strong style="color:#107c41; font-size:13.5px;">${appQty}</strong> <span class="text-muted small">${item.unit}</span>
           </td>
-          <td>${formatCurrency(item.unitPrice)}</td>
-          <td style="text-align:right; font-weight:700; color:#107c41;">${formatCurrency(appSubtotal)}</td>
           <td style="text-align:center;">
             ${isFull 
               ? `<span class="badge" style="background:#dff6dd; color:#107c41; border:1px solid #92c353;">100% Full</span>` 
@@ -1465,8 +1463,7 @@ window.openRequisitionDetail = function(reqId) {
       `;
     }).join('');
 
-    const approvedTotal = req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount;
-    const diff = approvedTotal - req.totalAmount;
+    const diffUnits = totalAppUnits - totalReqQty;
 
     approvedSectionHtml = `
       <div class="card mb-4 border" style="border-color:#107c41 !important; background:#ffffff;">
@@ -1489,11 +1486,9 @@ window.openRequisitionDetail = function(reqId) {
                 <tr>
                   <th style="width:40px;">#</th>
                   <th>${t('colItemSelect')}</th>
-                  <th style="width:125px;">${t('colQty')} (Req)</th>
-                  <th style="width:140px; color:#107c41;">${t('colApprovedQty')}</th>
-                  <th style="width:110px;">${t('colUnitPrice')}</th>
-                  <th style="text-align:right; width:130px; color:#107c41;">${t('colApprovedSubtotal')}</th>
-                  <th style="text-align:center; width:140px;">${t('colAllocationStatus')}</th>
+                  <th style="width:130px;">${t('colQty')} (Req)</th>
+                  <th style="width:160px; color:#107c41;">${t('colApprovedQty')}</th>
+                  <th style="text-align:center; width:150px;">${t('colAllocationStatus')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1501,12 +1496,12 @@ window.openRequisitionDetail = function(reqId) {
               </tbody>
               <tfoot class="table-light">
                 <tr style="font-weight:700;">
-                  <td colspan="4" class="text-end text-secondary small">${t('totalRequestedBudget')}: <strong>${formatCurrency(req.totalAmount)}</strong></td>
+                  <td colspan="2" class="text-end text-secondary small">${t('totalRequestedBudget')}: <strong>${totalReqQty} ${t('unitsLabel') || 'units'}</strong></td>
                   <td class="text-end" style="color:#107c41;">${t('totalApprovedBudget')}:</td>
-                  <td class="text-end" style="font-size:16px; color:#107c41;">${formatCurrency(approvedTotal)}</td>
+                  <td style="font-size:15px; color:#107c41;">${totalAppUnits} ${t('unitsLabel') || 'units'}</td>
                   <td class="text-center">
-                    <span class="badge ${diff === 0 ? 'bg-success' : 'bg-warning text-dark'}">
-                      ${diff === 0 ? '100% Matched' : formatCurrency(diff)}
+                    <span class="badge ${diffUnits === 0 ? 'bg-success' : 'bg-warning text-dark'}">
+                      ${diffUnits === 0 ? '100% Matched' : `${diffUnits} ${t('unitsLabel') || 'units'}`}
                     </span>
                   </td>
                 </tr>
@@ -1723,18 +1718,16 @@ window.openRequisitionDetail = function(reqId) {
               <th style="width:40px;">#</th>
               <th>${t('colItemSelect')}</th>
               <th>${t('colCategory')}</th>
-              <th>${t('colQty')} & ${t('colUnit')}</th>
-              <th>${t('colUnitPrice')}</th>
-              <th style="text-align:right;">${t('colLineTotal')}</th>
+              <th style="text-align:right; width:150px;">${t('colQty')} & ${t('colUnit')}</th>
             </tr>
           </thead>
           <tbody>
             ${itemsHtml}
           </tbody>
           <tfoot>
-            <tr style="background:#f8fafc; font-weight:800; font-size:15px;">
-              <td colspan="5" style="text-align:right;">${t('grandTotal')}</td>
-              <td style="text-align:right; color:var(--primary);">${formatCurrency(req.totalAmount)}</td>
+            <tr style="background:#f8fafc; font-weight:800; font-size:14px;">
+              <td colspan="3" style="text-align:right;">${t('grandTotal')}</td>
+              <td style="text-align:right; color:var(--primary);">${req.items.length} ${t('itemsLabel') || 'items'} (${totalReqQty} ${t('unitsLabel') || 'units'})</td>
             </tr>
           </tfoot>
         </table>
@@ -1808,12 +1801,13 @@ window.recalcApprovalSubtotals = function(reqId) {
   if (!req) return;
 
   const rows = document.querySelectorAll('.approved-item-row');
-  let runningApprovedTotal = 0;
+  let runningApprovedQty = 0;
+  let totalReqQty = 0;
 
   rows.forEach(row => {
     const idx = parseInt(row.getAttribute('data-index'), 10);
-    const unitPrice = parseFloat(row.getAttribute('data-unit-price')) || 0;
     const maxQty = parseFloat(row.getAttribute('data-max-qty')) || 0;
+    totalReqQty += maxQty;
     const input = document.getElementById(`approvedQtyInput_${idx}`);
     if (!input) return;
 
@@ -1826,11 +1820,7 @@ window.recalcApprovalSubtotals = function(reqId) {
       input.value = maxQty;
     }
 
-    const subtotal = Number((val * unitPrice).toFixed(2));
-    runningApprovedTotal += subtotal;
-
-    const span = document.getElementById(`approvedSubtotalSpan_${idx}`);
-    if (span) span.textContent = formatCurrency(subtotal);
+    runningApprovedQty += val;
 
     const badge = document.getElementById(`allocationStatusBadge_${idx}`);
     if (badge) {
@@ -1845,15 +1835,15 @@ window.recalcApprovalSubtotals = function(reqId) {
   });
 
   const totalEl = document.getElementById('approvalModalApprovedTotal');
-  if (totalEl) totalEl.textContent = formatCurrency(runningApprovedTotal);
+  if (totalEl) totalEl.textContent = `${runningApprovedQty} ${t('unitsLabel') || 'units'}`;
 
   const varEl = document.getElementById('approvalModalVariance');
   if (varEl) {
-    const diff = runningApprovedTotal - req.totalAmount;
-    if (Math.abs(diff) < 0.01) {
+    const diff = runningApprovedQty - totalReqQty;
+    if (diff === 0) {
       varEl.innerHTML = `<span class="badge bg-success" style="font-size:11px;">Match (100%)</span>`;
     } else {
-      varEl.innerHTML = `<span class="badge bg-warning text-dark" style="font-size:11px;">${formatCurrency(diff)}</span>`;
+      varEl.innerHTML = `<span class="badge bg-warning text-dark" style="font-size:11px;">${diff} ${t('unitsLabel') || 'units'}</span>`;
     }
   }
 };
@@ -1877,35 +1867,40 @@ window.submitManagementApproval = function(reqId) {
   if (!req) return;
 
   const rows = document.querySelectorAll('.approved-item-row');
-  let newApprovedTotal = 0;
+  let totalReqQty = 0;
+  let totalApprovedQty = 0;
   let anyReduced = false;
 
   if (rows.length > 0) {
     rows.forEach(row => {
       const idx = parseInt(row.getAttribute('data-index'), 10);
       const input = document.getElementById(`approvedQtyInput_${idx}`);
-      const maxQty = req.items[idx].qty;
+      const maxQty = Number(req.items[idx].qty) || 0;
       let val = input ? parseFloat(input.value) : maxQty;
       if (isNaN(val) || val < 0) val = 0;
       if (val > maxQty) val = maxQty;
 
       req.items[idx].approvedQty = val;
-      req.items[idx].approvedSubtotal = Number((val * req.items[idx].unitPrice).toFixed(2));
-      newApprovedTotal += req.items[idx].approvedSubtotal;
+      req.items[idx].approvedSubtotal = 0;
+      totalReqQty += maxQty;
+      totalApprovedQty += val;
 
       if (val < maxQty) anyReduced = true;
     });
   } else {
     // If no row inputs were active, default to full
     req.items.forEach(itm => {
-      if (itm.approvedQty === undefined) itm.approvedQty = itm.qty;
-      itm.approvedSubtotal = Number((itm.approvedQty * itm.unitPrice).toFixed(2));
-      newApprovedTotal += itm.approvedSubtotal;
+      const q = Number(itm.qty) || 0;
+      totalReqQty += q;
+      if (itm.approvedQty === undefined) itm.approvedQty = q;
+      itm.approvedSubtotal = 0;
+      totalApprovedQty += itm.approvedQty;
     });
   }
 
-  req.approvedTotal = Number(newApprovedTotal.toFixed(2));
-  req.approvalType = (req.approvedTotal === req.totalAmount) ? 'full' : (req.approvedTotal > 0 ? 'partial' : 'zero');
+  req.approvedQtyTotal = totalApprovedQty;
+  req.approvedTotal = 0;
+  req.approvalType = (totalApprovedQty === totalReqQty) ? 'full' : (totalApprovedQty > 0 ? 'partial' : 'zero');
   req.status = 'approved';
   req.approvedDate = new Date().toISOString().split('T')[0];
   req.approvedBy = AppState.role === 'admin' ? 'Sokha Chan (Administrator)' : 'Vireak Vong (Management Reviewer)';
@@ -1913,8 +1908,8 @@ window.submitManagementApproval = function(reqId) {
   const rationaleInput = document.getElementById('approvalRationaleInput') || document.getElementById('actionRemarkInput');
   const remarks = rationaleInput ? rationaleInput.value.trim() : '';
   req.remarks = remarks || (anyReduced 
-    ? `Approved with quantity allocation adjustments (Total: ${formatCurrency(req.approvedTotal)}).` 
-    : `Approved 100% requested quantities (Total: ${formatCurrency(req.approvedTotal)}).`);
+    ? `Approved with quantity allocation adjustments (${totalApprovedQty} / ${totalReqQty} units approved).` 
+    : `Approved 100% requested quantities (${totalApprovedQty} units).`);
 
   if (!req.history) req.history = [];
   req.history.push({
@@ -2057,11 +2052,29 @@ window.renderApprovedListView = function() {
 
   // Calculate KPIs on all approved
   const totalOrders = approvedList.length;
-  const fullApprovalCount = approvedList.filter(r => r.approvalType === 'full' || (!r.approvalType && (r.approvedTotal === undefined || r.approvedTotal === r.totalAmount))).length;
-  const partialApprovalCount = approvedList.filter(r => r.approvalType === 'partial' || (r.approvedTotal !== undefined && r.approvedTotal < r.totalAmount)).length;
+  let totalApprovedUnits = 0;
+  let totalRequestedUnits = 0;
+  let fullApprovalCount = 0;
+  let partialApprovalCount = 0;
   const completedCount = approvedList.filter(r => r.status === 'completed').length;
-  const totalApprovedSpend = approvedList.reduce((sum, r) => sum + (r.approvedTotal !== undefined ? r.approvedTotal : r.totalAmount), 0);
-  const totalOriginalSpend = approvedList.reduce((sum, r) => sum + r.totalAmount, 0);
+
+  approvedList.forEach(r => {
+    let reqUnits = 0;
+    let appUnits = 0;
+    (r.items || []).forEach(itm => {
+      const q = Number(itm.qty) || 0;
+      const aq = Number(itm.approvedQty !== undefined ? itm.approvedQty : itm.qty) || 0;
+      reqUnits += q;
+      appUnits += aq;
+    });
+    totalRequestedUnits += reqUnits;
+    totalApprovedUnits += appUnits;
+    if (r.approvalType === 'full' || (!r.approvalType && appUnits === reqUnits)) {
+      fullApprovalCount++;
+    } else {
+      partialApprovalCount++;
+    }
+  });
 
   // Update 5 KPI tiles
   const elOrders = document.getElementById('kpiApprovedOrdersCount');
@@ -2085,14 +2098,14 @@ window.renderApprovedListView = function() {
   if (elCompletedSub) elCompletedSub.textContent = AppState.lang === 'kh' ? 'បានបញ្ជាទិញ & ប្រគល់រួច' : 'Delivered & closed orders';
 
   const elSpend = document.getElementById('kpiApprovedTotalSpend');
-  if (elSpend) elSpend.textContent = formatCurrency(totalApprovedSpend);
+  if (elSpend) elSpend.textContent = `${totalApprovedUnits} ${t('unitsLabel') || 'Units'}`;
   const elDiff = document.getElementById('kpiApprovedSavedDiff');
   if (elDiff) {
-    const diff = totalApprovedSpend - totalOriginalSpend;
+    const diff = totalApprovedUnits - totalRequestedUnits;
     if (diff < 0) {
-      elDiff.textContent = AppState.lang === 'kh' ? `សន្សំបាន ${formatCurrency(Math.abs(diff))} ពីថវិកាស្នើ` : `Saved ${formatCurrency(Math.abs(diff))} from budget`;
+      elDiff.textContent = AppState.lang === 'kh' ? `កែសម្រួល ${diff} ឯកតាពីសំណើ` : `Adjusted ${diff} units from request`;
     } else {
-      elDiff.textContent = AppState.lang === 'kh' ? '១០០% ការប្តេជ្ញាថវិកា' : '100% budget commitment';
+      elDiff.textContent = AppState.lang === 'kh' ? '១០០% បរិមាណអនុម័តពេញលេញ' : '100% quantity allocated';
     }
   }
 
@@ -2139,8 +2152,15 @@ window.renderApprovedListView = function() {
     const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
     const prioBadge = getPriorityBadge(req.priority);
     const statusBadge = getStatusBadge(req.status);
-    const approvedTotal = req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount;
-    const isPartial = req.approvalType === 'partial' || approvedTotal < req.totalAmount;
+    let reqUnits = 0;
+    let appUnits = 0;
+    (req.items || []).forEach(itm => {
+      const q = Number(itm.qty) || 0;
+      const aq = Number(itm.approvedQty !== undefined ? itm.approvedQty : itm.qty) || 0;
+      reqUnits += q;
+      appUnits += aq;
+    });
+    const isPartial = req.approvalType === 'partial' || appUnits < reqUnits;
 
     // Items chips
     const itemChips = (req.items || []).map(itm => {
@@ -2176,8 +2196,8 @@ window.renderApprovedListView = function() {
           <div class="d-flex flex-wrap">${itemChips}</div>
         </td>
         <td style="text-align:right;">
-          <div class="fw-bold text-success" style="font-size:14px;">${formatCurrency(approvedTotal)}</div>
-          ${isPartial ? `<div class="small text-muted text-decoration-line-through">${formatCurrency(req.totalAmount)}</div>` : ''}
+          <div class="fw-bold text-success" style="font-size:14px;">${appUnits} ${t('unitsLabel') || 'units'}</div>
+          ${isPartial ? `<div class="small text-muted text-decoration-line-through">${reqUnits} ${t('unitsLabel') || 'units'}</div>` : ''}
         </td>
         <td>
           <div class="small fw-semibold text-secondary">${req.approvedDate || req.requestDate}</div>
@@ -2207,7 +2227,7 @@ window.exportApprovedToExcel = function() {
     return;
   }
 
-  let csv = 'Requisition ID,Department,Requester Name,Email,Priority,Status,Approval Type,Request Date,Approved Date,Approved By,Item Name,Category,Requested Qty,Approved Qty,Unit,Unit Price,Approved Subtotal,Requested Total,Approved Total,Remarks\n';
+  let csv = 'Requisition ID,Department,Requester Name,Email,Priority,Status,Approval Type,Request Date,Approved Date,Approved By,Item Name,Category,Requested Qty,Approved Qty,Unit,Remarks\n';
 
   approvedList.forEach(req => {
     const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
@@ -2217,8 +2237,6 @@ window.exportApprovedToExcel = function() {
       const cat = AppData.getCategories().find(c => c.id === item.categoryId);
       const catName = cat ? cat.nameEn : item.categoryId;
       const appQty = item.approvedQty !== undefined ? item.approvedQty : item.qty;
-      const appSubtotal = item.approvedSubtotal !== undefined ? item.approvedSubtotal : item.subtotal;
-      const appTotal = req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount;
 
       const row = [
         `"${req.id}"`,
@@ -2236,10 +2254,6 @@ window.exportApprovedToExcel = function() {
         item.qty,
         appQty,
         `"${item.unit}"`,
-        item.unitPrice,
-        appSubtotal,
-        req.totalAmount,
-        appTotal,
         `"${(req.remarks || '').replace(/"/g, '""')}"`
       ];
       csv += row.join(',') + '\n';
@@ -3052,7 +3066,12 @@ function renderRequesterDashboard() {
 
   // Calculate Situation Metrics for this requester/department
   const totalCount = personaReqs.length;
-  const totalAmt = personaReqs.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
+  let totalUnits = 0;
+  personaReqs.forEach(r => {
+    (r.items || []).forEach(itm => {
+      totalUnits += (Number(itm.qty) || 0);
+    });
+  });
   const reviewCount = personaReqs.filter(r => r.status === 'under_review' || r.status === 'new').length;
   const approvedCount = personaReqs.filter(r => r.status === 'approved').length;
   const declinedCount = personaReqs.filter(r => r.status === 'rejected').length;
@@ -3071,7 +3090,7 @@ function renderRequesterDashboard() {
   if (approvedCountEl) approvedCountEl.textContent = approvedCount;
   if (declinedCountEl) declinedCountEl.textContent = declinedCount;
   if (completedCountEl) completedCountEl.textContent = completedCount;
-  if (totalAmtEl) totalAmtEl.textContent = formatCurrency(totalAmt);
+  if (totalAmtEl) totalAmtEl.textContent = `${totalUnits} ${t('unitsLabel') || 'units'}`;
 
   // Highlight active situation KPI card
   const kpiCardsMap = {
@@ -3210,8 +3229,16 @@ function buildRequesterCardHtml(req) {
   const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
   const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
   const priorityBadge = getPriorityBadge(req.priority);
+  let totalReqQty = 0;
+  let totalAppQty = 0;
+  (req.items || []).forEach(itm => {
+    const q = Number(itm.qty) || 0;
+    const aq = Number(itm.approvedQty !== undefined ? itm.approvedQty : itm.qty) || 0;
+    totalReqQty += q;
+    totalAppQty += aq;
+  });
   const isApprovedOrDone = req.status === 'approved' || req.status === 'completed';
-  const isPartial = req.approvalType === 'partial' || (req.approvedTotal && req.approvedTotal < req.totalAmount);
+  const isPartial = req.approvalType === 'partial' || (isApprovedOrDone && totalAppQty < totalReqQty);
 
   // Status Badge with Partial Approval indication if adjusted
   let statusBadge = getStatusBadge(req.status);
@@ -3303,10 +3330,10 @@ function buildRequesterCardHtml(req) {
           <div class="mgmt-feedback-text">
             "${req.remarks || 'Approved by Management & Admin.'}"
           </div>
-          ${req.approvedTotal ? `
+          ${isApprovedOrDone ? `
             <div class="mt-1 small" style="color:#065f46; font-weight:600;">
-              <span>Approved Allocation: <strong>${formatCurrency(req.approvedTotal)}</strong></span>
-              ${isPartial ? `<span class="text-muted ms-1">(Requested: ${formatCurrency(req.totalAmount)}, Diff: -${formatCurrency(req.totalAmount - req.approvedTotal)})</span>` : ''}
+              <span>Approved Allocation: <strong>${totalAppQty} ${t('unitsLabel') || 'units'}</strong></span>
+              ${isPartial ? `<span class="text-muted ms-1">(Requested: ${totalReqQty} ${t('unitsLabel') || 'units'}, Diff: -${totalReqQty - totalAppQty})</span>` : ''}
             </div>
           ` : ''}
         </div>
@@ -3336,8 +3363,8 @@ function buildRequesterCardHtml(req) {
   const itemsRows = (req.items || []).map((itm, idx) => {
     const isAllocated = itm.approvedQty !== undefined;
     const appQty = isAllocated ? itm.approvedQty : itm.qty;
-    const appSubtotal = itm.approvedSubtotal !== undefined ? itm.approvedSubtotal : itm.subtotal;
-    const isReduced = isAllocated && itm.approvedQty < itm.qty;
+    const isFull = appQty === itm.qty;
+    const isZero = appQty === 0;
 
     return `
       <tr>
@@ -3349,22 +3376,21 @@ function buildRequesterCardHtml(req) {
         <td>
           ${isApprovedOrDone ? `
             <div>
-              <strong style="color:#107c41; font-size:13px;">${appQty}</strong> <span class="text-muted small">/ ${itm.qty} ${itm.unit}</span>
-              ${isReduced 
-                ? `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning ms-1" style="font-size:10px;">Adjusted (-${itm.qty - appQty})</span>` 
-                : `<span class="badge bg-success-subtle text-success border border-success ms-1" style="font-size:10px;">Full</span>`}
+              <strong style="color:#107c41; font-size:13.5px;">${appQty}</strong> <span class="text-muted small">/ ${itm.qty} ${itm.unit}</span>
             </div>
           ` : `
             <strong>${itm.qty}</strong> ${itm.unit}
           `}
         </td>
-        <td>${formatCurrency(itm.unitPrice)}</td>
-        <td style="text-align:right; font-weight:700; color:var(--text-main);">
-          ${isApprovedOrDone ? `
-            <span style="color:#107c41;">${formatCurrency(appSubtotal)}</span>
-            ${isReduced ? `<div style="font-size:11px; text-decoration:line-through; color:var(--text-light);">${formatCurrency(itm.subtotal)}</div>` : ''}
-          ` : `
-            ${formatCurrency(itm.subtotal)}
+        <td style="text-align:right;">
+          ${isApprovedOrDone ? (
+            isFull 
+              ? `<span class="badge bg-success-subtle text-success border border-success" style="font-size:10.5px;">100% Full</span>` 
+              : (isZero 
+                ? `<span class="badge bg-danger-subtle text-danger border border-danger" style="font-size:10.5px;">0 Excluded</span>` 
+                : `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning" style="font-size:10.5px;">Partial (-${itm.qty - appQty})</span>`)
+          ) : `
+            <span class="badge bg-light text-secondary border" style="font-size:10.5px;">Requested</span>
           `}
         </td>
       </tr>
@@ -3438,8 +3464,7 @@ function buildRequesterCardHtml(req) {
               <th>#</th>
               <th>${t('colItemSelect')}</th>
               <th>${isApprovedOrDone ? t('thRequestedVsApproved') : `${t('colQty')} & ${t('colUnit')}`}</th>
-              <th>${t('colUnitPrice')}</th>
-              <th style="text-align:right;">${t('colLineTotal')}</th>
+              <th style="text-align:right;">${t('colAllocationStatus')}</th>
             </tr>
           </thead>
           <tbody>
@@ -3455,16 +3480,13 @@ function buildRequesterCardHtml(req) {
           <span><strong>${req.requesterName}</strong> (${req.requesterEmail || ''})</span>
         </div>
         <div style="display:flex; align-items:center; gap:14px;">
-          <div class="req-total-badge" style="${isApprovedOrDone && req.approvedTotal && req.approvedTotal !== req.totalAmount ? 'background:#dff6dd; border:1px solid #107c41; color:#107c41;' : ''}">
+          <div class="req-total-badge" style="${isApprovedOrDone && isPartial ? 'background:#dff6dd; border:1px solid #107c41; color:#107c41;' : ''}">
             <span style="font-size:12px; font-weight:600; color:var(--text-muted); margin-right:4px;">
-              ${isApprovedOrDone && req.approvedTotal ? t('totalApprovedBudget') : t('grandTotal')}
+              ${isApprovedOrDone ? t('totalApprovedBudget') : t('grandTotal')}
             </span>
-            <span style="font-weight:800; font-size:15px; color:${isApprovedOrDone ? '#107c41' : 'var(--text-main)'};">
-              ${formatCurrency(isApprovedOrDone && req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount)}
+            <span style="font-weight:800; font-size:14.5px; color:${isApprovedOrDone ? '#107c41' : 'var(--text-main)'};">
+              ${isApprovedOrDone ? `${totalAppQty} / ${totalReqQty} ${t('unitsLabel') || 'units'}` : `${req.items ? req.items.length : 0} ${t('itemsLabel') || 'items'} (${totalReqQty} ${t('unitsLabel') || 'units'})`}
             </span>
-            ${isApprovedOrDone && req.approvedTotal && req.approvedTotal !== req.totalAmount ? `
-              <span style="font-size:11.5px; text-decoration:line-through; opacity:0.75; margin-left:4px; color:#64748b;">${formatCurrency(req.totalAmount)}</span>
-            ` : ''}
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
             <button type="button" class="btn btn-sm btn-outline d-inline-flex align-items-center gap-1" onclick="openRequisitionDetail('${req.id}')">
