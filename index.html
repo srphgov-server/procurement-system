@@ -402,7 +402,7 @@
         <!-- Management Situation KPI Metric Cards (5 Cards) -->
         <div class="d365-kpi-row">
           <!-- Total My Requests -->
-          <div class="d365-kpi-card" id="reqKpiTotalCard">
+          <div class="d365-kpi-card kpi-total" id="reqKpiTotalCard" role="button" tabindex="0" title="Click to filter all requests">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiTotalTitle">My Requisitions</span>
               <span class="d365-kpi-icon material-symbols-outlined">format_list_bulleted</span>
@@ -412,7 +412,7 @@
           </div>
 
           <!-- In Review by Management -->
-          <div class="d365-kpi-card" id="reqKpiReviewCard">
+          <div class="d365-kpi-card kpi-pending" id="reqKpiReviewCard" role="button" tabindex="0" title="Click to filter in-review requests">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiReviewTitle">In Review</span>
               <span class="d365-kpi-icon material-symbols-outlined">schedule</span>
@@ -425,7 +425,7 @@
           </div>
 
           <!-- Approved by Management -->
-          <div class="d365-kpi-card" id="reqKpiApprovedCard">
+          <div class="d365-kpi-card kpi-approved" id="reqKpiApprovedCard" role="button" tabindex="0" title="Click to filter approved requests">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiApprovedTitle">Approved</span>
               <span class="d365-kpi-icon material-symbols-outlined">verified</span>
@@ -435,7 +435,7 @@
           </div>
 
           <!-- Declined by Management -->
-          <div class="d365-kpi-card" id="reqKpiDeclinedCard">
+          <div class="d365-kpi-card kpi-urgent" id="reqKpiDeclinedCard" role="button" tabindex="0" title="Click to filter declined requests">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiDeclinedTitle">Declined</span>
               <span class="d365-kpi-icon material-symbols-outlined">cancel</span>
@@ -445,7 +445,7 @@
           </div>
 
           <!-- Completed & Delivered -->
-          <div class="d365-kpi-card" id="reqKpiCompletedCard">
+          <div class="d365-kpi-card kpi-completed" id="reqKpiCompletedCard" role="button" tabindex="0" title="Click to filter completed requests">
             <div class="d365-kpi-header">
               <span class="d365-kpi-label" data-i18n="requesterKpiCompletedTitle">Completed</span>
               <span class="d365-kpi-icon material-symbols-outlined">inventory</span>

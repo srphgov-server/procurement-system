@@ -2955,6 +2955,30 @@ function initRequesterDashboardListeners() {
       renderRequesterDashboard();
     });
   }
+
+  // Interactive 5 Situation KPI Metric Cards
+  const kpiCardMappings = [
+    { id: 'reqKpiTotalCard', sit: 'all' },
+    { id: 'reqKpiReviewCard', sit: 'under_review' },
+    { id: 'reqKpiApprovedCard', sit: 'approved' },
+    { id: 'reqKpiDeclinedCard', sit: 'rejected' },
+    { id: 'reqKpiCompletedCard', sit: 'completed' }
+  ];
+
+  kpiCardMappings.forEach(item => {
+    const el = document.getElementById(item.id);
+    if (el) {
+      el.addEventListener('click', () => {
+        setRequesterSituationFilter(item.sit);
+      });
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setRequesterSituationFilter(item.sit);
+        }
+      });
+    }
+  });
 }
 
 function populateRequesterPersonas() {
@@ -2981,7 +3005,7 @@ function populateRequesterPersonas() {
     }
   });
 
-  let optionsHtml = `<option value="all">🌟 ${t('requesterAllProfiles')}</option>`;
+  let optionsHtml = `<option value="all">🌟 ${t('requesterAllProfiles') || 'All Requesters / All Departments'}</option>`;
   distinctRequesters.forEach(reqUser => {
     const isSelected = currentVal === reqUser.name ? 'selected' : '';
     optionsHtml += `<option value="${reqUser.name}" ${isSelected}>👤 ${reqUser.name} (${reqUser.dept})</option>`;
@@ -2991,16 +3015,32 @@ function populateRequesterPersonas() {
   select.value = currentVal;
 }
 
+function populateRequesterPriorities() {
+  const select = document.getElementById('requesterPriorityFilter');
+  if (!select) return;
+  const priorities = AppData.getPriorities ? AppData.getPriorities() : [];
+  const current = AppState.requesterPriority || 'all';
+  let html = `<option value="all">${t('priorityAll') || 'All Priorities'}</option>`;
+  priorities.forEach(p => {
+    const pName = AppState.lang === 'kh' ? (p.nameKh || p.nameEn) : (p.nameEn || p.nameKh);
+    const selected = current === p.id ? 'selected' : '';
+    html += `<option value="${p.id}" ${selected}>${pName}</option>`;
+  });
+  select.innerHTML = html;
+  select.value = current;
+}
+
 window.setRequesterSituationFilter = function(situation) {
   AppState.requesterSituation = situation;
   renderRequesterDashboard();
 };
 
 function renderRequesterDashboard() {
-  const container = document.getElementById('requesterListContainer');
+  const container = document.getElementById('requesterCardsContainer') || document.getElementById('requesterListContainer');
   if (!container) return;
 
   populateRequesterPersonas();
+  populateRequesterPriorities();
 
   const allReqs = AppData.getRequisitions();
 
@@ -3019,76 +3059,102 @@ function renderRequesterDashboard() {
   const completedCount = personaReqs.filter(r => r.status === 'completed').length;
 
   // Update KPI Card Numbers
-  const kpiTotalVal = document.getElementById('reqKpiTotalVal');
-  const kpiTotalAmt = document.getElementById('reqKpiTotalAmt');
-  const kpiReviewVal = document.getElementById('reqKpiReviewVal');
-  const kpiApprovedVal = document.getElementById('reqKpiApprovedVal');
-  const kpiDeclinedVal = document.getElementById('reqKpiDeclinedVal');
-  const kpiCompletedVal = document.getElementById('reqKpiCompletedVal');
+  const totalCountEl = document.getElementById('reqKpiTotalCount') || document.getElementById('reqKpiTotalVal');
+  const reviewCountEl = document.getElementById('reqKpiReviewCount') || document.getElementById('reqKpiReviewVal');
+  const approvedCountEl = document.getElementById('reqKpiApprovedCount') || document.getElementById('reqKpiApprovedVal');
+  const declinedCountEl = document.getElementById('reqKpiDeclinedCount') || document.getElementById('reqKpiDeclinedVal');
+  const completedCountEl = document.getElementById('reqKpiCompletedCount') || document.getElementById('reqKpiCompletedVal');
+  const totalAmtEl = document.getElementById('reqKpiTotalAmt');
 
-  if (kpiTotalVal) kpiTotalVal.textContent = totalCount;
-  if (kpiTotalAmt) kpiTotalAmt.textContent = formatCurrency(totalAmt);
-  if (kpiReviewVal) kpiReviewVal.textContent = reviewCount;
-  if (kpiApprovedVal) kpiApprovedVal.textContent = approvedCount;
-  if (kpiDeclinedVal) kpiDeclinedVal.textContent = declinedCount;
-  if (kpiCompletedVal) kpiCompletedVal.textContent = completedCount;
+  if (totalCountEl) totalCountEl.textContent = totalCount;
+  if (reviewCountEl) reviewCountEl.textContent = reviewCount;
+  if (approvedCountEl) approvedCountEl.textContent = approvedCount;
+  if (declinedCountEl) declinedCountEl.textContent = declinedCount;
+  if (completedCountEl) completedCountEl.textContent = completedCount;
+  if (totalAmtEl) totalAmtEl.textContent = formatCurrency(totalAmt);
 
-  // Update situation pill counters
-  const sitCountAll = document.getElementById('sitCountAll');
-  const sitCountReview = document.getElementById('sitCountReview');
-  const sitCountApproved = document.getElementById('sitCountApproved');
-  const sitCountDeclined = document.getElementById('sitCountDeclined');
-  const sitCountCompleted = document.getElementById('sitCountCompleted');
-
-  if (sitCountAll) sitCountAll.textContent = totalCount;
-  if (sitCountReview) sitCountReview.textContent = reviewCount;
-  if (sitCountApproved) sitCountApproved.textContent = approvedCount;
-  if (sitCountDeclined) sitCountDeclined.textContent = declinedCount;
-  if (sitCountCompleted) sitCountCompleted.textContent = completedCount;
-
-  // Update situation pill active states
-  document.querySelectorAll('.situation-pill').forEach(btn => {
-    if (btn.getAttribute('data-sit') === AppState.requesterSituation) {
-      btn.classList.add('active');
+  // Highlight active situation KPI card
+  const kpiCardsMap = {
+    'all': 'reqKpiTotalCard',
+    'under_review': 'reqKpiReviewCard',
+    'approved': 'reqKpiApprovedCard',
+    'rejected': 'reqKpiDeclinedCard',
+    'completed': 'reqKpiCompletedCard'
+  };
+  const activeSit = AppState.requesterSituation || 'all';
+  Object.entries(kpiCardsMap).forEach(([sit, cardId]) => {
+    const cardEl = document.getElementById(cardId);
+    if (!cardEl) return;
+    if (activeSit === sit) {
+      cardEl.classList.add('active-filter');
     } else {
-      btn.classList.remove('active');
+      cardEl.classList.remove('active-filter');
     }
   });
 
-  // Situation Alert Banners
-  const declinedAlert = document.getElementById('requesterDeclinedAlert');
-  const approvedAlert = document.getElementById('requesterApprovedAlert');
-  const declinedAlertText = document.getElementById('requesterDeclinedAlertText');
-  const approvedAlertText = document.getElementById('requesterApprovedAlertText');
-
-  if (declinedAlert) {
+  // Situation Alert Banner in #requesterActionBanner
+  const bannerEl = document.getElementById('requesterActionBanner');
+  if (bannerEl) {
     if (declinedCount > 0) {
-      declinedAlert.style.display = 'flex';
       const declinedItems = personaReqs.filter(r => r.status === 'rejected');
       const latestDeclined = declinedItems[0];
       const reasonSnippet = latestDeclined.remarks ? `"${latestDeclined.remarks}"` : '';
-      if (declinedAlertText) {
-        declinedAlertText.innerHTML = AppState.lang === 'kh'
-          ? `ថ្នាក់ដឹកនាំបានបដិសេធសំណើចំនួន <strong>${declinedCount}</strong> (ឧ. <strong>${latestDeclined.id}</strong>៖ <em>${reasonSnippet}</em>)។ សូមពិនិត្យមើលមូលហេតុ និងចុច <strong>កែសម្រួល & ដាក់ស្នើឡើងវិញ</strong> ដើម្បីកែប្រែ។`
-          : `Management has declined <strong>${declinedCount}</strong> requisition(s) (e.g. <strong>${latestDeclined.id}</strong>: <em>${reasonSnippet}</em>). Review the feedback reasons below and click <strong>Modify & Re-submit</strong> to revise.`;
-      }
-    } else {
-      declinedAlert.style.display = 'none';
-    }
-  }
-
-  if (approvedAlert) {
-    if (approvedCount > 0 && declinedCount === 0) {
-      approvedAlert.style.display = 'flex';
+      bannerEl.style.display = 'block';
+      bannerEl.innerHTML = `
+        <div class="d365-callout d365-callout-danger" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #ef4444; border-radius:4px;">
+          <div style="display:flex; align-items:flex-start; gap:10px;">
+            <span class="material-symbols-outlined text-danger" style="font-size:24px; margin-top:2px;">error</span>
+            <div>
+              <strong style="color:#991b1b; font-size:14px;">
+                ${AppState.lang === 'kh' ? 'ការឆ្លើយតបពីថ្នាក់ដឹកនាំ៖ មានសំណើត្រូវបានបដិសេធ' : 'Real-time Management Action: Requisition Declined'}
+              </strong>
+              <div style="font-size:13px; color:#7f1d1d; margin-top:2px;">
+                ${AppState.lang === 'kh'
+                  ? `ថ្នាក់ដឹកនាំបានបដិសេធសំណើចំនួន <strong>${declinedCount}</strong> (ឧ. <strong>${latestDeclined.id}</strong>៖ <em>${reasonSnippet}</em>)។ សូមពិនិត្យមើលមូលហេតុ និងចុច <strong>កែសម្រួល & ដាក់ស្នើឡើងវិញ</strong> ដើម្បីកែប្រែ។`
+                  : `Management declined <strong>${declinedCount}</strong> requisition(s) (e.g. <strong>${latestDeclined.id}</strong>: <em>${reasonSnippet}</em>). Check the feedback reason and click <strong>Modify & Re-submit</strong> to revise.`}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="setRequesterSituationFilter('rejected')" style="white-space:nowrap;">
+              ${AppState.lang === 'kh' ? 'បង្ហាញតែសំណើបដិសេធ' : 'Filter Declined'}
+            </button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="cloneRequisitionToNew('${latestDeclined.id}')" style="white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
+              <span class="material-symbols-outlined" style="font-size:15px;">replay</span>
+              <span>${t('btnResubmitModify')}</span>
+            </button>
+          </div>
+        </div>
+      `;
+    } else if (approvedCount > 0) {
       const approvedItems = personaReqs.filter(r => r.status === 'approved');
       const latestApproved = approvedItems[0];
-      if (approvedAlertText) {
-        approvedAlertText.innerHTML = AppState.lang === 'kh'
-          ? `សំណើចំនួន <strong>${approvedCount}</strong> (ឧ. <strong>${latestApproved.id}</strong>) ត្រូវបានថ្នាក់ដឹកនាំអនុម័តរួចរាល់ និងបានបញ្ជូនទៅផ្នែកលទ្ធកម្មដើម្បីបញ្ជាទិញ។`
-          : `<strong>${approvedCount}</strong> requisition(s) (e.g. <strong>${latestApproved.id}</strong>) have been approved by Management and forwarded to Procurement for purchasing.`;
-      }
+      bannerEl.style.display = 'block';
+      bannerEl.innerHTML = `
+        <div class="d365-callout d365-callout-success" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #10b981; border-radius:4px;">
+          <div style="display:flex; align-items:flex-start; gap:10px;">
+            <span class="material-symbols-outlined text-success" style="font-size:24px; margin-top:2px;">verified</span>
+            <div>
+              <strong style="color:#166534; font-size:14px;">
+                ${AppState.lang === 'kh' ? 'ការឆ្លើយតបពីថ្នាក់ដឹកនាំ៖ សំណើត្រូវបានអនុម័ត' : 'Real-time Management Action: Requisitions Approved'}
+              </strong>
+              <div style="font-size:13px; color:#14532d; margin-top:2px;">
+                ${AppState.lang === 'kh'
+                  ? `សំណើចំនួន <strong>${approvedCount}</strong> (ឧ. <strong>${latestApproved.id}</strong>) ត្រូវបានថ្នាក់ដឹកនាំអនុម័តរួចរាល់ និងបានបញ្ជូនទៅផ្នែកលទ្ធកម្មដើម្បីបញ្ជាទិញ។`
+                  : `<strong>${approvedCount}</strong> requisition(s) (e.g. <strong>${latestApproved.id}</strong>) have been approved by Management and forwarded to Procurement for purchasing.`}
+              </div>
+            </div>
+          </div>
+          <div>
+            <button type="button" class="btn btn-sm btn-outline-success" onclick="setRequesterSituationFilter('approved')" style="white-space:nowrap;">
+              ${AppState.lang === 'kh' ? 'បង្ហាញតែសំណើអនុម័ត' : 'Filter Approved'}
+            </button>
+          </div>
+        </div>
+      `;
     } else {
-      approvedAlert.style.display = 'none';
+      bannerEl.style.display = 'none';
+      bannerEl.innerHTML = '';
     }
   }
 
@@ -3128,7 +3194,7 @@ function renderRequesterDashboard() {
         <p style="font-size: 13px; max-width: 450px; margin: 0 auto 16px;">
           ${AppState.lang === 'kh' ? 'អ្នកអាចបង្កើតសំណើសុំទិញសម្ភារៈថ្មីដោយចុចប៊ូតុងខាងក្រោម' : 'You can submit a new purchase requisition anytime by clicking the button below.'}
         </p>
-        <button class="btn btn-primary" onclick="switchTab('new-request')">${t('navNewRequest')}</button>
+        <button type="button" class="btn btn-primary" onclick="startNewRequisition()">${t('navNewRequest')}</button>
       </div>
     `;
     return;
@@ -3153,81 +3219,58 @@ function buildRequesterCardHtml(req) {
     statusBadge = `<span class="badge" style="background:#107c41; color:#fff; border:1px solid #0e6b37;">✓ ${t('statusApprovedAdjusted')}</span>`;
   }
 
-  // Stepper Stage Calculation
-  // Stage 1: Submitted (always done)
-  const step1Class = 'completed';
-  const step1Icon = '<span class="material-symbols-outlined" style="font-size:14px;">check</span>';
-  const step1Detail = req.requestDate;
+  // Dynamics 365 Business Process Flow (BPF) 4 Stages (same as New Procurement Requisition Form)
+  let bpfStage1 = 'completed';
+  let bpfStage2 = 'pending';
+  let bpfStage3 = 'pending';
+  let bpfStage4 = 'pending';
+  let bpfStage1Status = req.requestDate || 'Drafted';
+  let bpfStage2Status = AppState.lang === 'kh' ? 'ក្នុងជួរពិនិត្យ' : 'In Review Queue';
+  let bpfStage3Status = AppState.lang === 'kh' ? 'រង់ចាំការសម្រេច' : 'Pending Decision';
+  let bpfStage4Status = AppState.lang === 'kh' ? 'រង់ចាំការអនុម័ត' : 'PO Issuance';
 
-  // Stage 2: Management Review
-  let step2Class = 'pending';
-  let step2Icon = '2';
-  let step2Detail = t('stageStatusWait');
   if (req.status === 'new') {
-    step2Class = 'active';
-    step2Icon = '<span class="material-symbols-outlined" style="font-size:14px;">schedule</span>';
-    step2Detail = t('stageStatusWait');
+    bpfStage1 = 'completed';
+    bpfStage2 = 'active';
+    bpfStage2Status = AppState.lang === 'kh' ? 'រង់ចាំការត្រួតពិនិត្យ' : 'Pending Review';
+    bpfStage3 = 'pending';
+    bpfStage4 = 'pending';
   } else if (req.status === 'under_review') {
-    step2Class = 'active';
-    step2Icon = '<span class="material-symbols-outlined" style="font-size:14px;">schedule</span>';
-    step2Detail = t('stageStatusActiveReview');
-  } else {
-    step2Class = 'completed';
-    step2Icon = '<span class="material-symbols-outlined" style="font-size:14px;">check</span>';
-    step2Detail = AppState.lang === 'kh' ? 'បានពិនិត្យរួចរាល់' : 'Reviewed';
-  }
-
-  // Stage 3: Management Decision (Approve / Decline)
-  let step3Class = 'pending';
-  let step3Icon = '3';
-  let step3Detail = AppState.lang === 'kh' ? 'រង់ចាំការសម្រេច' : 'Pending Decision';
-  if (req.status === 'approved' || req.status === 'completed') {
-    step3Class = 'completed';
-    step3Icon = '<span class="material-symbols-outlined" style="font-size:14px;">check</span>';
-    step3Detail = isPartial ? t('statusApprovedAdjusted') : t('statusApproved');
-  } else if (req.status === 'rejected') {
-    step3Class = 'declined';
-    step3Icon = '<span class="material-symbols-outlined" style="font-size:14px;">close</span>';
-    step3Detail = t('statusRejected');
-  }
-
-  // Stage 4: Fulfillment / Delivery
-  let step4Class = 'pending';
-  let step4Icon = '4';
-  let step4Detail = AppState.lang === 'kh' ? 'រង់ចាំការអនុម័ត' : 'Awaiting Approval';
-  if (req.status === 'completed') {
-    step4Class = 'completed';
-    step4Icon = '<span class="material-symbols-outlined" style="font-size:14px;">done_all</span>';
-    step4Detail = t('statusCompleted');
+    bpfStage1 = 'completed';
+    bpfStage2 = 'active';
+    bpfStage2Status = AppState.lang === 'kh' ? 'កំពុងត្រួតពិនិត្យជាក់ស្តែង' : 'Active Review';
+    bpfStage3 = 'pending';
+    bpfStage4 = 'pending';
   } else if (req.status === 'approved') {
-    step4Class = 'active';
-    step4Icon = '<span class="material-symbols-outlined" style="font-size:14px;">local_shipping</span>';
-    step4Detail = AppState.lang === 'kh' ? 'កំពុងរៀបចំបញ្ជាទិញ' : 'PO in progress';
+    bpfStage1 = 'completed';
+    bpfStage2 = 'completed';
+    bpfStage2Status = AppState.lang === 'kh' ? 'បានពិនិត្យ ✓' : 'Reviewed ✓';
+    bpfStage3 = 'completed';
+    bpfStage3Status = AppState.lang === 'kh' ? 'បានអនុម័ត ✓' : 'Approved ✓';
+    bpfStage4 = 'active';
+    bpfStage4Status = AppState.lang === 'kh' ? 'កំពុងដំណើរការបញ្ជាទិញ' : 'PO Processing';
   } else if (req.status === 'rejected') {
-    step4Class = 'pending';
-    step4Icon = '<span class="material-symbols-outlined" style="font-size:14px;">close</span>';
-    step4Detail = AppState.lang === 'kh' ? 'បានផ្អាកការបញ្ជាទិញ' : 'Order stopped';
-  }
-
-  // Stepper progress line width and color
-  let progressWidth = '25%';
-  let progressColor = 'var(--success)';
-  if (req.status === 'new') {
-    progressWidth = '25%';
-    progressColor = '#f59e0b';
-  } else if (req.status === 'under_review') {
-    progressWidth = '45%';
-    progressColor = '#f59e0b';
-  } else if (req.status === 'rejected') {
-    progressWidth = '75%';
-    progressColor = 'var(--danger)';
-  } else if (req.status === 'approved') {
-    progressWidth = '75%';
-    progressColor = 'var(--success)';
+    bpfStage1 = 'completed';
+    bpfStage2 = 'completed';
+    bpfStage2Status = AppState.lang === 'kh' ? 'បានពិនិត្យ' : 'Reviewed';
+    bpfStage3 = 'declined';
+    bpfStage3Status = AppState.lang === 'kh' ? 'បានបដិសេធ ✕' : 'Declined ✕';
+    bpfStage4 = 'pending';
+    bpfStage4Status = AppState.lang === 'kh' ? 'ផ្អាកបញ្ជាទិញ' : 'Halted';
   } else if (req.status === 'completed') {
-    progressWidth = '100%';
-    progressColor = '#8b5cf6';
+    bpfStage1 = 'completed';
+    bpfStage2 = 'completed';
+    bpfStage2Status = AppState.lang === 'kh' ? 'បានពិនិត្យ ✓' : 'Reviewed ✓';
+    bpfStage3 = 'completed';
+    bpfStage3Status = AppState.lang === 'kh' ? 'បានអនុម័ត ✓' : 'Approved ✓';
+    bpfStage4 = 'completed';
+    bpfStage4Status = AppState.lang === 'kh' ? 'បានប្រគល់ទំនិញ ★' : 'Delivered ★';
   }
+
+  const bpfStage1Title = t('stageBpf1') || '1. Draft & Submit';
+  const stage2Title = t('stageBpf2') || '2. Management Review';
+  const stage3Title = t('stageBpf3') || '3. Approval Decision';
+  const stage4Title = t('stageBpf4') || '4. Sourcing & Delivery';
 
   // Management Feedback / Remarks Callout Box
   let feedbackBoxHtml = '';
@@ -3243,7 +3286,7 @@ function buildRequesterCardHtml(req) {
             "${req.remarks || 'No detailed reason provided.'}"
           </div>
         </div>
-        <button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
+        <button type="button" class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
           <span class="material-symbols-outlined" style="font-size:15px;">replay</span>
           <span>${t('btnResubmitModify')}</span>
         </button>
@@ -3267,7 +3310,7 @@ function buildRequesterCardHtml(req) {
             </div>
           ` : ''}
         </div>
-        <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" style="white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
+        <button type="button" class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" style="white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
           <span class="material-symbols-outlined" style="font-size:15px;">print</span>
           <span>${t('actionPrint')}</span>
         </button>
@@ -3352,43 +3395,24 @@ function buildRequesterCardHtml(req) {
 
       <!-- Body -->
       <div class="req-card-body">
-        <!-- 4-Stage Progress Stepper -->
-        <div class="workflow-stepper-box">
-          <div class="stepper-header-title">
-            <span>⚡</span>
-            <span>${t('approvalStage')} (Management Situation Tracker)</span>
-          </div>
-          <div class="stepper">
-            <div class="stepper-line">
-              <div class="stepper-line-progress" style="width: ${progressWidth}; background: ${progressColor};"></div>
+        <!-- Dynamics 365 Business Process Flow (BPF) Chevron Bar matching New Procurement Requisition Form -->
+        <div class="d365-bpf-container mb-3" style="background:#fcfcfc; padding:6px 10px; margin-bottom:14px; border:1px solid #e2e8f0; border-radius:4px;">
+          <div class="d365-bpf-bar">
+            <div class="d365-bpf-stage ${bpfStage1}">
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:15px; margin-right:4px;">edit_document</span> ${bpfStage1Title}</span>
+              <span class="d365-bpf-stage-status">${bpfStage1Status}</span>
             </div>
-
-            <!-- Step 1 -->
-            <div class="stepper-step ${step1Class}">
-              <div class="step-circle">${step1Icon}</div>
-              <div class="step-name">${t('stageSubmitted')}</div>
-              <div class="step-detail">${step1Detail}</div>
+            <div class="d365-bpf-stage ${bpfStage2}">
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:15px; margin-right:4px;">rate_review</span> ${stage2Title}</span>
+              <span class="d365-bpf-stage-status">${bpfStage2Status}</span>
             </div>
-
-            <!-- Step 2 -->
-            <div class="stepper-step ${step2Class}">
-              <div class="step-circle">${step2Icon}</div>
-              <div class="step-name">${t('stageReview')}</div>
-              <div class="step-detail">${step2Detail}</div>
+            <div class="d365-bpf-stage ${bpfStage3}">
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:15px; margin-right:4px;">gavel</span> ${stage3Title}</span>
+              <span class="d365-bpf-stage-status">${bpfStage3Status}</span>
             </div>
-
-            <!-- Step 3 -->
-            <div class="stepper-step ${step3Class}">
-              <div class="step-circle">${step3Icon}</div>
-              <div class="step-name">${t('stageDecision')}</div>
-              <div class="step-detail">${step3Detail}</div>
-            </div>
-
-            <!-- Step 4 -->
-            <div class="stepper-step ${step4Class}">
-              <div class="step-circle">${step4Icon}</div>
-              <div class="step-name">${t('stageDelivery')}</div>
-              <div class="step-detail">${step4Detail}</div>
+            <div class="d365-bpf-stage ${bpfStage4}">
+              <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:15px; margin-right:4px;">local_shipping</span> ${stage4Title}</span>
+              <span class="d365-bpf-stage-status">${bpfStage4Status}</span>
             </div>
           </div>
         </div>
@@ -3443,22 +3467,22 @@ function buildRequesterCardHtml(req) {
             ` : ''}
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <button class="btn btn-sm btn-outline d-inline-flex align-items-center gap-1" onclick="openRequisitionDetail('${req.id}')">
+            <button type="button" class="btn btn-sm btn-outline d-inline-flex align-items-center gap-1" onclick="openRequisitionDetail('${req.id}')">
               <span class="material-symbols-outlined" style="font-size:15px;">visibility</span>
               <span>${t('actionView')}</span>
             </button>
             ${req.status === 'new' 
-              ? `<button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" onclick="openEditRequisition('${req.id}')" title="${t('actionEdit')}">
+              ? `<button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" onclick="openEditRequisition('${req.id}')" title="${t('actionEdit')}">
                    <span class="material-symbols-outlined" style="font-size:15px;">edit</span>
                    <span>${t('actionEdit')}</span>
                  </button>`
-              : `<button class="btn btn-sm btn-outline-secondary disabled d-inline-flex align-items-center gap-1" disabled style="opacity:0.55; cursor:not-allowed;" title="${t('editLockedTooltip')}">
+              : `<button type="button" class="btn btn-sm btn-outline-secondary disabled d-inline-flex align-items-center gap-1" disabled style="opacity:0.55; cursor:not-allowed;" title="${t('editLockedTooltip')}">
                    <span class="material-symbols-outlined" style="font-size:14px;">lock</span>
                    <span>${t('actionEditLocked')}</span>
                  </button>`
             }
-            <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}"><span class="material-symbols-outlined" style="font-size:15px;">print</span></button>
-            ${req.status === 'rejected' ? `<button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; display:inline-flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:14px;">replay</span> <span>${t('btnResubmitModify')}</span></button>` : ''}
+            <button type="button" class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}"><span class="material-symbols-outlined" style="font-size:15px;">print</span></button>
+            ${req.status === 'rejected' ? `<button type="button" class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; display:inline-flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:14px;">replay</span> <span>${t('btnResubmitModify')}</span></button>` : ''}
           </div>
         </div>
       </div>
