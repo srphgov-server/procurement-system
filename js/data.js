@@ -17,7 +17,23 @@ const DEFAULT_DEPARTMENTS = [
   { id: 'Logistics', code: 'DEPT-LOG', nameEn: 'Logistics & Warehouse', nameKh: 'ភស្តុភារ & ឃ្លាំងស្តុក', desc: 'Supply chain, freight, inventory distribution', status: 'active' },
   { id: 'Marketing', code: 'DEPT-MKT', nameEn: 'Marketing & Sales', nameKh: 'ទីផ្សារ & ការលក់', desc: 'Advertising, exhibitions, branding, customer acquisition', status: 'active' },
   { id: 'Admin', code: 'DEPT-ADM', nameEn: 'Administration', nameKh: 'រដ្ឋបាលទូទៅ', desc: 'General corporate affairs and legal documentation', status: 'active' },
-  { id: 'Procurement', code: 'DEPT-PRO', nameEn: 'Procurement Dept', nameKh: 'ផ្នែកលទ្ធកម្ម', desc: 'Strategic sourcing, purchasing, supplier contracting', status: 'active' }
+  { id: 'Procurement', code: 'DEPT-PRO', nameEn: 'Procurement Dept', nameKh: 'ផ្នែកលទ្ធកម្ម', desc: 'Strategic sourcing, purchasing, supplier contracting', status: 'active' },
+
+  // Hospital Clinical & Operational Departments (Siem Reap Referral Hospital)
+  { id: 'MICU', code: 'DEPT-MICU', nameEn: 'Medical Intensive Care Unit', nameKh: 'ផ្នែកប្រពោធនកម្មជំងឺទូទៅ', desc: 'Medical Intensive Care and resuscitation services / ផ្នែកប្រពោធនកម្មជំងឺទូទៅ', status: 'active' },
+  { id: 'CSSD', code: 'DEPT-CSSD', nameEn: 'Central Sterilization Supply Department', nameKh: 'ផ្នែកមជ្ឈមណ្ឌលរំងាប់មេរោគរួម', desc: 'Central Sterilization Supply and Medical Disinfection / មជ្ឈមណ្ឌលរំងាប់មេរោគរួម', status: 'active' },
+  { id: 'Medical-Imagery', code: 'DEPT-IMG', nameEn: 'Medical Imagery', nameKh: 'ផ្នែកអេកូសាស្ត្រ', desc: 'Medical Imagery, Ultrasound, and Diagnostic Imaging / ផ្នែកអេកូសាស្ត្រ', status: 'active' },
+  { id: 'Gynecology', code: 'DEPT-GYN', nameEn: 'Gynecology', nameKh: 'ផ្នែករោគស្ត្រី', desc: 'Gynecology and Women Health Clinical Services / ផ្នែករោគស្ត្រី', status: 'active' },
+  { id: 'Abdominal-Thoracic-Surgery', code: 'DEPT-ATS', nameEn: 'Abdominal and Thoracic Surgery', nameKh: 'ផ្នែកសល្យសាស្ត្ររវីរង្គពោះ និងទ្រូង', desc: 'Abdominal, Visceral, and Thoracic Surgery / ផ្នែកសល្យសាស្ត្ររវីរង្គពោះ និងទ្រូង', status: 'active' },
+  { id: 'Workshop', code: 'DEPT-WKS', nameEn: 'Workshop', nameKh: 'រោងជាងជួសជុលឧបករណ៍ពេទ្យ', desc: 'Biomedical Equipment Repair and Maintenance / រោងជាងជួសជុលឧបករណ៍ពេទ្យ', status: 'active' },
+  { id: 'General-OPD', code: 'DEPT-OPD', nameEn: 'General OPD Department', nameKh: 'ផ្នែកពិគ្រោះជំងឺក្រៅ', desc: 'General Outpatient Consultations / ផ្នែកពិគ្រោះជំងឺក្រៅ', status: 'active' },
+  { id: 'Diabetic-Hypertension', code: 'DEPT-DHT', nameEn: 'Diabetic and Hypertension', nameKh: 'ផ្នែកជំងឺទឹកនោមផ្អែម និងលើសឈាម', desc: 'Diabetic and Hypertension Chronic Care / ផ្នែកជំងឺទឹកនោមផ្អែម និងលើសឈាម', status: 'active' },
+  { id: 'Ophthalmology', code: 'DEPT-OPH', nameEn: 'Ophthalmology', nameKh: 'ផ្នែកចក្ខុរោគ', desc: 'Eye Care, Screening, and Ophthalmology / ផ្នែកចក្ខុរោគ', status: 'active' },
+  { id: 'Pharmacy', code: 'DEPT-PHARM', nameEn: 'Pharmacy', nameKh: 'ផ្នែកឱសថស្ថាន', desc: 'Pharmaceutical Services and Dispensary / ផ្នែកឱសថស្ថាន', status: 'active' },
+  { id: 'Cardiology-Center', code: 'DEPT-CARD', nameEn: 'Cardiology Center', nameKh: 'ផ្នែកមជ្ឈមណ្ឌលបេះដូង', desc: 'Cardiology and Cardiovascular Center / ផ្នែកមជ្ឈមណ្ឌលបេះដូង', status: 'active' },
+  { id: 'Internal-Medicine-A', code: 'DEPT-IMA', nameEn: 'Internal Medicine A', nameKh: 'ផ្នែកជំងឺទូទៅ (ក)', desc: 'General Internal Medicine Ward A / ផ្នែកជំងឺទូទៅ (ក)', status: 'active' },
+  { id: 'Trauma-Orthopedic', code: 'DEPT-ORT', nameEn: 'Trauma and Orthopedic', nameKh: 'ផ្នែកសល្យសាស្ត្រឆ្អឹង-សន្លាក់', desc: 'Trauma, Bone, and Orthopedic Surgery / ផ្នែកសល្យសាស្ត្រឆ្អឹង-សន្លាក់', status: 'active' },
+  { id: 'Neurosurgery', code: 'DEPT-NSG', nameEn: 'Neurosurgery', nameKh: 'ផ្នែកសល្យសាស្ត្រប្រព័ន្ធប្រសាទ', desc: 'Brain, Spine, and Neurosurgical Care / ផ្នែកសល្យសាស្ត្រប្រព័ន្ធប្រសាទ', status: 'active' }
 ];
 
 const DEFAULT_PRIORITIES = [
@@ -303,15 +319,31 @@ const AppData = {
 
   getDepartments() {
     const raw = localStorage.getItem(STORAGE_KEYS.DEPARTMENTS);
+    let list;
     if (!raw) {
       this.saveDepartments(DEFAULT_DEPARTMENTS);
       return JSON.parse(JSON.stringify(DEFAULT_DEPARTMENTS));
     }
     try {
-      return JSON.parse(raw);
+      list = JSON.parse(raw);
     } catch (e) {
-      return JSON.parse(JSON.stringify(DEFAULT_DEPARTMENTS));
+      list = JSON.parse(JSON.stringify(DEFAULT_DEPARTMENTS));
     }
+
+    // Auto-sync missing default departments (including hospital departments)
+    let modified = false;
+    DEFAULT_DEPARTMENTS.forEach(defDept => {
+      const exists = list.some(d => d.id === defDept.id || d.code === defDept.code || (d.nameKh && d.nameKh === defDept.nameKh));
+      if (!exists) {
+        list.push(JSON.parse(JSON.stringify(defDept)));
+        modified = true;
+      }
+    });
+
+    if (modified) {
+      this.saveDepartments(list);
+    }
+    return list;
   },
 
   saveDepartments(data) {
