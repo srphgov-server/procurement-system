@@ -173,7 +173,16 @@
           <span class="d365-nav-text" data-i18n="navRequesterDashboard">Requester Dashboard</span>
         </a>
 
-        <!-- Group 2: Procurement & Sourcing -->
+        <!-- Group 2: Management & Approvals -->
+        <div class="d365-nav-group-header">TEAM MANAGEMENT</div>
+
+        <a href="#" class="d365-nav-link nav-item" data-nav-target="approved-list" id="navApprovedListItem">
+          <span class="d365-nav-icon material-symbols-outlined">fact_check</span>
+          <span class="d365-nav-text" data-i18n="navApprovedList">Approved Allocations</span>
+          <span class="badge rounded-pill bg-success ms-auto" id="sitemapApprovedBadge" style="font-size:10px; padding:2px 7px;">0</span>
+        </a>
+
+        <!-- Group 3: Procurement & Sourcing -->
         <div class="d365-nav-group-header">PROCUREMENT</div>
 
         <a href="#" class="d365-nav-link nav-item" data-nav-target="new-request">
@@ -821,6 +830,121 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           View 8: Team Management - Approved Requisitions & Allocations List
+           ===================================================================== -->
+      <section id="view-approved-list" class="tab-view" style="display:none;">
+        <div class="d365-view-header">
+          <div class="d365-view-title">
+            <h2 data-i18n="approvedListTitle">Team Management: Approved Allocations</h2>
+            <p data-i18n="approvedListSubtitle">Management verified procurement requisitions with item-level approved quantities and budget commitments</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline" id="approvedExportBtn" onclick="exportApprovedToExcel()">
+              <span class="material-symbols-outlined" style="font-size:16px;">table_view</span>
+              <span data-i18n="exportApprovedBtn">Export Approved Orders</span>
+            </button>
+            <button class="btn btn-primary" onclick="switchTab('dashboard')">
+              <span class="material-symbols-outlined" style="font-size:16px;">list_alt</span>
+              <span data-i18n="allRequisitionsBtn">All Requisitions</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Metrics Ribbon for Approved Orders -->
+        <div class="row g-3 mb-4" id="approvedKpisContainer">
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #107c41 !important;">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-secondary small fw-semibold" data-i18n="kpiApprovedOrders">Approved Orders</span>
+                <span class="material-symbols-outlined text-success" style="font-size:22px;">verified</span>
+              </div>
+              <h3 class="fw-bold mb-0 text-success" id="kpiApprovedOrdersCount">0</h3>
+              <small class="text-muted" id="kpiApprovedOrdersSubtitle">Active approved orders</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #0078d4 !important;">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-secondary small fw-semibold" data-i18n="kpiApprovedSpend">Approved Commitment</span>
+                <span class="material-symbols-outlined text-primary" style="font-size:22px;">payments</span>
+              </div>
+              <h3 class="fw-bold mb-0 text-primary" id="kpiApprovedTotalSpend">$0.00</h3>
+              <small class="text-muted" id="kpiApprovedSavedDiff">Allocated budget</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #5c2d91 !important;">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-secondary small fw-semibold" data-i18n="kpiAllocatedItems">Allocated Line Items</span>
+                <span class="material-symbols-outlined" style="color:#5c2d91; font-size:22px;">inventory_2</span>
+              </div>
+              <h3 class="fw-bold mb-0" style="color:#5c2d91;" id="kpiAllocatedItemsCount">0</h3>
+              <small class="text-muted" id="kpiAllocatedItemsSubtitle">Individual items allocated</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 h-100" style="border-left: 4px solid #d83b01 !important;">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-secondary small fw-semibold" data-i18n="kpiFullApprovalRate">Full Approval Rate</span>
+                <span class="material-symbols-outlined text-warning" style="font-size:22px;">pie_chart</span>
+              </div>
+              <h3 class="fw-bold mb-0 text-warning" id="kpiFullApprovalRatePercent">0%</h3>
+              <small class="text-muted" id="kpiFullApprovalRateSubtitle">100% full allocations</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="d365-grid-toolbar mb-3 p-3 bg-white rounded shadow-sm border">
+          <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light border-end-0"><span class="material-symbols-outlined" style="font-size:16px;">search</span></span>
+                <input type="text" id="approvedSearchInput" class="form-control border-start-0" placeholder="Search approved ID, department, requester...">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select id="approvedFilterDept" class="form-select form-select-sm">
+                <option value="all">All Departments</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select id="approvedFilterType" class="form-select form-select-sm">
+                <option value="all">All Allocations (Full & Partial)</option>
+                <option value="full">100% Full Approval Only</option>
+                <option value="partial">Limited / Partial Allocations Only</option>
+              </select>
+            </div>
+            <div class="col-md-2 text-end">
+              <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetApprovedFilters()">Clear Filters</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Grid -->
+        <div class="data-table-wrap shadow-sm rounded border bg-white">
+          <table class="data-table table mb-0">
+            <thead>
+              <tr>
+                <th style="width:110px;">Req ID</th>
+                <th>Department</th>
+                <th>Requester</th>
+                <th style="width:110px;">Priority</th>
+                <th>Approval Type</th>
+                <th>Item Allocations (Approved / Req)</th>
+                <th style="text-align:right;">Approved Total</th>
+                <th>Approved Date & By</th>
+                <th style="text-align:center; width:130px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="approvedTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
         </div>
       </section>
 

@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initKPIListeners();
   initFilterListeners();
   initRequesterDashboardListeners();
+  initApprovedListListeners();
   initRequestForm();
   renderAll();
 });
@@ -187,6 +188,7 @@ function switchTab(tab) {
     const tabMap = {
       'dashboard': t('requisitionList') || 'Requisitions',
       'requester-dashboard': t('requesterDashboardTitle') || 'Requester Portal',
+      'approved-list': t('approvedListTitle') || 'Approved Allocations',
       'new-request': t('formTitle') || 'New Requisition',
       'departments': t('deptManagementTitle') || 'Requesting Departments',
       'priorities': t('prioManagementTitle') || 'Priority Levels',
@@ -218,6 +220,16 @@ window.toggleFastTab = function(headerEl) {
   }
 };
 
+function updateSitemapBadges() {
+  const requisitions = AppData.getRequisitions();
+  const approvedCount = requisitions.filter(r => r.status === 'approved' || r.status === 'completed').length;
+  const badge = document.getElementById('sitemapApprovedBadge');
+  if (badge) {
+    badge.textContent = approvedCount;
+    badge.style.display = approvedCount > 0 ? 'inline-block' : 'none';
+  }
+}
+
 function renderAll() {
   updateLanguageUI();
   updateRoleVisibility();
@@ -225,6 +237,7 @@ function renderAll() {
   populateDepartmentSelect();
   renderKPIs();
   renderPriorityPills();
+  updateSitemapBadges();
   renderCurrentTabView();
 }
 
@@ -252,6 +265,9 @@ function renderCurrentTabView() {
       break;
     case 'requester-dashboard':
       renderRequesterDashboard();
+      break;
+    case 'approved-list':
+      renderApprovedListView();
       break;
     case 'departments':
       renderDepartmentsTable();
@@ -1093,7 +1109,7 @@ window.openRequisitionDetail = function(reqId) {
   const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
   const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
 
-  // Build items table
+  // Build items table (Requested Items Breakdown)
   const itemsHtml = req.items.map((item, idx) => {
     const cat = AppData.getCategories().find(c => c.id === item.categoryId);
     const catName = cat ? (AppState.lang === 'kh' ? cat.nameKh : cat.nameEn) : item.categoryId;
@@ -1111,6 +1127,236 @@ window.openRequisitionDetail = function(reqId) {
       </tr>
     `;
   }).join('');
+
+  // Build Approved Allocation Breakdown Section (Bottom of Requested Items Breakdown)
+  let approvedSectionHtml = '';
+  const isApprovedOrCompleted = req.status === 'approved' || req.status === 'completed';
+  const isPendingReview = req.status === 'new' || req.status === 'under_review';
+  const canManageApproval = (AppState.role === 'management' || AppState.role === 'admin');
+
+  if (canManageApproval && isPendingReview) {
+    // Interactive Management Allocation Form
+    const rowsHtml = req.items.map((item, idx) => {
+      const initApprovedQty = item.approvedQty !== undefined ? item.approvedQty : item.qty;
+      const initApprovedSubtotal = Number((initApprovedQty * item.unitPrice).toFixed(2));
+      return `
+        <tr class="approved-item-row" data-index="${idx}" data-unit-price="${item.unitPrice}" data-max-qty="${item.qty}">
+          <td style="font-weight:700; width:40px;">#${idx + 1}</td>
+          <td>
+            <div style="font-weight:700; color:var(--d365-text-primary);">${item.itemName}</div>
+            <div style="font-size:12px; color:var(--text-light);">${item.spec || '-'}</div>
+          </td>
+          <td style="width:125px;">
+            <span class="badge" style="background:#f1f5f9; font-size:12px; color:#334155; font-weight:600;">
+              ${item.qty} ${item.unit}
+            </span>
+          </td>
+          <td style="width:160px;">
+            <div class="d-flex align-items-center gap-1">
+              <input type="number" 
+                     id="approvedQtyInput_${idx}" 
+                     class="form-control form-control-sm text-center fw-bold approved-qty-field" 
+                     style="width:85px; border-color:#107c41; font-size:13px;"
+                     min="0" 
+                     max="${item.qty}" 
+                     step="1"
+                     value="${initApprovedQty}" 
+                     oninput="recalcApprovalSubtotals('${req.id}')" />
+              <span class="small text-muted">${item.unit}</span>
+            </div>
+            <small class="text-muted" style="font-size:10.5px;">Max: ${item.qty} ${item.unit}</small>
+          </td>
+          <td style="width:110px; font-weight:600;">${formatCurrency(item.unitPrice)}</td>
+          <td style="width:130px; text-align:right; font-weight:700; color:#107c41;" id="approvedSubtotalSpan_${idx}">
+            ${formatCurrency(initApprovedSubtotal)}
+          </td>
+          <td style="width:140px; text-align:center;" id="allocationStatusBadge_${idx}">
+            ${initApprovedQty === item.qty 
+              ? `<span class="badge" style="background:#dff6dd; color:#107c41; border:1px solid #92c353;">100% Full</span>`
+              : (initApprovedQty > 0 
+                ? `<span class="badge" style="background:#fed9cc; color:#d83b01; border:1px solid #ea6100;">Partial (-${item.qty - initApprovedQty})</span>`
+                : `<span class="badge" style="background:#fde7e9; color:#a80000; border:1px solid #d13438;">0 Excluded</span>`)}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const currentApprovedTotal = (req.items || []).reduce((acc, itm) => {
+      const q = itm.approvedQty !== undefined ? itm.approvedQty : itm.qty;
+      return acc + (q * itm.unitPrice);
+    }, 0);
+    const variance = currentApprovedTotal - req.totalAmount;
+
+    approvedSectionHtml = `
+      <div class="card mb-4 border" style="border-color:#107c41 !important; background:#ffffff; box-shadow:0 2px 8px rgba(16,124,65,0.08);">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3" style="border-bottom:1px solid #c7e0f4;">
+          <div class="d-flex align-items-center gap-1">
+            <span class="material-symbols-outlined" style="font-size:19px; color:#107c41; vertical-align:middle;">fact_check</span>
+            <strong style="color:#107c41; font-size:14px;">${t('sectionApprovedBreakdown')}</strong>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-success" onclick="setAllApprovedQty('${req.id}', 1)">
+              <span class="material-symbols-outlined" style="font-size:14px; margin-right:2px;">done_all</span> ${t('btnSetAll100')}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllApprovedQty('${req.id}', 0)">
+              <span class="material-symbols-outlined" style="font-size:14px; margin-right:2px;">clear_all</span> ${t('btnClearAll0')}
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-3">
+          <p class="text-secondary small mb-3">
+            <span class="material-symbols-outlined text-success" style="font-size:15px; vertical-align:middle; margin-right:3px;">info</span>
+            ${t('approvedBreakdownDesc')}
+          </p>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th>${t('colItemSelect')}</th>
+                  <th style="width:125px;">${t('colQty')} (Req)</th>
+                  <th style="width:160px; color:#107c41;">${t('colApprovedQty')}</th>
+                  <th style="width:110px;">${t('colUnitPrice')}</th>
+                  <th style="text-align:right; width:130px; color:#107c41;">${t('colApprovedSubtotal')}</th>
+                  <th style="text-align:center; width:140px;">${t('colAllocationStatus')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+              <tfoot class="table-light">
+                <tr style="font-weight:700;">
+                  <td colspan="4" class="text-end text-secondary small">${t('totalRequestedBudget')}: <strong>${formatCurrency(req.totalAmount)}</strong></td>
+                  <td class="text-end" style="color:#107c41;">${t('totalApprovedBudget')}:</td>
+                  <td class="text-end" style="font-size:15px; color:#107c41;" id="approvalModalApprovedTotal">${formatCurrency(currentApprovedTotal)}</td>
+                  <td class="text-center" id="approvalModalVariance">
+                    <span class="badge ${variance >= 0 ? 'bg-success' : 'bg-warning text-dark'}" style="font-size:11px;">
+                      ${variance >= 0 ? 'Match (100%)' : formatCurrency(variance)}
+                    </span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Allocation Rationale & Submit Button -->
+          <div class="mt-3 pt-3 border-top d-flex flex-column flex-md-row gap-3 justify-content-between align-items-md-center">
+            <div class="flex-grow-1">
+              <label class="form-label small fw-bold text-secondary mb-1" for="approvalRationaleInput">
+                ${t('mgmtAllocationNotes')}
+              </label>
+              <input type="text" id="approvalRationaleInput" class="form-control form-control-sm" 
+                     placeholder="${t('mgmtAllocationPlaceholder')}" 
+                     value="${req.remarks || ''}" />
+            </div>
+            <div class="text-end align-self-md-end">
+              <button type="button" class="btn btn-success d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm" onclick="submitManagementApproval('${req.id}')">
+                <span class="material-symbols-outlined" style="font-size:18px;">task_alt</span>
+                <span class="fw-bold">${t('btnSubmitApproval')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (isApprovedOrCompleted) {
+    // Read-only Approved Allocation Breakdown
+    const rowsHtml = req.items.map((item, idx) => {
+      const appQty = item.approvedQty !== undefined ? item.approvedQty : item.qty;
+      const appSubtotal = item.approvedSubtotal !== undefined ? item.approvedSubtotal : item.subtotal;
+      const isFull = appQty === item.qty;
+      const isZero = appQty === 0;
+
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>
+            <div style="font-weight:700;">${item.itemName}</div>
+            <div style="font-size:12px; color:var(--text-light);">${item.spec || '-'}</div>
+          </td>
+          <td>${item.qty} ${item.unit}</td>
+          <td>
+            <strong style="color:#107c41; font-size:13.5px;">${appQty}</strong> <span class="text-muted small">${item.unit}</span>
+          </td>
+          <td>${formatCurrency(item.unitPrice)}</td>
+          <td style="text-align:right; font-weight:700; color:#107c41;">${formatCurrency(appSubtotal)}</td>
+          <td style="text-align:center;">
+            ${isFull 
+              ? `<span class="badge" style="background:#dff6dd; color:#107c41; border:1px solid #92c353;">100% Full</span>` 
+              : (isZero 
+                ? `<span class="badge" style="background:#fde7e9; color:#a80000; border:1px solid #d13438;">0 Excluded</span>` 
+                : `<span class="badge" style="background:#fed9cc; color:#d83b01; border:1px solid #ea6100;">Limited (-${item.qty - appQty})</span>`)}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const approvedTotal = req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount;
+    const diff = approvedTotal - req.totalAmount;
+
+    approvedSectionHtml = `
+      <div class="card mb-4 border" style="border-color:#107c41 !important; background:#ffffff;">
+        <div class="card-header d-flex justify-content-between align-items-center py-2 px-3" style="background:#dff6dd; border-bottom:1px solid #92c353;">
+          <div class="d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined text-success" style="font-size:20px;">verified</span>
+            <strong style="color:#107c41; font-size:14px;">${t('sectionApprovedBreakdown')}</strong>
+            <span class="badge ${req.approvalType === 'partial' ? 'bg-warning text-dark' : 'bg-success'} ms-1">
+              ${req.approvalType === 'partial' ? t('approvalTypePartial') : t('approvalTypeFull')}
+            </span>
+          </div>
+          <small class="text-secondary">
+            ${t('approvedByLabel')}: <strong>${req.approvedBy || 'Management / Admin'}</strong> (${req.approvedDate || req.requestDate})
+          </small>
+        </div>
+        <div class="card-body p-3">
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th>${t('colItemSelect')}</th>
+                  <th style="width:125px;">${t('colQty')} (Req)</th>
+                  <th style="width:140px; color:#107c41;">${t('colApprovedQty')}</th>
+                  <th style="width:110px;">${t('colUnitPrice')}</th>
+                  <th style="text-align:right; width:130px; color:#107c41;">${t('colApprovedSubtotal')}</th>
+                  <th style="text-align:center; width:140px;">${t('colAllocationStatus')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+              <tfoot class="table-light">
+                <tr style="font-weight:700;">
+                  <td colspan="4" class="text-end text-secondary small">${t('totalRequestedBudget')}: <strong>${formatCurrency(req.totalAmount)}</strong></td>
+                  <td class="text-end" style="color:#107c41;">${t('totalApprovedBudget')}:</td>
+                  <td class="text-end" style="font-size:16px; color:#107c41;">${formatCurrency(approvedTotal)}</td>
+                  <td class="text-center">
+                    <span class="badge ${diff === 0 ? 'bg-success' : 'bg-warning text-dark'}">
+                      ${diff === 0 ? '100% Matched' : formatCurrency(diff)}
+                    </span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          ${req.remarks ? `
+            <div class="mt-2 p-2 bg-light rounded border small">
+              <strong>${t('mgmtRemarksTitle')}:</strong> ${req.remarks}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  } else if (isPendingReview && AppState.role === 'requester') {
+    // Requester view awaiting management allocation
+    approvedSectionHtml = `
+      <div class="alert alert-info d-flex align-items-center gap-2 mb-4 py-2 px-3">
+        <span class="material-symbols-outlined text-primary" style="font-size:20px;">pending_actions</span>
+        <span class="small">${t('awaitingMgmtAllocation')}</span>
+      </div>
+    `;
+  }
 
   // Build history timeline
   const historyHtml = (req.history || []).map(h => {
@@ -1133,12 +1379,13 @@ window.openRequisitionDetail = function(reqId) {
     
     if (AppState.role === 'management') {
       actionButtons = `
-        <button class="btn btn-primary" onclick="updateReqStatus('${req.id}', 'under_review')">${t('btnConfirmReview')}</button>
+        <button class="btn btn-warning" onclick="updateReqStatus('${req.id}', 'under_review')">${t('btnConfirmReview')}</button>
+        <button class="btn btn-success" onclick="submitManagementApproval('${req.id}')">${t('btnConfirmApprove')}</button>
       `;
     } else if (AppState.role === 'admin') {
       actionButtons = `
         <button class="btn btn-warning" onclick="updateReqStatus('${req.id}', 'under_review')">${t('btnConfirmReview')}</button>
-        <button class="btn btn-success" onclick="updateReqStatus('${req.id}', 'approved')">${t('btnConfirmApprove')}</button>
+        <button class="btn btn-success" onclick="submitManagementApproval('${req.id}')">${t('btnConfirmApprove')}</button>
         <button class="btn btn-danger" onclick="updateReqStatus('${req.id}', 'rejected')">${t('btnConfirmReject')}</button>
         <button class="btn btn-outline" onclick="updateReqStatus('${req.id}', 'completed')">${t('btnConfirmComplete')}</button>
       `;
@@ -1263,7 +1510,7 @@ window.openRequisitionDetail = function(reqId) {
       </div>
     </div>
 
-    <!-- Items Table -->
+    <!-- Items Table (Requested Items Breakdown) -->
     <div style="margin-bottom:20px;">
       <h4 style="font-size:14px; font-weight:700; margin-bottom:8px;">${t('sectionItemsList')}</h4>
       <div class="data-table-wrap">
@@ -1291,6 +1538,9 @@ window.openRequisitionDetail = function(reqId) {
       </div>
     </div>
 
+    <!-- Approved List in the bottom of Requested Items Breakdown -->
+    ${approvedSectionHtml}
+
     <!-- Workflow Audit Timeline -->
     <div style="margin-bottom:20px;">
       <h4 style="font-size:14px; font-weight:700; margin-bottom:6px;">${t('sectionWorkflow')}</h4>
@@ -1306,13 +1556,141 @@ window.openRequisitionDetail = function(reqId) {
   modal.classList.add('open');
 };
 
+window.recalcApprovalSubtotals = function(reqId) {
+  const req = AppData.getRequisitions().find(r => r.id === reqId);
+  if (!req) return;
+
+  const rows = document.querySelectorAll('.approved-item-row');
+  let runningApprovedTotal = 0;
+
+  rows.forEach(row => {
+    const idx = parseInt(row.getAttribute('data-index'), 10);
+    const unitPrice = parseFloat(row.getAttribute('data-unit-price')) || 0;
+    const maxQty = parseFloat(row.getAttribute('data-max-qty')) || 0;
+    const input = document.getElementById(`approvedQtyInput_${idx}`);
+    if (!input) return;
+
+    let val = parseFloat(input.value);
+    if (isNaN(val) || val < 0) {
+      val = 0;
+    }
+    if (val > maxQty) {
+      val = maxQty;
+      input.value = maxQty;
+    }
+
+    const subtotal = Number((val * unitPrice).toFixed(2));
+    runningApprovedTotal += subtotal;
+
+    const span = document.getElementById(`approvedSubtotalSpan_${idx}`);
+    if (span) span.textContent = formatCurrency(subtotal);
+
+    const badge = document.getElementById(`allocationStatusBadge_${idx}`);
+    if (badge) {
+      if (val === maxQty) {
+        badge.innerHTML = `<span class="badge" style="background:#dff6dd; color:#107c41; border:1px solid #92c353;">100% Full</span>`;
+      } else if (val > 0) {
+        badge.innerHTML = `<span class="badge" style="background:#fed9cc; color:#d83b01; border:1px solid #ea6100;">Partial (-${maxQty - val})</span>`;
+      } else {
+        badge.innerHTML = `<span class="badge" style="background:#fde7e9; color:#a80000; border:1px solid #d13438;">0 Excluded</span>`;
+      }
+    }
+  });
+
+  const totalEl = document.getElementById('approvalModalApprovedTotal');
+  if (totalEl) totalEl.textContent = formatCurrency(runningApprovedTotal);
+
+  const varEl = document.getElementById('approvalModalVariance');
+  if (varEl) {
+    const diff = runningApprovedTotal - req.totalAmount;
+    if (Math.abs(diff) < 0.01) {
+      varEl.innerHTML = `<span class="badge bg-success" style="font-size:11px;">Match (100%)</span>`;
+    } else {
+      varEl.innerHTML = `<span class="badge bg-warning text-dark" style="font-size:11px;">${formatCurrency(diff)}</span>`;
+    }
+  }
+};
+
+window.setAllApprovedQty = function(reqId, factor) {
+  const rows = document.querySelectorAll('.approved-item-row');
+  rows.forEach(row => {
+    const idx = parseInt(row.getAttribute('data-index'), 10);
+    const maxQty = parseFloat(row.getAttribute('data-max-qty')) || 0;
+    const input = document.getElementById(`approvedQtyInput_${idx}`);
+    if (input) {
+      input.value = factor === 1 ? maxQty : 0;
+    }
+  });
+  recalcApprovalSubtotals(reqId);
+};
+
+window.submitManagementApproval = function(reqId) {
+  const requisitions = AppData.getRequisitions();
+  const req = requisitions.find(r => r.id === reqId);
+  if (!req) return;
+
+  const rows = document.querySelectorAll('.approved-item-row');
+  let newApprovedTotal = 0;
+  let anyReduced = false;
+
+  if (rows.length > 0) {
+    rows.forEach(row => {
+      const idx = parseInt(row.getAttribute('data-index'), 10);
+      const input = document.getElementById(`approvedQtyInput_${idx}`);
+      const maxQty = req.items[idx].qty;
+      let val = input ? parseFloat(input.value) : maxQty;
+      if (isNaN(val) || val < 0) val = 0;
+      if (val > maxQty) val = maxQty;
+
+      req.items[idx].approvedQty = val;
+      req.items[idx].approvedSubtotal = Number((val * req.items[idx].unitPrice).toFixed(2));
+      newApprovedTotal += req.items[idx].approvedSubtotal;
+
+      if (val < maxQty) anyReduced = true;
+    });
+  } else {
+    // If no row inputs were active, default to full
+    req.items.forEach(itm => {
+      if (itm.approvedQty === undefined) itm.approvedQty = itm.qty;
+      itm.approvedSubtotal = Number((itm.approvedQty * itm.unitPrice).toFixed(2));
+      newApprovedTotal += itm.approvedSubtotal;
+    });
+  }
+
+  req.approvedTotal = Number(newApprovedTotal.toFixed(2));
+  req.approvalType = (req.approvedTotal === req.totalAmount) ? 'full' : (req.approvedTotal > 0 ? 'partial' : 'zero');
+  req.status = 'approved';
+  req.approvedDate = new Date().toISOString().split('T')[0];
+  req.approvedBy = AppState.role === 'admin' ? 'Sokha Chan (Administrator)' : 'Vireak Vong (Management Reviewer)';
+
+  const rationaleInput = document.getElementById('approvalRationaleInput') || document.getElementById('actionRemarkInput');
+  const remarks = rationaleInput ? rationaleInput.value.trim() : '';
+  req.remarks = remarks || (anyReduced 
+    ? `Approved with quantity allocation adjustments (Total: ${formatCurrency(req.approvedTotal)}).` 
+    : `Approved 100% requested quantities (Total: ${formatCurrency(req.approvedTotal)}).`);
+
+  if (!req.history) req.history = [];
+  req.history.push({
+    action: anyReduced ? 'Approved (Adjusted)' : 'Approved (Full)',
+    byRole: AppState.role,
+    byUser: req.approvedBy,
+    timestamp: new Date().toLocaleString(),
+    comment: req.remarks
+  });
+
+  AppData.saveRequisitions(requisitions);
+  showToast(AppState.lang === 'kh' ? `សំណើ ${req.id} ត្រូវបានអនុម័តបរិមាណដោយជោគជ័យ!` : `Requisition ${req.id} approved with item allocations!`, 'success');
+  closeModal('requisitionDetailModal');
+  renderAll();
+};
+
 window.closeModal = function(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.remove('open');
 };
 
 window.updateReqStatus = function(reqId, newStatus) {
-  const remarkInput = document.getElementById('actionRemarkInput');
+  const remarkInput = document.getElementById('actionRemarkInput') || document.getElementById('approvalRationaleInput');
   const comment = remarkInput ? remarkInput.value.trim() : '';
 
   const requisitions = AppData.getRequisitions();
@@ -1343,6 +1721,251 @@ window.printRequisition = function(reqId) {
   setTimeout(() => {
     window.print();
   }, 300);
+};
+
+// =========================================================================
+// Team Management: Approved Allocations View
+// =========================================================================
+function populateApprovedFilterDropdowns() {
+  const deptSelect = document.getElementById('approvedFilterDept');
+  if (!deptSelect) return;
+  const currentVal = deptSelect.value;
+  const depts = AppData.getDepartments();
+  deptSelect.innerHTML = `<option value="all">${t('allDepartments')}</option>` +
+    depts.map(d => `<option value="${d.id}">${AppState.lang === 'kh' ? (d.nameKh || d.nameEn) : (d.nameEn || d.nameKh)}</option>`).join('');
+  if (currentVal) deptSelect.value = currentVal;
+}
+
+window.resetApprovedFilters = function() {
+  const searchInput = document.getElementById('approvedSearchInput');
+  const deptSelect = document.getElementById('approvedFilterDept');
+  const typeSelect = document.getElementById('approvedFilterType');
+  if (searchInput) searchInput.value = '';
+  if (deptSelect) deptSelect.value = 'all';
+  if (typeSelect) typeSelect.value = 'all';
+  renderApprovedListView();
+};
+
+function initApprovedListListeners() {
+  const searchInput = document.getElementById('approvedSearchInput');
+  const deptSelect = document.getElementById('approvedFilterDept');
+  const typeSelect = document.getElementById('approvedFilterType');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => renderApprovedListView());
+  }
+  if (deptSelect) {
+    deptSelect.addEventListener('change', () => renderApprovedListView());
+  }
+  if (typeSelect) {
+    typeSelect.addEventListener('change', () => renderApprovedListView());
+  }
+}
+
+window.renderApprovedListView = function() {
+  updateSitemapBadges();
+  populateApprovedFilterDropdowns();
+
+  const search = (document.getElementById('approvedSearchInput')?.value || '').toLowerCase().trim();
+  const deptFilter = document.getElementById('approvedFilterDept')?.value || 'all';
+  const typeFilter = document.getElementById('approvedFilterType')?.value || 'all';
+
+  const allReqs = AppData.getRequisitions();
+  let approvedList = allReqs.filter(r => r.status === 'approved' || r.status === 'completed');
+
+  // Calculate KPIs on all approved
+  const totalOrders = approvedList.length;
+  const totalApprovedSpend = approvedList.reduce((sum, r) => sum + (r.approvedTotal !== undefined ? r.approvedTotal : r.totalAmount), 0);
+  const totalOriginalSpend = approvedList.reduce((sum, r) => sum + r.totalAmount, 0);
+  const totalAllocatedItems = approvedList.reduce((sum, r) => {
+    return sum + (r.items || []).filter(itm => (itm.approvedQty !== undefined ? itm.approvedQty : itm.qty) > 0).length;
+  }, 0);
+  const fullApprovalCount = approvedList.filter(r => r.approvalType === 'full' || (!r.approvalType && (r.approvedTotal === undefined || r.approvedTotal === r.totalAmount))).length;
+  const fullApprovalPercent = totalOrders > 0 ? Math.round((fullApprovalCount / totalOrders) * 100) : 0;
+
+  // Update KPI tiles
+  const elOrders = document.getElementById('kpiApprovedOrdersCount');
+  if (elOrders) elOrders.textContent = totalOrders;
+  const elOrdersSub = document.getElementById('kpiApprovedOrdersSubtitle');
+  if (elOrdersSub) elOrdersSub.textContent = AppState.lang === 'kh' ? 'សំណើបានអនុម័តសកម្ម' : 'Active approved orders';
+
+  const elSpend = document.getElementById('kpiApprovedTotalSpend');
+  if (elSpend) elSpend.textContent = formatCurrency(totalApprovedSpend);
+  const elDiff = document.getElementById('kpiApprovedSavedDiff');
+  if (elDiff) {
+    const diff = totalApprovedSpend - totalOriginalSpend;
+    if (diff < 0) {
+      elDiff.textContent = AppState.lang === 'kh' ? `សន្សំបាន ${formatCurrency(Math.abs(diff))} ពីថវិកាស្នើ` : `Saved ${formatCurrency(Math.abs(diff))} from budget`;
+    } else {
+      elDiff.textContent = AppState.lang === 'kh' ? '១០០% ការប្តេជ្ញាថវិកា' : '100% budget commitment';
+    }
+  }
+
+  const elItems = document.getElementById('kpiAllocatedItemsCount');
+  if (elItems) elItems.textContent = totalAllocatedItems;
+  const elItemsSub = document.getElementById('kpiAllocatedItemsSubtitle');
+  if (elItemsSub) elItemsSub.textContent = AppState.lang === 'kh' ? 'មុខទំនិញត្រូវបានបែងចែក' : 'Individual items allocated';
+
+  const elRate = document.getElementById('kpiFullApprovalRatePercent');
+  if (elRate) elRate.textContent = `${fullApprovalPercent}%`;
+  const elRateSub = document.getElementById('kpiFullApprovalRateSubtitle');
+  if (elRateSub) elRateSub.textContent = AppState.lang === 'kh' ? `${fullApprovalCount} ក្នុងចំណោម ${totalOrders} អនុម័តពេញលេញ` : `${fullApprovalCount} of ${totalOrders} fully allocated`;
+
+  // Apply filters
+  if (deptFilter !== 'all') {
+    approvedList = approvedList.filter(r => r.department === deptFilter);
+  }
+  if (typeFilter === 'full') {
+    approvedList = approvedList.filter(r => r.approvalType === 'full' || (!r.approvalType && r.approvedTotal === r.totalAmount));
+  } else if (typeFilter === 'partial') {
+    approvedList = approvedList.filter(r => r.approvalType === 'partial' || (r.approvedTotal !== undefined && r.approvedTotal < r.totalAmount));
+  }
+
+  if (search) {
+    approvedList = approvedList.filter(r => {
+      const matchId = r.id.toLowerCase().includes(search);
+      const matchReq = (r.requesterName || '').toLowerCase().includes(search);
+      const matchDept = (r.department || '').toLowerCase().includes(search);
+      const matchPurp = (r.purpose || '').toLowerCase().includes(search);
+      return matchId || matchReq || matchDept || matchPurp;
+    });
+  }
+
+  const tbody = document.getElementById('approvedTableBody');
+  if (!tbody) return;
+
+  if (approvedList.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="text-center py-4 text-muted">
+          <span class="material-symbols-outlined" style="font-size:36px; color:#94a3b8; display:block; margin-bottom:8px;">fact_check</span>
+          ${t('noRecordsFound')}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = approvedList.map(req => {
+    const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
+    const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
+    const prioBadge = getPriorityBadge(req.priority);
+    const approvedTotal = req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount;
+    const isPartial = req.approvalType === 'partial' || approvedTotal < req.totalAmount;
+
+    // Items chips
+    const itemChips = (req.items || []).map(itm => {
+      const appQty = itm.approvedQty !== undefined ? itm.approvedQty : itm.qty;
+      const chipClass = appQty === itm.qty ? 'bg-light text-success border-success' : (appQty > 0 ? 'bg-light text-warning-emphasis border-warning' : 'bg-light text-danger border-danger');
+      return `<span class="badge border ${chipClass} me-1 mb-1" style="font-weight:500; font-size:11.5px;" title="${itm.itemName}">
+        ${itm.itemName.slice(0, 22)}${itm.itemName.length > 22 ? '...' : ''}: <strong>${appQty}/${itm.qty} ${itm.unit}</strong>
+      </span>`;
+    }).join('');
+
+    return `
+      <tr>
+        <td>
+          <a href="#" onclick="openRequisitionDetail('${req.id}'); return false;" class="fw-bold" style="font-family:monospace; color:var(--primary); font-size:13.5px;">
+            ${req.id}
+          </a>
+        </td>
+        <td>
+          <span class="badge" style="background:#e2e8f0; color:#334155; font-weight:600;">${deptName}</span>
+        </td>
+        <td>
+          <div class="fw-semibold">${req.requesterName}</div>
+          <small class="text-muted">${req.requesterEmail || ''}</small>
+        </td>
+        <td>${prioBadge}</td>
+        <td>
+          ${isPartial 
+            ? `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning">${t('approvalTypePartial')}</span>` 
+            : `<span class="badge bg-success-subtle text-success border border-success">${t('approvalTypeFull')}</span>`}
+        </td>
+        <td style="max-width:320px;">
+          <div class="d-flex flex-wrap">${itemChips}</div>
+        </td>
+        <td style="text-align:right;">
+          <div class="fw-bold text-success" style="font-size:14px;">${formatCurrency(approvedTotal)}</div>
+          ${isPartial ? `<div class="small text-muted text-decoration-line-through">${formatCurrency(req.totalAmount)}</div>` : ''}
+        </td>
+        <td>
+          <div class="small fw-semibold text-secondary">${req.approvedDate || req.requestDate}</div>
+          <div class="small text-muted">${req.approvedBy || 'Management Reviewer'}</div>
+        </td>
+        <td style="text-align:center;">
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-sm btn-outline-primary" onclick="openRequisitionDetail('${req.id}')" title="${t('actionView')}">
+              <span class="material-symbols-outlined" style="font-size:15px;">visibility</span>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}">
+              <span class="material-symbols-outlined" style="font-size:15px;">print</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.exportApprovedToExcel = function() {
+  const allReqs = AppData.getRequisitions();
+  const approvedList = allReqs.filter(r => r.status === 'approved' || r.status === 'completed');
+
+  if (approvedList.length === 0) {
+    showToast(t('noRecordsFound'), 'info');
+    return;
+  }
+
+  let csv = 'Requisition ID,Department,Requester Name,Email,Priority,Status,Approval Type,Request Date,Approved Date,Approved By,Item Name,Category,Requested Qty,Approved Qty,Unit,Unit Price,Approved Subtotal,Requested Total,Approved Total,Remarks\n';
+
+  approvedList.forEach(req => {
+    const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
+    const deptName = deptObj ? deptObj.nameEn : req.department;
+
+    (req.items || []).forEach(item => {
+      const cat = AppData.getCategories().find(c => c.id === item.categoryId);
+      const catName = cat ? cat.nameEn : item.categoryId;
+      const appQty = item.approvedQty !== undefined ? item.approvedQty : item.qty;
+      const appSubtotal = item.approvedSubtotal !== undefined ? item.approvedSubtotal : item.subtotal;
+      const appTotal = req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount;
+
+      const row = [
+        `"${req.id}"`,
+        `"${deptName}"`,
+        `"${req.requesterName}"`,
+        `"${req.requesterEmail || ''}"`,
+        `"${req.priority}"`,
+        `"${req.status}"`,
+        `"${req.approvalType || 'full'}"`,
+        `"${req.requestDate}"`,
+        `"${req.approvedDate || ''}"`,
+        `"${req.approvedBy || ''}"`,
+        `"${(item.itemName || '').replace(/"/g, '""')}"`,
+        `"${catName}"`,
+        item.qty,
+        appQty,
+        `"${item.unit}"`,
+        item.unitPrice,
+        appSubtotal,
+        req.totalAmount,
+        appTotal,
+        `"${(req.remarks || '').replace(/"/g, '""')}"`
+      ];
+      csv += row.join(',') + '\n';
+    });
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `SRPH_Approved_Allocations_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(AppState.lang === 'kh' ? 'បានទាញយកបញ្ជីអនុម័តជា CSV រួចរាល់!' : 'Approved orders exported to CSV successfully!', 'success');
 };
 
 // Master Data: Requesting Departments
@@ -2231,7 +2854,14 @@ function buildRequesterCardHtml(req) {
   const deptObj = AppData.getDepartments().find(d => d.id === req.department || d.code === req.department);
   const deptName = deptObj ? (AppState.lang === 'kh' ? (deptObj.nameKh || deptObj.nameEn) : (deptObj.nameEn || deptObj.nameKh)) : req.department;
   const priorityBadge = getPriorityBadge(req.priority);
-  const statusBadge = getStatusBadge(req.status);
+  const isApprovedOrDone = req.status === 'approved' || req.status === 'completed';
+  const isPartial = req.approvalType === 'partial' || (req.approvedTotal && req.approvedTotal < req.totalAmount);
+
+  // Status Badge with Partial Approval indication if adjusted
+  let statusBadge = getStatusBadge(req.status);
+  if (isApprovedOrDone && isPartial) {
+    statusBadge = `<span class="badge" style="background:#107c41; color:#fff; border:1px solid #0e6b37;">✓ ${t('statusApprovedAdjusted')}</span>`;
+  }
 
   // Stepper Stage Calculation
   // Stage 1: Submitted (always done)
@@ -2264,7 +2894,7 @@ function buildRequesterCardHtml(req) {
   if (req.status === 'approved' || req.status === 'completed') {
     step3Class = 'completed';
     step3Icon = '<span class="material-symbols-outlined" style="font-size:14px;">check</span>';
-    step3Detail = t('statusApproved');
+    step3Detail = isPartial ? t('statusApprovedAdjusted') : t('statusApproved');
   } else if (req.status === 'rejected') {
     step3Class = 'declined';
     step3Icon = '<span class="material-symbols-outlined" style="font-size:14px;">close</span>';
@@ -2335,11 +2965,17 @@ function buildRequesterCardHtml(req) {
         <div>
           <div class="mgmt-feedback-title">
             <span class="material-symbols-outlined" style="font-size:16px; color:#10b981; margin-right:4px; vertical-align:middle;">verified</span>
-            <span>${t('mgmtRemarksTitle')}: ${t('statusApproved')}</span>
+            <span>${t('mgmtRemarksTitle')}: ${isPartial ? t('statusApprovedAdjusted') : t('statusApproved')}</span>
           </div>
           <div class="mgmt-feedback-text">
             "${req.remarks || 'Approved by Management & Admin.'}"
           </div>
+          ${req.approvedTotal ? `
+            <div class="mt-1 small" style="color:#065f46; font-weight:600;">
+              <span>Approved Allocation: <strong>${formatCurrency(req.approvedTotal)}</strong></span>
+              ${isPartial ? `<span class="text-muted ms-1">(Requested: ${formatCurrency(req.totalAmount)}, Diff: -${formatCurrency(req.totalAmount - req.approvedTotal)})</span>` : ''}
+            </div>
+          ` : ''}
         </div>
         <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" style="white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
           <span class="material-symbols-outlined" style="font-size:15px;">print</span>
@@ -2363,8 +2999,13 @@ function buildRequesterCardHtml(req) {
     `;
   }
 
-  // Items table preview (up to 4 items)
+  // Items table preview with requested vs approved comparison
   const itemsRows = (req.items || []).map((itm, idx) => {
+    const isAllocated = itm.approvedQty !== undefined;
+    const appQty = isAllocated ? itm.approvedQty : itm.qty;
+    const appSubtotal = itm.approvedSubtotal !== undefined ? itm.approvedSubtotal : itm.subtotal;
+    const isReduced = isAllocated && itm.approvedQty < itm.qty;
+
     return `
       <tr>
         <td style="font-weight:600; width:35px;">#${idx + 1}</td>
@@ -2372,9 +3013,27 @@ function buildRequesterCardHtml(req) {
           <div style="font-weight:700;">${itm.itemName}</div>
           <div style="font-size:11.5px; color:var(--text-light);">${itm.spec || '-'}</div>
         </td>
-        <td><strong>${itm.qty}</strong> ${itm.unit}</td>
+        <td>
+          ${isApprovedOrDone ? `
+            <div>
+              <strong style="color:#107c41; font-size:13px;">${appQty}</strong> <span class="text-muted small">/ ${itm.qty} ${itm.unit}</span>
+              ${isReduced 
+                ? `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning ms-1" style="font-size:10px;">Adjusted (-${itm.qty - appQty})</span>` 
+                : `<span class="badge bg-success-subtle text-success border border-success ms-1" style="font-size:10px;">Full</span>`}
+            </div>
+          ` : `
+            <strong>${itm.qty}</strong> ${itm.unit}
+          `}
+        </td>
         <td>${formatCurrency(itm.unitPrice)}</td>
-        <td style="text-align:right; font-weight:700; color:var(--text-main);">${formatCurrency(itm.subtotal)}</td>
+        <td style="text-align:right; font-weight:700; color:var(--text-main);">
+          ${isApprovedOrDone ? `
+            <span style="color:#107c41;">${formatCurrency(appSubtotal)}</span>
+            ${isReduced ? `<div style="font-size:11px; text-decoration:line-through; color:var(--text-light);">${formatCurrency(itm.subtotal)}</div>` : ''}
+          ` : `
+            ${formatCurrency(itm.subtotal)}
+          `}
+        </td>
       </tr>
     `;
   }).join('');
@@ -2464,7 +3123,7 @@ function buildRequesterCardHtml(req) {
             <tr>
               <th>#</th>
               <th>${t('colItemSelect')}</th>
-              <th>${t('colQty')} & ${t('colUnit')}</th>
+              <th>${isApprovedOrDone ? t('thRequestedVsApproved') : `${t('colQty')} & ${t('colUnit')}`}</th>
               <th>${t('colUnitPrice')}</th>
               <th style="text-align:right;">${t('colLineTotal')}</th>
             </tr>
@@ -2482,9 +3141,16 @@ function buildRequesterCardHtml(req) {
           <span><strong>${req.requesterName}</strong> (${req.requesterEmail || ''})</span>
         </div>
         <div style="display:flex; align-items:center; gap:14px;">
-          <div class="req-total-badge">
-            <span style="font-size:12.5px; font-weight:600; color:var(--text-muted); margin-right:4px;">${t('grandTotal')}</span>
-            <span>${formatCurrency(req.totalAmount)}</span>
+          <div class="req-total-badge" style="${isApprovedOrDone && req.approvedTotal && req.approvedTotal !== req.totalAmount ? 'background:#dff6dd; border:1px solid #107c41; color:#107c41;' : ''}">
+            <span style="font-size:12px; font-weight:600; color:var(--text-muted); margin-right:4px;">
+              ${isApprovedOrDone && req.approvedTotal ? t('totalApprovedBudget') : t('grandTotal')}
+            </span>
+            <span style="font-weight:800; font-size:15px; color:${isApprovedOrDone ? '#107c41' : 'var(--text-main)'};">
+              ${formatCurrency(isApprovedOrDone && req.approvedTotal !== undefined ? req.approvedTotal : req.totalAmount)}
+            </span>
+            ${isApprovedOrDone && req.approvedTotal && req.approvedTotal !== req.totalAmount ? `
+              <span style="font-size:11.5px; text-decoration:line-through; opacity:0.75; margin-left:4px; color:#64748b;">${formatCurrency(req.totalAmount)}</span>
+            ` : ''}
           </div>
           <div style="display:flex; gap:8px;">
             <button class="btn btn-sm btn-outline" onclick="openRequisitionDetail('${req.id}')">${t('actionView')}</button>

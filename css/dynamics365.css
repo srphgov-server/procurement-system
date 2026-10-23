@@ -1490,3 +1490,32 @@ a:hover {
     border: none !important;
   }
 }
+
+/* ==========================================================================
+   Management Approved Allocation System
+   ========================================================================== */
+.approved-qty-field {
+  transition: all 0.15s ease-in-out;
+  border: 1.5px solid #107c41 !important;
+  background-color: #f7fee7;
+  color: #14532d;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.approved-qty-field:focus {
+  background-color: #ffffff;
+  border-color: #047857 !important;
+  box-shadow: 0 0 0 3px rgba(16, 124, 65, 0.2) !important;
+}
+
+.approved-item-row:hover {
+  background-color: #f0fdf4 !important;
+}
+
+#sitemapApprovedBadge {
+  background-color: #107c41 !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+

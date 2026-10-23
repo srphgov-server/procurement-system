@@ -152,16 +152,20 @@ const DEFAULT_REQUISITIONS = [
     priority: 'medium',
     purpose: 'Annual tech expo exhibition booth setup and client hospitality display.',
     items: [
-      { itemId: 'ITM-110', itemName: 'Roll-up Stand Banner (85x200cm)', categoryId: 'CAT-005', spec: 'High-res vinyl print with aluminum base', qty: 4, unit: 'Pcs', unitPrice: 35.00, subtotal: 140.00 },
-      { itemId: 'ITM-109', itemName: 'Arabica Coffee Beans 1kg Bag', categoryId: 'CAT-006', spec: 'Premium dark roast for client hospitality', qty: 6, unit: 'Pack', unitPrice: 18.00, subtotal: 108.00 }
+      { itemId: 'ITM-110', itemName: 'Roll-up Stand Banner (85x200cm)', categoryId: 'CAT-005', spec: 'High-res vinyl print with aluminum base', qty: 4, unit: 'Pcs', unitPrice: 35.00, subtotal: 140.00, approvedQty: 2, approvedSubtotal: 70.00 },
+      { itemId: 'ITM-109', itemName: 'Arabica Coffee Beans 1kg Bag', categoryId: 'CAT-006', spec: 'Premium dark roast for client hospitality', qty: 6, unit: 'Pack', unitPrice: 18.00, subtotal: 108.00, approvedQty: 6, approvedSubtotal: 108.00 }
     ],
     totalAmount: 248.00,
+    approvedTotal: 178.00,
+    approvedDate: '2026-10-16',
+    approvedBy: 'Sokha Chan (Administrator)',
+    approvalType: 'partial',
     status: 'approved',
-    remarks: 'Approved under Marketing Q4 Event Budget #MKT-2026.',
+    remarks: 'Approved with allocation adjustment: Limited banners to 2 units due to stock limitation; coffee beans fully approved.',
     history: [
       { action: 'Created', byRole: 'requester', byUser: 'Dara Pich', timestamp: '2026-10-15 08:45 AM', comment: 'Initial submission' },
       { action: 'Reviewed', byRole: 'management', byUser: 'Vireak Vong', timestamp: '2026-10-15 03:00 PM', comment: 'Recommended for approval' },
-      { action: 'Approved', byRole: 'admin', byUser: 'Sokha Chan', timestamp: '2026-10-16 11:15 AM', comment: 'Budget approved by Admin' }
+      { action: 'Approved', byRole: 'admin', byUser: 'Sokha Chan', timestamp: '2026-10-16 11:15 AM', comment: 'Budget approved with allocation adjustment: $178.00 approved' }
     ]
   },
   {
@@ -174,14 +178,18 @@ const DEFAULT_REQUISITIONS = [
     priority: 'low',
     purpose: 'Ergonomic posture improvement for operations desk staff.',
     items: [
-      { itemId: 'ITM-107', itemName: 'Ergonomic Mesh Office Chair', categoryId: 'CAT-003', spec: 'Lumbar support, 3D armrests', qty: 3, unit: 'Unit', unitPrice: 175.00, subtotal: 525.00 }
+      { itemId: 'ITM-107', itemName: 'Ergonomic Mesh Office Chair', categoryId: 'CAT-003', spec: 'Lumbar support, 3D armrests', qty: 3, unit: 'Unit', unitPrice: 175.00, subtotal: 525.00, approvedQty: 3, approvedSubtotal: 525.00 }
     ],
     totalAmount: 525.00,
+    approvedTotal: 525.00,
+    approvedDate: '2026-10-13',
+    approvedBy: 'Sokha Chan (Administrator)',
+    approvalType: 'full',
     status: 'completed',
     remarks: 'PO issued to supplier. Goods delivered and distributed.',
     history: [
       { action: 'Created', byRole: 'requester', byUser: 'Channary Lim', timestamp: '2026-10-12 11:00 AM', comment: 'Requisition submitted' },
-      { action: 'Approved', byRole: 'admin', byUser: 'Sokha Chan', timestamp: '2026-10-13 09:30 AM', comment: 'Approved for purchase' },
+      { action: 'Approved', byRole: 'admin', byUser: 'Sokha Chan', timestamp: '2026-10-13 09:30 AM', comment: 'Approved for purchase (100% allocation)' },
       { action: 'Completed', byRole: 'admin', byUser: 'Sokha Chan', timestamp: '2026-10-17 04:00 PM', comment: 'Delivered and closed order' }
     ]
   },
@@ -211,15 +219,31 @@ const DEFAULT_REQUISITIONS = [
 const AppData = {
   getRequisitions() {
     const raw = localStorage.getItem(STORAGE_KEYS.REQUISITIONS);
+    let list;
     if (!raw) {
       this.saveRequisitions(DEFAULT_REQUISITIONS);
-      return JSON.parse(JSON.stringify(DEFAULT_REQUISITIONS));
+      list = JSON.parse(JSON.stringify(DEFAULT_REQUISITIONS));
+    } else {
+      try {
+        list = JSON.parse(raw);
+      } catch (e) {
+        list = JSON.parse(JSON.stringify(DEFAULT_REQUISITIONS));
+      }
     }
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return JSON.parse(JSON.stringify(DEFAULT_REQUISITIONS));
-    }
+    // Ensure approved/completed items have approvedQty populated
+    list.forEach(req => {
+      if ((req.status === 'approved' || req.status === 'completed') && (req.approvedTotal === undefined || req.approvedTotal === null)) {
+        let total = 0;
+        (req.items || []).forEach(item => {
+          if (item.approvedQty === undefined) item.approvedQty = item.qty;
+          if (item.approvedSubtotal === undefined) item.approvedSubtotal = Number((item.approvedQty * item.unitPrice).toFixed(2));
+          total += item.approvedSubtotal;
+        });
+        req.approvedTotal = Number(total.toFixed(2));
+        if (!req.approvalType) req.approvalType = req.approvedTotal === req.totalAmount ? 'full' : 'partial';
+      }
+    });
+    return list;
   },
 
   saveRequisitions(data) {
