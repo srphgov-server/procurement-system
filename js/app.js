@@ -19,7 +19,8 @@ const AppState = {
   editingPriorityId: null,
   editingCategoryId: null,
   editingItemId: null,
-  editingUserId: null
+  editingUserId: null,
+  editingRequisitionId: null
 };
 
 // Helper translation function
@@ -107,6 +108,16 @@ function updateLanguageUI() {
     if (AppState.role === 'admin') roleDescEl.textContent = t('roleNoteAdmin');
     else if (AppState.role === 'management') roleDescEl.textContent = t('roleNoteManagement');
     else roleDescEl.textContent = t('roleNoteRequester');
+  }
+
+  // If editing an existing requisition, re-apply edit labels
+  if (AppState.editingRequisitionId) {
+    const headingEl = document.getElementById('formViewHeading');
+    const subheadEl = document.getElementById('formViewSubheading');
+    const submitTextEl = document.getElementById('submitRequisitionText');
+    if (headingEl) headingEl.textContent = `${t('editFormTitle')} [${AppState.editingRequisitionId}]`;
+    if (subheadEl) subheadEl.textContent = t('editFormSubtitle');
+    if (submitTextEl) submitTextEl.textContent = t('btnUpdateRequest');
   }
 
   // Refresh dynamic line items in form if any
@@ -203,7 +214,14 @@ function switchTab(tab) {
   if (tab === 'new-request') {
     populateDepartmentSelect();
     populateFilterDropdowns();
-    resetLineItemsTable();
+    if (!AppState.editingRequisitionId) {
+      resetRequisitionFormUI();
+    }
+  } else {
+    // Navigating away from request form clears editing mode
+    if (AppState.editingRequisitionId) {
+      AppState.editingRequisitionId = null;
+    }
   }
 
   renderCurrentTabView();
@@ -665,6 +683,104 @@ function getStatusBadge(status) {
   }
 }
 
+// Requisition Form Mode & Workflow Helpers (for Requester Portal)
+window.startNewRequisition = function() {
+  AppState.editingRequisitionId = null;
+  switchTab('new-request');
+  resetRequisitionFormUI();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.cancelRequisitionForm = function() {
+  AppState.editingRequisitionId = null;
+  resetRequisitionFormUI();
+  switchTab('requester-dashboard');
+};
+
+window.resetRequisitionFormUI = function() {
+  AppState.editingRequisitionId = null;
+  const headingEl = document.getElementById('formViewHeading');
+  const subheadEl = document.getElementById('formViewSubheading');
+  const submitTextEl = document.getElementById('submitRequisitionText');
+  const submitIconEl = document.getElementById('submitRequisitionIcon');
+
+  if (headingEl) headingEl.textContent = t('formTitle');
+  if (subheadEl) subheadEl.textContent = t('formSubtitle');
+  if (submitTextEl) submitTextEl.textContent = t('btnSubmitRequest');
+  if (submitIconEl) submitIconEl.textContent = 'send';
+
+  const form = document.getElementById('newRequisitionForm');
+  if (form) form.reset();
+
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('formRequestDate');
+  if (dateInput) dateInput.value = today;
+
+  populateDepartmentSelect();
+  populateFilterDropdowns();
+  resetLineItemsTable();
+};
+
+window.openEditRequisition = function(reqId) {
+  const req = AppData.getRequisitions().find(r => r.id === reqId);
+  if (!req) return;
+
+  // Strict check: Edit is ONLY available if transaction is still in 'new' status
+  if (req.status !== 'new') {
+    showToast(t('editLockedWarning') || 'Cannot edit: Transaction has already been reviewed or approved.', 'warning');
+    return;
+  }
+
+  AppState.editingRequisitionId = reqId;
+
+  // Switch to new-request tab (without resetting line items)
+  switchTab('new-request');
+
+  const headingEl = document.getElementById('formViewHeading');
+  const subheadEl = document.getElementById('formViewSubheading');
+  const submitTextEl = document.getElementById('submitRequisitionText');
+  const submitIconEl = document.getElementById('submitRequisitionIcon');
+
+  if (headingEl) headingEl.textContent = `${t('editFormTitle')} [${req.id}]`;
+  if (subheadEl) subheadEl.textContent = t('editFormSubtitle');
+  if (submitTextEl) submitTextEl.textContent = t('btnUpdateRequest');
+  if (submitIconEl) submitIconEl.textContent = 'save';
+
+  const deptSelect = document.getElementById('formDepartmentSelect');
+  const prioritySelect = document.getElementById('formPrioritySelect');
+  const requesterNameInput = document.getElementById('formRequesterName');
+  const requesterEmailInput = document.getElementById('formRequesterEmail');
+  const requestDateInput = document.getElementById('formRequestDate');
+  const neededDateInput = document.getElementById('formNeededDate');
+  const purposeInput = document.getElementById('formPurposeText');
+
+  if (deptSelect) deptSelect.value = req.department;
+  if (prioritySelect) prioritySelect.value = req.priority;
+  if (requesterNameInput) requesterNameInput.value = req.requesterName;
+  if (requesterEmailInput) requesterEmailInput.value = req.requesterEmail || '';
+  if (requestDateInput) requestDateInput.value = req.requestDate || new Date().toISOString().split('T')[0];
+  if (neededDateInput) neededDateInput.value = req.neededDate || '';
+  if (purposeInput) purposeInput.value = req.purpose || '';
+
+  // Populate line items
+  const tbody = document.getElementById('lineItemsTbody');
+  if (tbody) {
+    tbody.innerHTML = '';
+    lineItemCounter = 0;
+    if (req.items && req.items.length > 0) {
+      req.items.forEach(item => {
+        addLineItemRow(item);
+      });
+    } else {
+      addLineItemRow();
+    }
+    updateGrandTotal();
+  }
+
+  showToast(AppState.lang === 'kh' ? `បានទាញយកទិន្នន័យ ${req.id} ដើម្បីកែសម្រួល` : `Editing ${req.id} (Status: New)`, 'info');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 // Request Form Handlers
 function initRequestForm() {
   const form = document.getElementById('newRequisitionForm');
@@ -684,7 +800,7 @@ function initRequestForm() {
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
-      switchTab('dashboard');
+      cancelRequisitionForm();
     });
   }
 
@@ -1060,40 +1176,97 @@ function handleFormSubmit(e) {
   }
 
   const requisitions = AppData.getRequisitions();
-  const nextNumber = requisitions.length + 1;
-  const newId = `REQ-2026-${String(nextNumber).padStart(3, '0')}`;
   const totalAmount = items.reduce((sum, i) => sum + i.subtotal, 0);
 
-  const newRequisition = {
-    id: newId,
-    requestDate: requestDate || new Date().toISOString().split('T')[0],
-    neededDate: neededDate || '',
-    department: dept,
-    requesterName,
-    requesterEmail,
-    priority,
-    purpose,
-    items,
-    totalAmount,
-    status: 'new',
-    remarks: 'Submitted for management review.',
-    history: [
-      {
-        action: 'Created',
-        byRole: 'requester',
-        byUser: requesterName,
-        timestamp: new Date().toLocaleString(),
-        comment: `Submitted by ${dept} Department`
-      }
-    ]
-  };
+  if (AppState.editingRequisitionId) {
+    // EDIT EXISTING REQUISITION (for Requester Portal)
+    const existingReq = requisitions.find(r => r.id === AppState.editingRequisitionId);
+    if (!existingReq) {
+      showToast('Requisition record not found.', 'danger');
+      return;
+    }
 
-  requisitions.unshift(newRequisition);
-  AppData.saveRequisitions(requisitions);
+    if (existingReq.status !== 'new') {
+      showToast(t('editLockedWarning') || 'Cannot edit: Transaction has already been reviewed or approved.', 'warning');
+      return;
+    }
 
-  showToast(`${t('reqSubmittedSuccess')} ${newId}`, 'success');
-  switchTab('dashboard');
-  renderAll();
+    existingReq.department = dept;
+    existingReq.priority = priority;
+    existingReq.requesterName = requesterName;
+    existingReq.requesterEmail = requesterEmail;
+    existingReq.requestDate = requestDate || existingReq.requestDate;
+    existingReq.neededDate = neededDate || '';
+    existingReq.purpose = purpose;
+    existingReq.items = items;
+    existingReq.totalAmount = totalAmount;
+
+    if (!existingReq.history) existingReq.history = [];
+    existingReq.history.push({
+      action: 'Updated',
+      byRole: 'requester',
+      byUser: requesterName,
+      timestamp: new Date().toLocaleString(),
+      comment: 'Requisition details & line items updated while in New status'
+    });
+
+    AppData.saveRequisitions(requisitions);
+
+    const updatedId = existingReq.id;
+    AppState.editingRequisitionId = null;
+    resetRequisitionFormUI();
+
+    showToast(`${t('reqUpdatedSuccess')} ${updatedId}`, 'success');
+
+    // Make sure newly updated requisition is visible in Requester Portal feed
+    AppState.requesterPersona = 'all';
+    AppState.requesterSituation = 'all';
+
+    switchTab('requester-dashboard');
+    renderAll();
+  } else {
+    // CREATE NEW REQUISITION
+    const nextNumber = requisitions.length + 1;
+    const newId = `REQ-2026-${String(nextNumber).padStart(3, '0')}`;
+
+    const newRequisition = {
+      id: newId,
+      requestDate: requestDate || new Date().toISOString().split('T')[0],
+      neededDate: neededDate || '',
+      department: dept,
+      requesterName,
+      requesterEmail,
+      priority,
+      purpose,
+      items,
+      totalAmount,
+      status: 'new',
+      remarks: 'Submitted for management review.',
+      history: [
+        {
+          action: 'Created',
+          byRole: 'requester',
+          byUser: requesterName,
+          timestamp: new Date().toLocaleString(),
+          comment: `Submitted by ${dept} Department`
+        }
+      ]
+    };
+
+    requisitions.unshift(newRequisition);
+    AppData.saveRequisitions(requisitions);
+
+    resetRequisitionFormUI();
+    showToast(`${t('reqSubmittedSuccess')} ${newId}`, 'success');
+
+    // Make sure newly created requisition is visible in Requester Portal feed
+    AppState.requesterPersona = 'all';
+    AppState.requesterSituation = 'all';
+
+    // Switch to requester-dashboard in view-only list
+    switchTab('requester-dashboard');
+    renderAll();
+  }
 }
 
 // Requisition Detail Modal & Workflow Actions
@@ -1410,53 +1583,71 @@ window.openRequisitionDetail = function(reqId) {
   let bpfStage2 = 'pending';
   let bpfStage3 = 'pending';
   let bpfStage4 = 'pending';
-  let bpfStage2Status = 'In Review Queue';
-  let bpfStage3Status = 'Pending Decision';
-  let bpfStage4Status = 'PO Issuance';
+  let bpfStage1Status = req.requestDate || 'Drafted';
+  let bpfStage2Status = AppState.lang === 'kh' ? 'ក្នុងជួរពិនិត្យ' : 'In Review Queue';
+  let bpfStage3Status = AppState.lang === 'kh' ? 'រង់ចាំការសម្រេច' : 'Pending Decision';
+  let bpfStage4Status = AppState.lang === 'kh' ? 'រង់ចាំការអនុម័ត' : 'PO Issuance';
 
-  if (req.status === 'under_review') {
+  if (req.status === 'new') {
+    bpfStage1 = 'completed';
     bpfStage2 = 'active';
-    bpfStage2Status = 'Active Review';
-  } else if (req.status === 'approved') {
-    bpfStage2 = 'completed';
-    bpfStage2Status = 'Reviewed ✓';
-    bpfStage3 = 'completed';
-    bpfStage3Status = 'Approved ✓';
-    bpfStage4 = 'active';
-    bpfStage4Status = 'PO Processing';
-  } else if (req.status === 'rejected') {
-    bpfStage2 = 'completed';
-    bpfStage2Status = 'Reviewed';
-    bpfStage3 = 'declined';
-    bpfStage3Status = 'Declined ✕';
+    bpfStage2Status = AppState.lang === 'kh' ? 'រង់ចាំការត្រួតពិនិត្យ' : 'Pending Review';
+    bpfStage3 = 'pending';
     bpfStage4 = 'pending';
-    bpfStage4Status = 'Halted';
-  } else if (req.status === 'completed') {
+  } else if (req.status === 'under_review') {
+    bpfStage1 = 'completed';
+    bpfStage2 = 'active';
+    bpfStage2Status = AppState.lang === 'kh' ? 'កំពុងត្រួតពិនិត្យជាក់ស្តែង' : 'Active Review';
+    bpfStage3 = 'pending';
+    bpfStage4 = 'pending';
+  } else if (req.status === 'approved') {
+    bpfStage1 = 'completed';
     bpfStage2 = 'completed';
-    bpfStage2Status = 'Reviewed ✓';
+    bpfStage2Status = AppState.lang === 'kh' ? 'បានពិនិត្យ ✓' : 'Reviewed ✓';
     bpfStage3 = 'completed';
-    bpfStage3Status = 'Approved ✓';
+    bpfStage3Status = AppState.lang === 'kh' ? 'បានអនុម័ត ✓' : 'Approved ✓';
+    bpfStage4 = 'active';
+    bpfStage4Status = AppState.lang === 'kh' ? 'កំពុងដំណើរការបញ្ជាទិញ' : 'PO Processing';
+  } else if (req.status === 'rejected') {
+    bpfStage1 = 'completed';
+    bpfStage2 = 'completed';
+    bpfStage2Status = AppState.lang === 'kh' ? 'បានពិនិត្យ' : 'Reviewed';
+    bpfStage3 = 'declined';
+    bpfStage3Status = AppState.lang === 'kh' ? 'បានបដិសេធ ✕' : 'Declined ✕';
+    bpfStage4 = 'pending';
+    bpfStage4Status = AppState.lang === 'kh' ? 'ផ្អាកបញ្ជាទិញ' : 'Halted';
+  } else if (req.status === 'completed') {
+    bpfStage1 = 'completed';
+    bpfStage2 = 'completed';
+    bpfStage2Status = AppState.lang === 'kh' ? 'បានពិនិត្យ ✓' : 'Reviewed ✓';
+    bpfStage3 = 'completed';
+    bpfStage3Status = AppState.lang === 'kh' ? 'បានអនុម័ត ✓' : 'Approved ✓';
     bpfStage4 = 'completed';
-    bpfStage4Status = 'Delivered ★';
+    bpfStage4Status = AppState.lang === 'kh' ? 'បានប្រគល់ទំនិញ ★' : 'Delivered ★';
   }
+
+  const bpfStage1Title = t('stageBpf1') || '1. Draft & Submit';
+  const stage2Title = t('stageBpf2') || '2. Management Review';
+  const stage3Title = t('stageBpf3') || '3. Approval Decision';
+  const stage4Title = t('stageBpf4') || '4. Sourcing & Delivery';
 
   const bpfHtml = `
     <div class="d365-bpf-container mb-3">
       <div class="d365-bpf-bar">
         <div class="d365-bpf-stage ${bpfStage1}">
-          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">edit_document</span> 1. Draft & Submitted</span>
-          <span class="d365-bpf-stage-status">${req.requestDate}</span>
+          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">edit_document</span> ${bpfStage1Title}</span>
+          <span class="d365-bpf-stage-status">${bpfStage1Status}</span>
         </div>
         <div class="d365-bpf-stage ${bpfStage2}">
-          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">rate_review</span> 2. Management Review</span>
+          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">rate_review</span> ${stage2Title}</span>
           <span class="d365-bpf-stage-status">${bpfStage2Status}</span>
         </div>
         <div class="d365-bpf-stage ${bpfStage3}">
-          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">gavel</span> 3. Approval Decision</span>
+          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">gavel</span> ${stage3Title}</span>
           <span class="d365-bpf-stage-status">${bpfStage3Status}</span>
         </div>
         <div class="d365-bpf-stage ${bpfStage4}">
-          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">local_shipping</span> 4. Fulfillment & PO</span>
+          <span class="d365-bpf-stage-title"><span class="material-symbols-outlined" style="font-size:16px; margin-right:4px;">local_shipping</span> ${stage4Title}</span>
           <span class="d365-bpf-stage-status">${bpfStage4Status}</span>
         </div>
       </div>
@@ -1482,7 +1673,19 @@ window.openRequisitionDetail = function(reqId) {
       </div>
       <div>
         <div style="font-size:12px; color:var(--text-muted);">${t('thStatus')}</div>
-        <div>${getStatusBadge(req.status)}</div>
+        <div class="d-flex align-items-center gap-2">
+          ${getStatusBadge(req.status)}
+          ${req.status === 'new' 
+            ? `<button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 py-0 px-2" onclick="closeModal('requisitionDetailModal'); openEditRequisition('${req.id}');" style="font-size:11.5px; height:24px;">
+                 <span class="material-symbols-outlined" style="font-size:14px;">edit</span>
+                 <span>${t('actionEdit')}</span>
+               </button>`
+            : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle d-inline-flex align-items-center gap-1" style="font-size:10.5px; padding:3px 6px;" title="${t('editLockedTooltip')}">
+                 <span class="material-symbols-outlined" style="font-size:12px;">lock</span>
+                 <span>${t('editLockedBadge')}</span>
+               </span>`
+          }
+        </div>
       </div>
       <div>
         <div style="font-size:12px; color:var(--text-muted);">${t('thPriority')}</div>
@@ -1552,6 +1755,50 @@ window.openRequisitionDetail = function(reqId) {
     <!-- Action Panel for Management/Admin -->
     ${actionPanelHtml}
   `;
+
+  // Update Modal Footer with Edit action if status === 'new'
+  const modalFooter = document.getElementById('requisitionDetailModalFooter');
+  if (modalFooter) {
+    if (req.status === 'new') {
+      modalFooter.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
+          <div class="text-muted small d-flex align-items-center gap-1">
+            <span class="material-symbols-outlined text-primary" style="font-size:17px;">edit_document</span>
+            <span>${AppState.lang === 'kh' ? 'ស្ថានភាពថ្មី៖ អ្នកអាចកែសម្រួលសំណើនេះបាន' : 'Status is New: You can edit this requisition before review.'}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-warning d-inline-flex align-items-center gap-1 shadow-sm px-3" onclick="closeModal('requisitionDetailModal'); openEditRequisition('${req.id}');">
+              <span class="material-symbols-outlined" style="font-size:17px;">edit</span>
+              <span class="fw-bold">${t('actionEditRequisition')}</span>
+            </button>
+            <button type="button" class="btn btn-outline d-inline-flex align-items-center gap-1" onclick="printRequisition('${req.id}')">
+              <span class="material-symbols-outlined" style="font-size:16px;">print</span> <span>${t('actionPrint')}</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal('requisitionDetailModal')">${t('actionClose')}</button>
+          </div>
+        </div>
+      `;
+    } else {
+      modalFooter.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
+          <div class="text-muted small d-flex align-items-center gap-1">
+            <span class="material-symbols-outlined text-secondary" style="font-size:17px;">lock</span>
+            <span title="${t('editLockedTooltip')}">${t('editLockedTooltip')}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary disabled d-inline-flex align-items-center gap-1" disabled style="opacity:0.6; cursor:not-allowed;" title="${t('editLockedTooltip')}">
+              <span class="material-symbols-outlined" style="font-size:16px;">lock</span>
+              <span>${t('actionEditLocked')}</span>
+            </button>
+            <button type="button" class="btn btn-outline d-inline-flex align-items-center gap-1" onclick="printRequisition('${req.id}')">
+              <span class="material-symbols-outlined" style="font-size:16px;">print</span> <span>${t('actionPrint')}</span>
+            </button>
+            <button type="button" class="btn btn-primary" onclick="closeModal('requisitionDetailModal')">${t('actionClose')}</button>
+          </div>
+        </div>
+      `;
+    }
+  }
 
   modal.classList.add('open');
 };
@@ -3195,8 +3442,21 @@ function buildRequesterCardHtml(req) {
               <span style="font-size:11.5px; text-decoration:line-through; opacity:0.75; margin-left:4px; color:#64748b;">${formatCurrency(req.totalAmount)}</span>
             ` : ''}
           </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-sm btn-outline" onclick="openRequisitionDetail('${req.id}')">${t('actionView')}</button>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn btn-sm btn-outline d-inline-flex align-items-center gap-1" onclick="openRequisitionDetail('${req.id}')">
+              <span class="material-symbols-outlined" style="font-size:15px;">visibility</span>
+              <span>${t('actionView')}</span>
+            </button>
+            ${req.status === 'new' 
+              ? `<button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" onclick="openEditRequisition('${req.id}')" title="${t('actionEdit')}">
+                   <span class="material-symbols-outlined" style="font-size:15px;">edit</span>
+                   <span>${t('actionEdit')}</span>
+                 </button>`
+              : `<button class="btn btn-sm btn-outline-secondary disabled d-inline-flex align-items-center gap-1" disabled style="opacity:0.55; cursor:not-allowed;" title="${t('editLockedTooltip')}">
+                   <span class="material-symbols-outlined" style="font-size:14px;">lock</span>
+                   <span>${t('actionEditLocked')}</span>
+                 </button>`
+            }
             <button class="btn btn-sm btn-outline" onclick="printRequisition('${req.id}')" title="${t('actionPrint')}"><span class="material-symbols-outlined" style="font-size:15px;">print</span></button>
             ${req.status === 'rejected' ? `<button class="btn btn-sm btn-primary" onclick="cloneRequisitionToNew('${req.id}')" style="background:#be123c; border-color:#9f1239; display:inline-flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:14px;">replay</span> <span>${t('btnResubmitModify')}</span></button>` : ''}
           </div>
